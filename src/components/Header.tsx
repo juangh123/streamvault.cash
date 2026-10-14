@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Zap, Wallet, Globe, BookOpen } from 'lucide-react';
+import { Zap, Wallet, Globe, BookOpen, Presentation, ExternalLink } from 'lucide-react';
 import { AppMode, NetworkType } from '../types';
 
 interface HeaderProps {
@@ -8,6 +8,7 @@ interface HeaderProps {
   network: NetworkType;
   setNetwork: (net: NetworkType) => void;
   onOpenDocs: () => void;
+  onOpenSlides: () => void;
   onConnectWallet: () => void;
   walletConnected: boolean;
   walletAddress: string;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   network,
   setNetwork,
   onOpenDocs,
+  onOpenSlides,
   onConnectWallet,
   walletConnected,
   walletAddress,
@@ -46,14 +48,35 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap justify-end">
+          {/* Slides Deck Button */}
+          <button
+            onClick={onOpenSlides}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-950/70 hover:bg-purple-900 text-purple-300 border border-purple-800/60 transition shadow-sm"
+          >
+            <Presentation className="w-3.5 h-3.5 text-purple-400" />
+            <span>7-Page Deck</span>
+          </button>
+
           {/* Docs button */}
           <button
             onClick={onOpenDocs}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800/80 hover:bg-gray-700 text-gray-200 border border-gray-700 transition"
           >
             <BookOpen className="w-3.5 h-3.5 text-[#0AC18E]" />
-            <span>Docs & Slides</span>
+            <span>Docs & PRD</span>
           </button>
+
+          {/* Chipnet Faucet External Link */}
+          <a
+            href="https://chipnet.chaingraph.cash/faucet"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-800 transition"
+            title="Official Chipnet Faucet"
+          >
+            <span>Faucet</span>
+            <ExternalLink className="w-3 h-3 text-gray-500" />
+          </a>
 
           {/* Mode Switcher */}
           <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg p-0.5 text-xs">
@@ -89,7 +112,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <option value="sandbox" className="bg-gray-900">Chipnet (Testnet)</option>
               <option value="mainnet" className="bg-gray-900">BCH Mainnet</option>
-              <option value="chipnet" className="bg-gray-900">Virtual VM Simulator</option>
             </select>
           </div>
 

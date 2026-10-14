@@ -7,16 +7,15 @@ import { CovenantVisualizer } from './components/CovenantVisualizer';
 import { TxLedger } from './components/TxLedger';
 import { DocsViewer } from './components/DocsViewer';
 import { WalletConnectModal } from './components/WalletConnectModal';
+import { SlideDeck } from './components/SlideDeck';
 import { AgentLogEntry, AgentService, AppMode, NetworkType, TxRecord, VaultConfig } from './types';
 import {
   generateInitialVault,
   executeSpendSimulation,
   executeEmergencyReclaim,
   PRESET_SERVICES,
-  satsToBch,
   satsToUsd,
 } from './lib/bchSimulator';
-
 
 export const App: React.FC = () => {
   const [vault, setVault] = useState<VaultConfig>(generateInitialVault());
@@ -29,6 +28,7 @@ export const App: React.FC = () => {
   const [mode, setMode] = useState<AppMode>('SANDBOX');
   const [network, setNetwork] = useState<NetworkType>('sandbox');
   const [isDocsOpen, setIsDocsOpen] = useState(false);
+  const [isSlideDeckOpen, setIsSlideDeckOpen] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('bitcoincash:qp0xowner8923748923749823749283749823749823');
@@ -200,6 +200,7 @@ export const App: React.FC = () => {
         network={network}
         setNetwork={setNetwork}
         onOpenDocs={() => setIsDocsOpen(true)}
+        onOpenSlides={() => setIsSlideDeckOpen(true)}
         onConnectWallet={() => setIsWalletModalOpen(true)}
         walletConnected={walletConnected}
         walletAddress={walletAddress}
@@ -249,6 +250,9 @@ export const App: React.FC = () => {
             <span>Built for BCH BLAZE 2026 (Mainnet & Media Track)</span>
           </div>
           <div className="flex items-center gap-4 text-gray-400">
+            <button onClick={() => setIsSlideDeckOpen(true)} className="hover:text-purple-400 transition">
+              7-Page Slides
+            </button>
             <button onClick={() => setIsDocsOpen(true)} className="hover:text-[#0AC18E] transition">
               Documentation
             </button>
@@ -272,8 +276,14 @@ export const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Modals */}
+      {/* Modals & Fullscreen Overlays */}
       <DocsViewer isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
+      {isSlideDeckOpen && (
+        <SlideDeck
+          onClose={() => setIsSlideDeckOpen(false)}
+          onLaunchDemo={() => setIsSlideDeckOpen(false)}
+        />
+      )}
       <WalletConnectModal
         isOpen={isWalletModalOpen}
         onClose={() => setIsWalletModalOpen(false)}
@@ -282,4 +292,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-
