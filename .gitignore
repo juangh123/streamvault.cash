@@ -9,3 +9,7 @@ dist-ssr
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+.playwright-cli
+.decknode
+work
+*.inspect.ndjson
