@@ -1,64 +1,47 @@
-# BCH BLAZE 2026: Official 7-Page Presentation Deck
-## Project: AgentPay.cash (Widget Factory Presentation Format)
+# Official 7-page Widget Factory deck (content)
 
----
+> A generated deck (dark brand theme, 7 pages + PNG previews) lives in `docs/deck/`:
+> `docs/deck/StreamVault-BCH-Blaze-2026.pptx`. Regenerate with `node .decknode/build-deck.mjs`.
+> Restyle it inside the official Widget Factory Google Slides template before submitting.
 
-### Slide 1: Cover
-- **Title**: AgentPay.cash
-- **Subtitle**: Non-Custodial AI Agent Allowance Vault & Sub-Cent Micro-Payment Gateway on Bitcoin Cash
-- **Event**: BCH BLAZE 2026 Hackathon
-- **Team**: Team Autonomous Cash (Solo Developer + AI Collaborative Engineering)
-- **Links**: https://agentpay.cash | GitHub: github.com/agentpay/agentpay.cash | Telegram: @AgentPayCash
 
----
+Port this content into the official Widget Factory Google Slides template.
 
-### Slide 2: One-Liner & Project Overview
-- **One-Liner**: Empowering autonomous AI Agents with controlled, sub-cent on-chain micro-payments, backed by non-custodial Bitcoin Cash Covenants.
-- **Key Stats & Value Props**:
-  - ⚡ **$0.001 per tx**: 100x cheaper than EVM L2s, making per-token API billing viable.
-  - 🛡️ **Zero Risk of Card Draining**: Hard-coded per-tx allowance enforced by BCH Script.
-  - 🔄 **Recursive Covenants**: Introspection guarantees change never leaves the vault.
-  - 🚨 **1-Click Clawback**: 100% human sovereign fund reclamation anytime.
+**Slide 1 - Cover**
+- StreamVault.cash
+- Non-custodial PUSD streaming payroll & subscription vault on Bitcoin Cash
+- BCH BLAZE 2026 - Team Autonomous Cash
+- streamvault.cash | @StreamVaultCash
 
----
+**Slide 2 - One-liner & repo**
+- "Programmable BCH money streams that pay themselves - capped on-chain, cancellable by the payer, settled
+  in a stablecoin."
+- Repo: github.com/streamvault/streamvault.cash
+- Non-custodial - PUSD settlement - hard covenants
 
-### Slide 3: The Origin Story & Problem
-- **The AI Boom**: AI agents (AutoGPT, Devin, Claude MCP, LangChain) need to autonomously buy external compute, weather data, specialized LLM tokens, and scraper proxies.
-- **The Catastrophic Failure Modes**:
-  1. *Credit Cards*: Handing API keys/cards to agents leads to runaway billing loops.
-  2. *EVM Chains*: Gas fees ($0.20 - $3.00) exceed the actual value of the micro-call ($0.001).
-  3. *Unconstrained Crypto Wallets*: One prompt injection can drain the entire wallet.
-- **The Epiphany**: Bitcoin Cash has the world's most elegant UTXO Introspection opcodes and microscopic fees. It is the missing financial layer for the AI Agent economy.
+**Slide 3 - Story / origin**
+- Contractors, creators and SaaS vendors are paid in lumps that arrive late or need a custodian.
+- Cards and mandates are custodial and reversible; lump-sum crypto has no schedule; EVM gas exceeds the tranche.
+- BCH's near-zero fees + introspection covenants are the natural rail for programmable streams.
 
----
+**Slide 4 - Benefits**
+- Payees: withdraw on schedule without invoicing or a custodian.
+- Payers: per-period ceiling, cancel and reclaim anytime.
+- Stable value: denominated in PUSD, not a volatile token.
+- Any wallet: sign with Selene, Paytaca or Cashonize.
 
-### Slide 4: Key Benefits & Features
-- **For AI Developers**: Plug-and-play autonomous micro-payments SDK. No credit card KYC needed.
-- **For API & Tool Providers**: Monetize per-request without subscription friction or payment processor chargebacks.
-- **For Human Owners**: Complete peace of mind. Fund a bot with $2.00 of BCH, knowing it can never spend more than $0.003 in a single call.
-- **For the BCH Ecosystem**: Massive on-chain transaction volume driven by machine-to-machine micro-transactions.
+**Slide 5 - BCH usage (core scoring)**
+- PUSD is a CashTokens fungible token; the covenant enforces token conservation.
+- `this.age` (OP_CHECKSEQUENCEVERIFY) gates each tranche - the stream's rate limit.
+- `output[1].lockingBytecode == input.lockingBytecode` - recursive change, enforced by introspection.
+- Signed via WizardConnect, broadcast to BCH; everything is consensus-enforced.
 
----
+**Slide 6 - Vision & roadmap**
+- Phase 1: covenant + cockpit + Chipnet/Mainnet settlement.
+- Phase 2: SDK + MCP server so AI agents stream per-call budgets.
+- Phase 3: marketplace of PUSD-denominated recurring services.
 
-### Slide 5: Bitcoin Cash Technical Innovation (Core Scoring)
-- **CashScript 0.10+ Covenants**:
-  - Utilizes `OP_INSPECTINPUT*` and `OP_INSPECTOUTPUT*` via CashScript introspection.
-  - `require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);`
-  - Guarantees on-chain algorithmic enforcement without trusted oracles or off-chain sequencers.
-- **WizardConnect Integration**: Seamlessly connects mobile wallets (Selene) via QR and desktop extensions (Paytaca).
-- **Dual Asset Architecture**: Built for native BCH satoshis, immediately extensible to PUSD CashTokens.
-
----
-
-### Slide 6: Vision & Roadmap
-- **Phase 1 (Hackathon MVP)**: Live web cockpit, CashScript vault contract, 1-Click Sandbox demo, Chipnet/Mainnet readiness.
-- **Phase 2 (Developer SDK & MCP Server)**: Release Model Context Protocol (MCP) server for Claude Desktop and AutoGPT plugins (`agentpay-mcp`).
-- **Phase 3 (Agent Marketplace)**: Decentralized directory of BCH-monetized micro-APIs (weather, compute, translation, image gen).
-
----
-
-### Slide 7: Thank You & Live Demo
-- **Try Live Demo**: https://agentpay.cash
-- **GitHub Repository**: Full source code, test suites, and documentation.
-- **Judge 1-Minute Walkthrough**: Instant simulation mode allows comprehensive review in under 60 seconds without installing third-party wallets.
-- **Closing Quote**: *"Bitcoin Cash is peer-to-peer electronic cash for humanity — and now, for the autonomous agents working alongside us."*
+**Slide 7 - Thank you & demo**
+- Live demo: streamvault.cash
+- Judge walkthrough (one click, no wallet)
+- "Bitcoin Cash is peer-to-peer cash for people - and now, for their money streams."

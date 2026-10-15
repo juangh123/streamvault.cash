@@ -1,122 +1,47 @@
-# System Architecture & Technical Specifications
-## AgentPay.cash — Bitcoin Cash Covenants & Autonomous Agent Execution Architecture
+# System architecture
 
----
-
-### 1. Architectural Philosophy
-AgentPay is built upon the sovereign UTXO paradigm of Bitcoin Cash. Unlike account-based EVM contracts where state is stored in contract storage slots, Bitcoin Cash Smart Contracts operate as **spending conditions (locks)** on individual UTXOs. 
-
-By leveraging native **Introspection Opcodes** (`OP_INSPECTINPUT*`, `OP_INSPECTOUTPUT*`) exposed through CashScript, AgentPay enforces state transitions recursively without needing oracles, off-chain state machines, or centralized coordinator servers.
-
----
-
-### 2. High-Level System Topology
+## Topology
 
 ```
-                  ┌───────────────────────────────────────────────┐
-                  │                 Human Owner                   │
-                  │   - Holds Master Private Key (e.g. Selene)    │
-                  │   - Sets maxPerTx & initial deposit           │
-                  │   - Retains 100% Emergency Clawback rights    │
-                  └───────────────────────┬───────────────────────┘
-                                          │ 1. Fund Vault
-                                          ▼
-                         ┌─────────────────────────────────┐
-                         │      AgentVault Covenants       │
-                         │      (CashScript Contract)      │
-                         │  - Balance: e.g. 100,000 sats   │
-                         │  - Hard ceiling: 1,000 sats/tx  │
-                         └────────────────┬────────────────┘
+        Payer wallet ── WizardConnect ──┐
+                                        │  fund + cancel (signed)
+                                        ▼
+                          ┌───────────────────────────────┐
+                          │  StreamVault covenant (P2SH)   │
+                          │  PUSD + BCH buffer            │
+                          │  amountPerPeriod, periodBlocks│
+                          └───────────────┬───────────────┘
+                                          │ claim (payee-signed)
+        Payee wallet ── WizardConnect ────┘
                                           │
-            ┌─────────────────────────────┴─────────────────────────────┐
-            │ 2. spend(agentSig, amount, serviceLockingBytecode, fee)    │ 4. reclaim(ownerSig)
-            ▼                                                           ▼
-┌───────────────────────────────┐                             ┌───────────────────┐
-│        AI Agent Engine        │                             │   Owner Wallet    │
-│  - Ephemeral Session Key      │                             │ (100% Recovered)  │
-│  - Calls Micro-APIs           │                             └───────────────────┘
-└───────────────┬───────────────┘
-                │
-                ├──────────────────────────────────────┐
-                │ Output 0: Direct Payment             │ Output 1: Recursive Change
-                ▼                                      ▼
-┌───────────────────────────────┐     ┌─────────────────────────────────┐
-│     Third-Party Service       │     │     Same AgentVault Bytecode    │
-│ (LLM / Oracle / Scraper API)  │     │ (tx.outputs[1].lockingBytecode  │
-│ e.g. 800 satoshis             │     │  == tx.inputs[0].lockingBytecode│
-└───────────────────────────────┘     └─────────────────────────────────┘
+                          Output 0: payee tranche (PUSD)
+                          Output 1: vault change (same bytecode, clock reset)
 ```
 
----
+## Contract
+`contracts/StreamVault.cash`, CashScript `^0.14.0`, compiled to `contracts/artifacts/StreamVault.json`
+by `npm run compile`. Two functions: `claim` and `cancel`. See `docs/STREAM_MECHANICS.md`.
 
-### 3. Smart Contract Specification (`contracts/AgentVault.cash`)
+## Client stack
+- **Vite + React 18 + TypeScript**, Tailwind CSS, Lucide icons.
+- **cashscript 0.14** - contract instantiation, transaction building.
+- **@bitauth/libauth** - address encoding, key/address helpers.
+- **@wizardconnect/react + @wizardconnect/dapp** - wallet pairing (relay protocol, QR) and signing.
 
-The core contract is written in **CashScript 0.10+**:
+## Layers
+- `src/lib/covenant.ts` - compiled artifact, PUSD/network constants, explorer config.
+- `src/lib/stream.ts` - sandbox engine that replays the covenant invariants offline.
+- `src/lib/chain.ts` - live layer: `ElectrumNetworkProvider` (Chipnet/Mainnet), `Contract`, UTXO/token
+  queries, size-based fee estimation, real `claim`/`cancel` transaction building.
+- `src/components/*` - cockpit UI.
 
-```solidity
-pragma cashscript ^0.10.0;
+## Signing flow (live)
+1. The dapp builds a covenant spend with `TransactionBuilder` (payee or payer `sig`).
+2. Permissioned signing is delegated to the wallet over WizardConnect (`DappConnectionManager.signTransaction`)
+   or, for the Chipnet walkthrough with a throwaway demo key, signed locally.
+3. The signed transaction is broadcast through the Electrum provider; the txid is recorded in the ledger.
 
-contract AgentVault(
-    pubkey ownerPk,         // The human controller's public key
-    pubkey agentPk,         // The AI Agent's limited-privilege public key
-    int maxPerTx            // Maximum satoshis permitted per single spend
-) {
-    /**
-     * @notice Allows the AI Agent to spend a micro-payment to a service provider.
-     * @param agentSig Signature from the AI Agent key
-     * @param amount The payment amount in satoshis
-     * @param serviceLockingBytecode The recipient's scriptPubKey / lockingBytecode
-     * @param minerFee Mining transaction fee (typically 300 - 500 satoshis)
-     */
-    function spend(
-        sig agentSig,
-        int amount,
-        bytes serviceLockingBytecode,
-        int minerFee
-    ) {
-        // Verification 1: Verify Agent cryptographic signature
-        require(checkSig(agentSig, agentPk));
+No private key is ever persisted in the browser; session state only keeps the public xpub.
 
-        // Verification 2: Enforce policy ceilings
-        require(amount <= maxPerTx);
-        require(amount >= 546); // Bitcoin Cash dust threshold
-
-        // Verification 3: Verify Output 0 (Service Provider)
-        require(tx.outputs[0].value == amount);
-        require(tx.outputs[0].lockingBytecode == serviceLockingBytecode);
-
-        // Verification 4: Recursive Covenants Introspection (Output 1 Change)
-        // Calculate the expected change after deducting spent amount and miner fee
-        int change = tx.inputs[this.activeInputIndex].value - amount - minerFee;
-        if (change >= 546) {
-            require(tx.outputs[1].value == change);
-            // CRITICAL: Introspection guarantees change returns to the EXACT SAME contract bytecode
-            require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);
-        }
-    }
-
-    /**
-     * @notice Allows the human owner to unconditionally sweep and recover all funds.
-     * @param ownerSig Signature from the human master key
-     */
-    function reclaim(sig ownerSig) {
-        require(checkSig(ownerSig, ownerPk));
-    }
-}
-```
-
----
-
-### 4. Bitcoin Cash VM Introspection Mechanics
-1. **`tx.inputs[this.activeInputIndex].lockingBytecode`**: Reads the scriptPubKey of the input UTXO currently being spent. This is the compiled bytecode of the `AgentVault` covenant.
-2. **`tx.outputs[1].lockingBytecode`**: Reads the scriptPubKey of the change output.
-3. **Equivalence Constraint**: By asserting `tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode`, the VM proves at consensus level that funds remain locked under the exact same spending restrictions. Neither the Agent nor any third party can siphon off the change.
-
----
-
-### 5. Frontend & Client-Side Stack
-- **Framework**: Vite + React 18 + TypeScript
-- **Styling**: Tailwind CSS + Custom Cyber/Fintech Design System
-- **Icons**: Lucide React
-- **Wallet Connection**: WizardConnect modal & bridge (supporting Selene Mobile QR, Paytaca Web Extension, and Cashonize Web)
-- **Simulation Engine**: Client-side BCH transaction builder & introspection validator for instantaneous judge evaluations.
+## Deployment
+Static build (`dist/`) hosted on Vercel (`vercel.json`) or Cloudflare Pages (`public/_redirects`).

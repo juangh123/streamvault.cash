@@ -1,46 +1,20 @@
-# DoraHacks Judge 60-Second Friction-Free Walkthrough
-## AgentPay.cash — Evaluation Quickstart
+# Judge walkthrough (60 seconds)
 
----
+No wallet, no testnet coins, no local build required - the sandbox mirrors every covenant rule.
 
-Dear BCH BLAZE 2026 Judges,
+1. **Open the demo** and click **Launch Demo Stream** in the Judge Fast-Track bar. A $1,000.00 PUSD payroll
+   stream is created: payer "Design retainer" funds a CashScript covenant with a $25.00 / period policy.
+2. **Fast-forward 1 period** (or click **Run 3-period workflow**). The block clock advances; the covenant
+   becomes eligible for the next tranche.
+3. Click **Claim**. The payee withdraws $25.00; the remaining PUSD returns to the vault under the *identical*
+   bytecode - watch the Covenant Visualizer light up Output 1.
+4. **Prove the ceiling**: set the claim amount above $25.00 and claim - the covenant rejects it
+   (`amount <= amountPerPeriod`).
+5. **Cancel & reclaim**: the payer sweeps 100% of the remaining PUSD back. The payee key is now powerless.
 
-We know your time is valuable! To make your evaluation seamless and completely friction-free—**without requiring you to install third-party mobile apps or request testnet faucets**—AgentPay.cash includes a built-in **"Judge 1-Click Fast Demo"** sandbox mode alongside real **Live Wallet (WizardConnect)** connectivity.
+Key files:
 
----
-
-### ⏱️ 60-Second Self-Test Checklist
-
-#### Step 1: Open the Application
-Navigate to the live web interface (or run `npm run dev` locally). You will see the **Judge Fast-Track Bar** at the very top of the screen.
-
-#### Step 2: Auto-Provision a Vault (1 Click)
-Click the prominent button: **[🚀 Judge 1-Click Fast Demo]**.
-- **What happens**: The system generates a deterministic `AgentVault` covenant contract, simulates a 0.001 BCH (~100,000 satoshis) deposit from a human owner, and establishes an active agent session key with a `maxPerTx = 1,000 sats` spending ceiling.
-
-#### Step 3: Trigger an Autonomous AI Agent Payment
-In the **AI Agent Action Runner** panel:
-- Select any micro-service (e.g. *OpenAI/DeepSeek API Token Call — 800 sats* or *Decentralized Weather Oracle — 300 sats*).
-- Click **[Execute Micro-Payment]** or click **[Run Autonomous Stream Workflow]**.
-- **Inspect**:
-  1. The vault balance instantly updates.
-  2. The **Live Introspection Visualizer** highlights:
-     - Output 0 (800 sats) -> Directed to Service Provider.
-     - Output 1 (98,800 sats) -> Recursively verified and locked into the identical `lockingBytecode`.
-  3. A cryptographic transaction record is generated in the **Live Transaction Ledger**.
-
-#### Step 4: Test Covenant Security Boundary (Rejection)
-Attempt to force a payment above `maxPerTx` (e.g., 2,500 sats):
-- **Inspect**: The simulation engine immediately displays the VM verification failure: `Execution Failed: Amount (2500) exceeds maxPerTx (1000)`.
-
-#### Step 5: Test Sovereign Emergency Sweep (Clawback)
-Click the red **[🚨 Emergency Sweep (Clawback)]** button:
-- **Inspect**: The human owner signs the `reclaim` function. 100% of the remaining balance is instantly swept to the owner's address. Vault balance becomes 0 sats, rendering the agent completely incapable of further spending.
-
----
-
-### 🔍 Key Files for Technical Auditing
-- Contract Code: `contracts/AgentVault.cash`
-- Architectural Spec: `docs/ARCHITECTURE.md`
-- Security Threat Model: `docs/SECURITY.md`
-- Presentation Slides: `docs/SLIDES.md`
+- Covenant: `contracts/StreamVault.cash`
+- Real VM tests: `contracts/test-streamvault.mjs` (`npm test`)
+- Live layer: `src/lib/chain.ts`
+- Mechanics: `docs/STREAM_MECHANICS.md`

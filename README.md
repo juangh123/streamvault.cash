@@ -1,121 +1,147 @@
-# AgentPay.cash ⚡
-> Non-Custodial AI Agent Allowance Vault & Sub-Cent Micro-Payment Gateway on Bitcoin Cash (BCH)
+# StreamVault.cash
 
-[![Hackathon](https://img.shields.io/badge/BCH%20BLAZE-2026-brightgreen.svg)](https://dorahacks.io/hackathon/bchblaze2026)
+> Non-custodial **PUSD streaming payroll & subscription vault** on Bitcoin Cash, enforced by CashScript covenants and relative timelocks.
+
+[![BCH BLAZE 2026](https://img.shields.io/badge/BCH%20BLAZE-2026-brightgreen.svg)](https://dorahacks.io/hackathon/bchblaze2026)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CashScript](https://img.shields.io/badge/Smart%20Contracts-CashScript%200.10-green)](https://cashscript.org/)
+[![CashScript](https://img.shields.io/badge/Smart%20Contracts-CashScript%200.14-green)](https://cashscript.org/)
 [![Network](https://img.shields.io/badge/Network-BCH%20Mainnet%20%7C%20Chipnet-orange)](https://bitcoincash.org)
 
 ---
 
-## 💡 The Problem & The Big Idea
+## What it is
 
-AI Agents (AutoGPT, LangChain, Claude MCP, Devin) are taking over autonomous computational workflows. However, **how do they pay for third-party APIs, data oracles, compute power, and web scraping?**
+StreamVault.cash lets a payer lock **PUSD (ParyonUSD)** - a CashTokens stablecoin pegged to USD - inside a
+Bitcoin Cash covenant and release it to a payee as a **money stream**. The payee may withdraw at most
+`amountPerPeriod` PUSD per `periodBlocks` blocks; the payer can cancel and reclaim the unstreamed balance
+at any time. Everything is enforced by the Bitcoin Cash VM - no custodial server, no chargebacks, no
+infinite billing loops.
 
-1. **The Credit Card Dilemma**: Handing an AI Agent corporate credit card details or unmetered SaaS API keys exposes users to catastrophic billing loops or accidental bank draining.
-2. **The EVM Gas Impasse**: Ethereum or L2 gas fees ($0.20 - $5.00 per tx) make single-request micro-payments (costing $0.001 each) mathematically impossible.
-3. **The Raw Private Key Trap**: Giving an autonomous agent an unconstrained crypto private key means any prompt injection or rogue model action can instantly wipe out 100% of the wallet.
+Typical uses:
 
-### 🌟 The Solution: AgentPay.cash
-**AgentPay.cash** leverages Bitcoin Cash’s native **UTXO Covenants & Introspection Opcodes** via CashScript to build a bulletproof, non-custodial allowance vault:
-- 🛡️ **Hard Spending Caps**: The AI Agent can only spend up to a strict ceiling (e.g., `maxPerTx = 1,000 sats` (~$0.003)) per transaction.
-- 🔄 **Recursive Covenant Change**: Introspection opcodes inspect outputs in the Bitcoin Cash Virtual Machine. Change must return **strictly** to the exact same contract bytecode (`lockingBytecode`). The agent cannot redirect change to any unauthorized address.
-- 🚨 **Emergency Sweep**: The human owner retains complete sovereign control and can claw back 100% of remaining funds with a single click at any millisecond.
-- 💸 **Sub-Cent Real Settlement**: BCH transaction fees are ~0.001 USD (~300 satoshis), enabling true pay-per-token and pay-per-call machine-to-machine commerce.
-
----
-
-## 🏛️ Project Architecture
-
-```
-AgentPay.cash/
-├── docs/                      # Comprehensive project & submission specifications
-│   ├── PRD.md                 # Product Requirements Document
-│   ├── ARCHITECTURE.md        # Technical architecture, Covenants & UTXO mechanics
-│   ├── SECURITY.md            # Zero-trust security boundaries & threat modeling
-│   ├── SLIDES.md              # Official 7-slide Widget Factory presentation deck
-│   └── JUDGE_GUIDE.md         # 60-second friction-free walkthrough for DoraHacks judges
-├── contracts/                 # CashScript Smart Contracts
-│   ├── AgentVault.cash        # Core Covenants Vault contract
-│   └── test-vault.ts          # Contract test suite & simulation
-├── src/                       # Modern Frontend Cockpit (React + Vite + Tailwind CSS)
-│   ├── components/            # UI components (Judge fast-track, Vault panel, Visualizer)
-│   ├── lib/                   # CashScript covenants logic & mock BCH network
-│   └── types/                 # TypeScript interfaces
-└── README.md
-```
+- **Freelance / contractor payroll** - a monthly retainer that the contractor draws down per period.
+- **SaaS subscriptions** - a prepaid budget that releases a tranche per cycle.
+- **Creator / grant streams** - continuous funding that stays cancellable by the sponsor.
 
 ---
 
-## 🚀 Quick Start for DoraHacks Judges
+## Why Bitcoin Cash
 
-Visit our interactive Live Demo or run locally:
+- **Sub-cent settlement**: BCH fees (~1 sat/byte) make per-period micro-settlement economically viable.
+- **UTXO covenants**: introspection opcodes let the contract *prove* that change returns to the identical
+  spending condition (`output[1].lockingBytecode == input[0].lockingBytecode`).
+- **Relative timelocks**: `this.age` (OP_CHECKSEQUENCEVERIFY) natively encodes "at least N blocks since this
+  UTXO", which is exactly a rate limit for a stream.
+- **CashTokens**: PUSD is a native fungible token, so the covenant can enforce token conservation on-chain.
+
+---
+
+## How the covenant works
+
+`contracts/StreamVault.cash` (CashScript `^0.14.0`):
+
+```
+contract StreamVault(pubkey payerPk, pubkey payeePk, int amountPerPeriod, int periodBlocks, bytes pusdCategory)
+```
+
+- `claim(sig payeeSig, int amount)`
+  - `checkSig(payeeSig, payeePk)` - only the payee can pull a tranche.
+  - `this.age >= periodBlocks` - relative period must have elapsed.
+  - `amount > 0 && amount <= amountPerPeriod` - per-period ceiling.
+  - `tx.outputs.length == 2` - the payee tranche plus the vault change; no third output can siphon the BCH buffer.
+  - Output 0 carries exactly `amount` PUSD to the payee (`tokenCategory == pusdCategory`).
+  - Output 1 carries the remaining PUSD back to the **identical covenant bytecode**; the new UTXO restarts the clock.
+- `cancel(sig payerSig, bytes payerLockingBytecode)`
+  - The payer signature sweeps **100%** of the remaining PUSD to a payer-selected address.
+
+Token conservation is guaranteed by the VM: a claim can never drain the vault (the covenant requires a
+positive remainder), so only the payer's `cancel` can empty it.
+
+See [docs/STREAM_MECHANICS.md](docs/STREAM_MECHANICS.md) for the full mechanics, edge cases and the
+"why relative locks" rationale.
+
+---
+
+## Quick start
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/your-username/AgentPay.cash.git
-cd AgentPay.cash
-
-# 2. Install dependencies
 npm install
-
-# 3. Launch local dev server
-npm run dev
+npm run compile   # cashc contracts/StreamVault.cash -> contracts/artifacts/StreamVault.json
+npm test          # 9 covenant tests evaluated against the real BCH VM (MockNetworkProvider)
+npm run dev       # http://localhost:5173
 ```
 
-Open `http://localhost:5173` to experience the **1-Minute Judge Walkthrough**:
-1. Click **"Judge 1-Click Fast Demo"** to auto-provision a simulated 0.001 BCH vault.
-2. Click **"Trigger AI Agent Action"** to watch the Agent autonomously pay for an LLM token call (800 sats).
-3. Observe the **Live Introspection Visualizer** prove that change is recursively routed back to the vault bytecode.
-4. Click **"Emergency Sweep"** to execute the human clawback function and drain 100% back to the owner wallet.
+Open `http://localhost:5173` and use the **Judge Fast-Track**: *Launch demo stream* -> *Fast-forward 1 period*
+-> *Claim* -> *Cancel & reclaim*. The sandbox mirrors every covenant rule, so no wallet or testnet coins are
+required.
 
 ---
 
-## 📜 Smart Contract Core Logic (`contracts/AgentVault.cash`)
+## Test suite
 
-```solidity
-pragma cashscript ^0.10.0;
+- `npm test` - the covenant against the **real BCH VM** (`contracts/test-streamvault.mjs`, `MockNetworkProvider`).
+- `npm run test:engine` - sandbox engine invariants (`tests/stream.test.ts`).
+- `npm run test:derive` - offline covenant address derivation for Chipnet/Mainnet (`tests/derive.ts`).
+- `npm run test:chain` - the live layer builds VM-accepted `claim`/`cancel` txs and WalletConnect objects (`tests/chain.test.ts`).
 
-contract AgentVault(
-    pubkey ownerPk,         // Human owner (sole reclaim authority)
-    pubkey agentPk,         // AI Agent session key (limited spending)
-    int maxPerTx            // Max satoshis allowed per call (e.g. 5000 sats)
-) {
-    function spend(
-        sig agentSig,
-        int amount,
-        bytes serviceLockingBytecode,
-        int minerFee
-    ) {
-        require(checkSig(agentSig, agentPk));
-        require(amount <= maxPerTx);
-        require(amount >= 546); // Dust protection
 
-        // Output 0: Direct payment to the verified service provider
-        require(tx.outputs[0].value == amount);
-        require(tx.outputs[0].lockingBytecode == serviceLockingBytecode);
+The covenant suite loads the compiled artifact, instantiates the covenant
+on a `MockNetworkProvider` (real VM validation) and asserts both accepted and rejected paths:
 
-        // Output 1: Covenant introspection ensures change returns to this vault
-        int change = tx.inputs[this.activeInputIndex].value - amount - minerFee;
-        if (change >= 546) {
-            require(tx.outputs[1].value == change);
-            require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);
-        }
-    }
+| Test | Scenario | Expectation |
+| :--- | :--- | :--- |
+| TEST-00 | Artifact / ABI (`claim`, `cancel`) | compiles |
+| TEST-01 | Valid claim (800 <= 1000) | VM accepts |
+| TEST-02 | Over-limit claim (2500 > 1000) | covenant reverts |
+| TEST-03 | Claim before the period elapsed | covenant reverts |
+| TEST-04 | Change redirected to an attacker | covenant reverts |
+| TEST-05 | Zero-amount claim | covenant reverts |
+| TEST-06 | Payer cancel sweeps 100% | VM accepts |
+| TEST-07 | Cancel with a non-payer key | covenant reverts |
+| TEST-08 | Broadcast updates the covenant UTXO | stream continues |
 
-    function reclaim(sig ownerSig) {
-        require(checkSig(ownerSig, ownerPk));
-    }
-}
+---
+
+## Project layout
+
+```
+StreamVault.cash/
+├── contracts/
+│   ├── StreamVault.cash            # the covenant
+│   ├── test-streamvault.mjs        # real VM test suite
+│   └── artifacts/StreamVault.json  # compiled artifact (committed for judge convenience)
+├── src/
+│   ├── components/                 # React cockpit (Header, StreamControls, ClaimPanel, ...)
+│   ├── lib/
+│   │   ├── covenant.ts             # artifact + PUSD/network constants + address config
+│   │   ├── stream.ts               # sandbox engine mirroring the covenant invariants
+│   │   ├── chain.ts                # live layer: Electrum provider, contract, real tx building
+│   │   └── format.ts               # PUSD/BCH formatting
+│   └── types/
+└── docs/                           # PRD, ARCHITECTURE, SECURITY, STREAM_MECHANICS, SLIDES, ...
 ```
 
 ---
 
-## 🏆 BCH BLAZE 2026 Submission Tracks
-- **Mainnet Track**: Full-stack non-custodial payment infrastructure, CashScript contract, and interactive web dashboard.
-- **Media Track**: 7-slide official presentation deck and 90-second animated AI explainer video.
+## Live settlement
+
+`src/lib/chain.ts` wires the real stack: `ElectrumNetworkProvider` for Chipnet/Mainnet, `Contract`
+instantiation, live UTXO/Tokens queries, and real `claim` transaction building. Wallet signing goes through
+**WizardConnect** (`@wizardconnect/react` + `@wizardconnect/dapp`), so no private key is ever stored in the
+browser. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the signing flow.
 
 ---
 
-## 📄 License
-MIT © 2026 Team AgentPay
+## Compliance (BCH BLAZE 2026)
+
+See [docs/COMPLIANCE.md](docs/COMPLIANCE.md) for the seven mandatory requirements checklist.
+
+## Roadmap
+
+1. **Hackathon MVP** - covenant, cockpit, Chipnet + Mainnet settlement.
+2. **SDK + MCP server** - let AI agents stream a per-call PUSD budget.
+3. **Marketplace** - a directory of PUSD-denominated recurring services.
+
+## License
+
+MIT (c) 2026 StreamVault.cash contributors

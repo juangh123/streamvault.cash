@@ -1,68 +1,40 @@
 # Product Requirements Document (PRD)
-## AgentPay.cash — Non-Custodial AI Agent Allowance Vault & Micro-Payment Gateway
+## StreamVault.cash - Non-Custodial PUSD Streaming Payroll & Subscription Vault
 
----
+### 1. Summary
+StreamVault.cash is a non-custodial vault on Bitcoin Cash that turns a lump sum of **PUSD** (ParyonUSD,
+a CashTokens stablecoin) into a **rate-limited money stream**. A payer funds a CashScript covenant; a payee
+draws a capped tranche per period; the payer keeps an unconditional claw-back.
 
-### 1. Executive Summary & Vision
-AgentPay.cash is a decentralized, non-custodial financial vault and micro-payment protocol designed specifically for autonomous AI Agents operating on Bitcoin Cash (BCH). By combining BCH's near-zero transaction fees (~0.001 USD) with native UTXO Introspection Covenants via CashScript, AgentPay solves the fundamental dilemma of the AI Agent economy: **how to grant autonomous software spending authority without handing over unconstrained private keys or infinite credit lines.**
+### 2. Problem
+1. **Lump-sum risk** - paying a contractor or vendor up front is all-or-nothing; ongoing work needs a schedule.
+2. **Custodial rails** - payroll services and card mandates are custodial, reversible and geo-fenced.
+3. **Volatile crypto** - streams denominated in a volatile asset are unusable for real payroll.
+4. **EVM gas** - per-period settlement on EVM chains costs more in gas than the tranche itself.
 
----
+### 3. Solution
+An on-chain covenant parameterised by `payerPk`, `payeePk`, `amountPerPeriod`, `periodBlocks` and the PUSD
+`category`. The BCH VM enforces the per-period ceiling, the relative timelock, recursive change and token
+conservation. The payer keeps a one-signature `cancel`.
 
-### 2. Problem Statement
-1. **Unconstrained API & Cloud Costs**: Autonomous agents (e.g. LangChain agents, AutoGPT, Claude MCP tools, web crawlers) frequently loop or call external APIs thousands of times. Traditional corporate credit cards or prepaid API keys have failed catastrophically due to unbounded consumption.
-2. **EVM Gas Inefficiency**: In Ethereum and L2 ecosystems, paying $0.001 for a single LLM token inference or weather query requires $0.20 to $3.00 in gas fees, rendering sub-cent micro-payments economically infeasible.
-3. **Private Key Vulnerability**: Handing a raw blockchain private key to an AI agent leaves users vulnerable to prompt injections, model hallucinations, and reverse-engineering of agent memory.
-4. **Lack of Native Protocol Controls**: Existing crypto bot solutions rely on centralized custodial servers to enforce quotas, creating single points of failure and custodial legal risk.
+### 4. Personas
+- **Payer** - a studio, sponsor or employer that wants scheduled, cancellable payouts in a stable unit.
+- **Payee** - a freelancer, creator or vendor that wants to withdraw on schedule without invoicing or a custodian.
+- **Service provider / agent** - a machine that draws a per-call budget (future SDK/MCP phase).
 
----
+### 5. Functional requirements
+5.1 **Create & fund** - configure per-period amount, period (blocks) and deposit; lock PUSD into the covenant.
+5.2 **Claim** - payee withdraws up to `amountPerPeriod` once per period; change returns to the vault.
+5.3 **Cancel** - payer sweeps 100% of the remaining PUSD to a payer address.
+5.4 **Top up** - payer adds more PUSD (creates a fresh vault UTXO).
+5.5 **Visualizer** - show the PUSD input/outputs, the `this.age` gate and the recursive-change check.
+5.6 **Ledger** - every fund/claim/cancel event with a (real, when live) txid.
 
-### 3. Solution Overview
-AgentPay introduces an on-chain **Covenant Vault** instantiated with:
-- `ownerPk`: The human owner's public key (100% sovereign reclamation authority).
-- `agentPk`: The AI Agent's ephemeral session key.
-- `maxPerTx`: A hard-coded ceiling in satoshis restricting the maximum expenditure of any single transaction.
+### 6. Non-functional requirements
+- No private keys stored in the browser; signing is delegated to a wallet (WizardConnect).
+- Sandbox mode runs the whole flow with zero prerequisites (judge fallback).
+- First paint < 1.5s; responsive from 375px to desktop.
+- `npm test` evaluates the covenant against the real BCH VM.
 
-The Bitcoin Cash VM verifies via introspection opcodes that:
-1. The transaction is signed by `agentPk`.
-2. The payment amount does not exceed `maxPerTx`.
-3. The change output is **cryptographically compelled** to return to the exact same contract bytecode.
-4. The human owner retains an unconditional `reclaim` function to withdraw all funds instantly.
-
----
-
-### 4. Target User Personas
-- **AI Agent Developers**: Building multi-agent systems, AutoGPT pipelines, or MCP servers requiring autonomous billing.
-- **Data & API Service Providers**: Oracles, LLM providers, and scraper networks accepting per-call sub-cent satoshi payments.
-- **Crypto-Native Power Users**: Humans deploying automated research bots without risking more than $1-$5 in working capital.
-- **Hackathon Judges (BCH BLAZE 2026)**: Technical reviewers evaluating Bitcoin Cash real-world utility and Covenants innovation.
-
----
-
-### 5. Functional Requirements
-#### 5.1 Vault Creation & Funding
-- Users connect a BCH wallet (Selene, Paytaca, Cashonize via WizardConnect) or use Sandbox Mode.
-- User configures `maxPerTx` (e.g., 1,000 sats / $0.003) and initial deposit (e.g., 0.001 BCH).
-- Vault contract is generated deterministically; human owner deposits funds.
-
-#### 5.2 Autonomous Agent Spending (`spend`)
-- Agent is triggered to consume a third-party paid service (e.g. LLM inference, Weather Oracle, Image Generation, Web Proxy).
-- Agent constructs an unconfirmed transaction spending from the vault UTXO.
-- Contract validates `amount <= maxPerTx` and `output[1].lockingBytecode == input.lockingBytecode`.
-- Payment completes on-chain within 1-2 seconds with 0-conf safety or next-block inclusion.
-
-#### 5.3 Sovereign Clawback (`reclaim`)
-- At any point, the human owner can broadcast a signed `reclaim` transaction.
-- 100% of remaining UTXOs in the vault are returned to the owner's primary address.
-- Agent key is instantaneously rendered powerless without needing on-chain blacklisting.
-
-#### 5.4 Live Introspection Visualizer
-- Visual node diagram showing Input UTXO -> Covenants Inspection -> Output 0 (Service) & Output 1 (Recursive Change).
-- Real-time satoshi breakdown and dust limit verification (>546 sats).
-
----
-
-### 6. Non-Functional Requirements
-- **Performance**: Dashboard loads in under 1 second; instant simulation runs in <200ms.
-- **Security**: Zero persistent storage of private keys in browser local storage or server databases.
-- **Usability**: 1-Minute Judge Fast-Track button allowing frictionless review without external wallet dependencies.
-- **Responsiveness**: Mobile-first responsive layout (375px to 4K displays).
+### 7. Out of scope (v1)
+Per-second continuous accrual, multi-payee splits, cross-chain, and the payer recovery of unclaimed dust.
