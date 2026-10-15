@@ -1,294 +1,257 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { JudgeFastTrack } from './components/JudgeFastTrack';
-import { VaultManager } from './components/VaultManager';
-import { AgentRunner } from './components/AgentRunner';
+import { StreamControls } from './components/StreamControls';
+import { ClaimPanel } from './components/ClaimPanel';
 import { CovenantVisualizer } from './components/CovenantVisualizer';
 import { TxLedger } from './components/TxLedger';
-import { DocsViewer } from './components/DocsViewer';
-import { WalletConnectModal } from './components/WalletConnectModal';
-import { SlideDeck } from './components/SlideDeck';
-import { AgentLogEntry, AgentService, AppMode, NetworkType, TxRecord, VaultConfig } from './types';
-import {
-  generateInitialVault,
-  executeSpendSimulation,
-  executeEmergencyReclaim,
-  PRESET_SERVICES,
-  satsToUsd,
-} from './lib/bchSimulator';
+import { AppMode, LedgerEntry, LogEntry, NetworkType, StreamConfig, WalletState } from './types';
+import { cancel as cancelStream, claim as claimStream, createStream, topUp as topUpStream } from './lib/stream';
+import { CONTRACT_BYTECODE_HEX, DEFAULT_PERIOD_BLOCKS, PUSD_CATEGORY, SANDBOX_START_BLOCK } from './lib/covenant';
+import { pusdToDisplay, shortAddress } from './lib/format';
+
+// Heavy / optional surfaces are code-split so the initial bundle stays lean.
+const DocsViewer = lazy(() => import('./components/DocsViewer').then((m) => ({ default: m.DocsViewer })));
+const SlideDeck = lazy(() => import('./components/SlideDeck').then((m) => ({ default: m.SlideDeck })));
+const WalletConnectDialog = lazy(() => import('./components/WalletConnectDialog').then((m) => ({ default: m.WalletConnectDialog })));
+const LiveVaultPanel = lazy(() => import('./components/LiveVaultPanel').then((m) => ({ default: m.LiveVaultPanel })));
+
+const DEMO_PAYER = 'bchtest:zq0payer9k4x7m2p8s5v1n3d6t9r4w7y2u5c8b';
+const DEMO_PAYEE = 'bchtest:zz0payee4d8f2g6h1j5k9l3m7n2p6q1r5s9t4v';
+const DEMO_DEPOSIT = 100000; // $1,000.00
+const DEMO_PER_PERIOD = 2500; // $25.00
+
+const B32 = 'abcdefghijklmnopqrstuvwxyz234567';
+function fakeVaultAddress(): string {
+  let out = '';
+  for (let i = 0; i < 50; i += 1) out += B32[Math.floor(Math.random() * B32.length)];
+  return 'bchtest:p' + out;
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const App: React.FC = () => {
-  const [vault, setVault] = useState<VaultConfig>(generateInitialVault());
-  const [transactions, setTransactions] = useState<TxRecord[]>([]);
-  const [logs, setLogs] = useState<AgentLogEntry[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [vaultReady, setVaultReady] = useState(true);
-
-  // App controls
   const [mode, setMode] = useState<AppMode>('SANDBOX');
-  const [network, setNetwork] = useState<NetworkType>('sandbox');
-  const [isDocsOpen, setIsDocsOpen] = useState(false);
-  const [isSlideDeckOpen, setIsSlideDeckOpen] = useState(false);
-  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('bitcoincash:qp0xowner8923748923749823749283749823749823');
+  const [network, setNetwork] = useState<NetworkType>('chipnet');
+  const [stream, setStream] = useState<StreamConfig | null>(null);
+  const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [block, setBlock] = useState(SANDBOX_START_BLOCK);
+  const [isRunning, setIsRunning] = useState(false);
+  const [wallet, setWallet] = useState<WalletState>({ connected: false, name: null, icon: null, address: null });
+  const [showDocs, setShowDocs] = useState(false);
+  const [showDeck, setShowDeck] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
 
-  // Initial welcome log
+  const addLog = (level: LogEntry['level'], message: string) => {
+    const entry: LogEntry = { id: Math.random().toString(36).slice(2, 9), time: new Date().toLocaleTimeString(), level, message };
+    setLogs((prev) => [entry, ...prev].slice(0, 40));
+  };
+
   useEffect(() => {
-    addLog(
-      'info',
-      'System initialized. BCH Covenants VM ready. CashScript 0.10+ covenants active with recursion check.'
-    );
-    addLog(
-      'success',
-      `Vault loaded: 100,000 sats available. maxPerTx = 1,000 sats (~$0.003). Non-custodial rules active.`
-    );
+    addLog('info', 'Sandbox ready. StreamVault covenant loaded - claim/cancel ABI, PUSD CashToken channel.');
   }, []);
 
-  const addLog = (level: AgentLogEntry['level'], message: string, txid?: string, sats?: number) => {
-    const entry: AgentLogEntry = {
-      id: Math.random().toString(36).substring(2, 9),
-      timestamp: new Date().toLocaleTimeString(),
-      level,
-      message,
-      txid,
-      sats,
-    };
-    setLogs((prev) => [entry, ...prev.slice(0, 49)]); // keep recent 50 logs
-  };
+  const pushEntry = (entry: LedgerEntry) => setLedger((prev) => [entry, ...prev]);
 
-  // Adjust max per tx
-  const handleUpdateMaxLimit = (limitSats: number) => {
-    setVault((prev) => ({ ...prev, maxPerTxSats: limitSats }));
-    addLog('info', `Owner updated spending policy: maxPerTx adjusted to ${limitSats} sats (${satsToUsd(limitSats)}).`);
-  };
-
-  // Fund vault
-  const handleFundVault = (depositSats: number) => {
-    if (depositSats <= 0) return;
-    setVault((prev) => ({
-      ...prev,
-      balanceSats: prev.balanceSats + depositSats,
-    }));
-    const newTx: TxRecord = {
-      txid: Math.random().toString(36).substring(2, 18) + Math.random().toString(36).substring(2, 18),
+  const handleCreate = (input: {
+    label: string;
+    payerAddress: string;
+    payeeAddress: string;
+    amountPerPeriod: number;
+    periodBlocks: number;
+    deposit: number;
+  }) => {
+    const next = createStream({
+      ...input,
+      category: PUSD_CATEGORY,
+      vaultAddress: fakeVaultAddress(),
+      contractBytecode: CONTRACT_BYTECODE_HEX,
+      block,
+    });
+    setStream(next);
+    const fund: LedgerEntry = {
+      id: Math.random().toString(36).slice(2, 9),
+      txid: Math.random().toString(16).slice(2).padEnd(64, '0').slice(0, 64),
       timestamp: Date.now(),
-      type: 'DEPOSIT',
-      amountSats: depositSats,
-      feeSats: 250,
-      changeSats: 0,
-      serviceName: 'Owner Vault Deposit',
-      senderAddress: vault.ownerAddress,
-      recipientAddress: vault.vaultAddress,
-      status: 'confirmed',
-      covenantVerified: true,
-      explorerUrl: `https://blockchair.com/bitcoin-cash/transaction/demo`,
+      type: 'FUND',
+      amount: input.deposit,
+      feeSats: 280,
+      remaining: input.deposit,
+      actorAddress: input.payerAddress,
+      counterpartyAddress: next.vaultAddress,
+      blockHeight: block,
+      simulated: true,
+      explorerUrl: '',
     };
-    setTransactions((prev) => [newTx, ...prev]);
-    addLog('success', `Vault funded with +${depositSats.toLocaleString()} sats from owner address.`);
+    pushEntry(fund);
+    addLog('success', `Vault funded with $${pusdToDisplay(input.deposit)} PUSD. Stream "${input.label}" live at block #${block}.`);
   };
 
-  // Execute single spend
-  const handleExecuteSpend = (service: AgentService, forcedAmount?: number) => {
-    addLog(
-      'info',
-      `[AI Agent Triggered] Requesting ${service.name} (${service.endpoint}). Amount: ${forcedAmount ?? service.costSats} sats...`
-    );
+  const handleLaunchDemo = () => {
+    handleCreate({
+      label: 'Design retainer - Q4',
+      payerAddress: DEMO_PAYER,
+      payeeAddress: DEMO_PAYEE,
+      amountPerPeriod: DEMO_PER_PERIOD,
+      periodBlocks: DEFAULT_PERIOD_BLOCKS,
+      deposit: DEMO_DEPOSIT,
+    });
+  };
 
-    const result = executeSpendSimulation(vault, service, forcedAmount);
+  const handleTopUp = (amount: number) => {
+    if (!stream) return;
+    const outcome = topUpStream(stream, amount, block);
+    if (!outcome.ok) { addLog('error', outcome.error ?? 'Top-up failed.'); return; }
+    setStream(outcome.stream);
+    if (outcome.entry) pushEntry(outcome.entry);
+    addLog('success', `Top-up: +$${pusdToDisplay(amount)} PUSD. Vault now $${pusdToDisplay(outcome.stream.remaining)}.`);
+  };
 
-    if (!result.success) {
-      addLog('error', result.error || 'Spend execution rejected by VM.');
-      return;
+  const handleClaim = (amount: number) => {
+    if (!stream) return;
+    const outcome = claimStream(stream, amount, block);
+    if (!outcome.ok) { addLog('error', outcome.error ?? 'Claim rejected.'); return; }
+    setStream(outcome.stream);
+    if (outcome.entry) pushEntry(outcome.entry);
+    addLog('success', `Tranche claimed: $${pusdToDisplay(amount)} PUSD paid to ${shortAddress(stream.payeeAddress)}. Change returned to vault bytecode.`);
+  };
+
+  const handleCancel = () => {
+    if (!stream) return;
+    const outcome = cancelStream(stream, block);
+    if (!outcome.ok) { addLog('warn', outcome.error ?? 'Cancel failed.'); return; }
+    setStream(outcome.stream);
+    if (outcome.entry) pushEntry(outcome.entry);
+    addLog('warn', `Stream cancelled. $${pusdToDisplay(outcome.entry?.amount ?? 0)} PUSD reclaimed by the payer; payee key now powerless.`);
+  };
+
+  const handleFastForward = () => {
+    if (!stream) return;
+    setBlock((b) => b + stream.periodBlocks);
+  };
+
+  const handleRunWorkflow = async () => {
+    if (!stream || isRunning) return;
+    setIsRunning(true);
+    addLog('info', 'Running 3-period streaming workflow...');
+    let current = stream;
+    let currentBlock = block;
+    for (let step = 0; step < 3; step += 1) {
+      await delay(700);
+      currentBlock += current.periodBlocks;
+      setBlock(currentBlock);
+      const outcome = claimStream(current, current.amountPerPeriod, currentBlock);
+      if (!outcome.ok) { addLog('error', outcome.error ?? 'Workflow claim rejected.'); break; }
+      current = outcome.stream;
+      setStream(current);
+      if (outcome.entry) pushEntry(outcome.entry);
+      addLog('success', `Period ${step + 1}: $${pusdToDisplay(current.amountPerPeriod)} streamed (block #${currentBlock}).`);
     }
-
-    if (result.txRecord && result.vmTrace) {
-      const tx = result.txRecord;
-      setTransactions((prev) => [tx, ...prev]);
-      setVault((prev) => ({
-        ...prev,
-        balanceSats: prev.balanceSats - tx.amountSats - tx.feeSats,
-        totalSpentSats: prev.totalSpentSats + tx.amountSats,
-        totalTxs: prev.totalTxs + 1,
-      }));
-
-      addLog(
-        'success',
-        `[Tx Confirmed] Paid ${tx.amountSats} sats to ${service.name}. Change (${tx.changeSats.toLocaleString()} sats) locked back into identical vault bytecode!`,
-        tx.txid,
-        tx.amountSats
-      );
-    }
+    setIsRunning(false);
   };
 
-  // Emergency sweep
-  const handleEmergencySweep = () => {
-    if (vault.balanceSats <= 0) {
-      addLog('warn', 'Emergency Sweep aborted: Vault balance is already 0.');
-      return;
-    }
-
-    addLog('warn', `🚨 [Emergency Sweep Triggered] Invoking reclaim(ownerSig) on-chain...`);
-
-    const { txRecord, reclaimedSats } = executeEmergencyReclaim(vault);
-    setTransactions((prev) => [txRecord, ...prev]);
-    setVault((prev) => ({
-      ...prev,
-      balanceSats: 0,
-    }));
-
-    addLog(
-      'success',
-      `Sovereign Clawback Complete: 100% of remaining funds (${reclaimedSats.toLocaleString()} sats) swept to owner wallet. Agent spending authority neutralized.`,
-      txRecord.txid
-    );
-  };
-
-  // Auto-Provision for Judges
-  const handleAutoProvision = () => {
-    const freshVault = generateInitialVault();
-    setVault(freshVault);
-    setVaultReady(true);
-    addLog('success', '1-Click Auto-Provision complete: Vault instantiated with 100,000 sats (~0.001 BCH).');
-  };
-
-  // Reset
-  const handleResetVault = () => {
-    setVault(generateInitialVault());
-    setTransactions([]);
+  const handleReset = () => {
+    setStream(null);
+    setLedger([]);
     setLogs([]);
-    addLog('info', 'Simulation reset to baseline state.');
-  };
-
-  // Automated Batch Stream Demo (3 steps)
-  const handleRunBatchDemo = async () => {
-    if (isStreaming) return;
-    setIsStreaming(true);
-    addLog('info', 'Starting Autonomous Multi-Step AI Agent Workflow...');
-
-    const sequence = [
-      PRESET_SERVICES[0], // DeepSeek API (800 sats)
-      PRESET_SERVICES[1], // Weather Oracle (300 sats)
-      PRESET_SERVICES[3], // Web Scraper Proxy (500 sats)
-    ];
-
-    for (let i = 0; i < sequence.length; i++) {
-      const s = sequence[i];
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      handleExecuteSpend(s);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setIsStreaming(false);
-    addLog('success', 'Autonomous Agent Workflow finished. All 3 micro-transactions settled with recursive change verification.');
-  };
-
-  // Wallet selection
-  const handleSelectWallet = (name: string, address: string) => {
-    setWalletConnected(true);
-    setWalletAddress(address);
-    setMode('LIVE');
-    addLog('success', `Connected via WizardConnect: ${name} (${address.slice(0, 12)}...)`);
+    setBlock(SANDBOX_START_BLOCK);
+    addLog('info', 'Sandbox reset to baseline state.');
   };
 
   return (
     <div className="min-h-screen bg-[#070a12] text-gray-100 flex flex-col font-sans selection:bg-[#0AC18E] selection:text-black">
-      {/* Top Navigation */}
       <Header
         mode={mode}
         setMode={setMode}
         network={network}
         setNetwork={setNetwork}
-        onOpenDocs={() => setIsDocsOpen(true)}
-        onOpenSlides={() => setIsSlideDeckOpen(true)}
-        onConnectWallet={() => setIsWalletModalOpen(true)}
-        walletConnected={walletConnected}
-        walletAddress={walletAddress}
+        onOpenDocs={() => setShowDocs(true)}
+        onOpenSlides={() => setShowDeck(true)}
+        onConnectWallet={() => setShowWallet(true)}
+        onDisconnect={() => { setWallet({ connected: false, name: null, icon: null, address: null }); setMode('SANDBOX'); addLog('info', 'Wallet disconnected.'); }}
+        wallet={wallet}
       />
 
-      {/* Judge Fast-Track Bar */}
       <JudgeFastTrack
-        onAutoProvision={handleAutoProvision}
-        onRunBatchDemo={handleRunBatchDemo}
-        onResetVault={handleResetVault}
-        isStreaming={isStreaming}
-        vaultReady={vaultReady}
+        hasStream={!!stream}
+        isRunning={isRunning}
+        onLaunchDemo={handleLaunchDemo}
+        onRunWorkflow={handleRunWorkflow}
+        onFastForward={handleFastForward}
+        onReset={handleReset}
       />
 
-      {/* Main Cockpit Content */}
       <main className="max-w-7xl mx-auto w-full px-4 lg:px-8 py-6 flex-1 space-y-6">
-        {/* Top Grid: Vault Manager + Agent Runner */}
+        {mode === 'LIVE' && (
+          <Suspense fallback={<div className="text-xs text-slate-500 py-4">Loading live tools...</div>}>
+            <LiveVaultPanel network={network} />
+          </Suspense>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <VaultManager
-            vault={vault}
-            onUpdateMaxLimit={handleUpdateMaxLimit}
-            onFundVault={handleFundVault}
-            onEmergencySweep={handleEmergencySweep}
+          <StreamControls
+            stream={stream}
+            mode={mode}
+            connectedAddress={wallet.address}
+            onCreate={handleCreate}
+            onTopUp={handleTopUp}
+            onCancel={handleCancel}
           />
-          <AgentRunner
-            vault={vault}
-            onExecuteSpend={handleExecuteSpend}
-            logs={logs}
-            isStreaming={isStreaming}
-            onRunBatchDemo={handleRunBatchDemo}
-          />
+          <ClaimPanel stream={stream} block={block} onClaim={handleClaim} />
         </div>
 
-        {/* Middle: Live Covenants Introspection Visualizer */}
-        <CovenantVisualizer vault={vault} lastTx={transactions[0]} />
+        <CovenantVisualizer stream={stream} lastEntry={ledger[0]} />
 
-        {/* Bottom: Verifiable Transaction Ledger */}
-        <TxLedger transactions={transactions} />
+        <TxLedger entries={ledger} network={network} />
+
+        <div className="bg-[#0a0f1d] border border-slate-800 rounded-lg p-4">
+          <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+            <span className="font-mono">Covenant console</span>
+            <span className="font-mono text-slate-600">{logs.length} events</span>
+          </div>
+          <div className="bg-[#070a12] border border-slate-800 rounded-lg p-3 h-32 overflow-y-auto font-mono text-[11px] space-y-1">
+            {logs.length === 0 ? (
+              <div className="text-slate-600 italic text-center py-6">Awaiting actions.</div>
+            ) : (
+              logs.map((l) => (
+                <div key={l.id} className="flex items-start gap-2">
+                  <span className="text-slate-600 shrink-0">{l.time}</span>
+                  <span className={l.level === 'success' ? 'text-emerald-300' : l.level === 'error' ? 'text-rose-300' : l.level === 'warn' ? 'text-amber-300' : 'text-slate-300'}>{l.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-800 bg-[#0a0f1d] py-6 px-4 text-xs text-gray-400 mt-auto">
+      <footer className="border-t border-slate-800 bg-[#0a0f1d] py-5 px-4 text-xs text-slate-400 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white">AgentPay.cash</span>
-            <span>•</span>
-            <span>Built for BCH BLAZE 2026 (Mainnet & Media Track)</span>
+            <span className="font-bold text-white">StreamVault.cash</span>
+            <span>-</span>
+            <span>Built for BCH BLAZE 2026 (Mainnet &amp; Media Track)</span>
           </div>
-          <div className="flex items-center gap-4 text-gray-400">
-            <button onClick={() => setIsSlideDeckOpen(true)} className="hover:text-purple-400 transition">
-              7-Page Slides
-            </button>
-            <button onClick={() => setIsDocsOpen(true)} className="hover:text-[#0AC18E] transition">
-              Documentation
-            </button>
-            <a
-              href="https://github.com/agentpay/agentpay.cash"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-[#0AC18E] transition"
-            >
-              GitHub Source
-            </a>
-            <a
-              href="https://dorahacks.io/hackathon/bchblaze2026"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-[#0AC18E] transition"
-            >
-              DoraHacks Entry
-            </a>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setShowDeck(true)} className="hover:text-[#0AC18E] transition">7-page deck</button>
+            <button onClick={() => setShowDocs(true)} className="hover:text-[#0AC18E] transition">Documentation</button>
+            <a href="https://dorahacks.io/hackathon/bchblaze2026" target="_blank" rel="noreferrer" className="hover:text-[#0AC18E] transition">DoraHacks entry</a>
           </div>
         </div>
       </footer>
 
-      {/* Modals & Fullscreen Overlays */}
-      <DocsViewer isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
-      {isSlideDeckOpen && (
-        <SlideDeck
-          onClose={() => setIsSlideDeckOpen(false)}
-          onLaunchDemo={() => setIsSlideDeckOpen(false)}
-        />
-      )}
-      <WalletConnectModal
-        isOpen={isWalletModalOpen}
-        onClose={() => setIsWalletModalOpen(false)}
-        onSelectWallet={handleSelectWallet}
-      />
+      <Suspense fallback={null}>
+        {showDocs && <DocsViewer isOpen onClose={() => setShowDocs(false)} />}
+        {showDeck && <SlideDeck onClose={() => setShowDeck(false)} onLaunchDemo={() => { setShowDeck(false); handleLaunchDemo(); }} />}
+        {showWallet && (
+          <WalletConnectDialog
+            open
+            network={network}
+            onClose={() => setShowWallet(false)}
+            onConnected={(w) => { setWallet(w); setMode('LIVE'); addLog('success', `Wallet connected: ${w.name ?? 'BCH wallet'}${w.address ? ' (' + shortAddress(w.address) + ')' : ''}.`); }}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };

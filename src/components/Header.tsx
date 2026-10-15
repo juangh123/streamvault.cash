@@ -1,6 +1,7 @@
 import React from 'react';
-import { Zap, Wallet, Globe, BookOpen, Presentation, ExternalLink } from 'lucide-react';
-import { AppMode, NetworkType } from '../types';
+import { Wallet, Globe, BookOpen, Presentation, Droplets, LogOut } from 'lucide-react';
+import { AppMode, NetworkType, WalletState } from '../types';
+import { shortAddress } from '../lib/format';
 
 interface HeaderProps {
   mode: AppMode;
@@ -10,8 +11,8 @@ interface HeaderProps {
   onOpenDocs: () => void;
   onOpenSlides: () => void;
   onConnectWallet: () => void;
-  walletConnected: boolean;
-  walletAddress: string;
+  onDisconnect: () => void;
+  wallet: WalletState;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,115 +23,93 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDocs,
   onOpenSlides,
   onConnectWallet,
-  walletConnected,
-  walletAddress,
+  onDisconnect,
+  wallet,
 }) => {
   return (
-    <header className="border-b border-gray-800 bg-[#0a0f1d]/90 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-8 py-3.5">
+    <header className="border-b border-slate-800 bg-[#0a0f1d]/95 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-8 py-3">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-        {/* Brand & Badge */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0AC18E] to-[#055B43] flex items-center justify-center shadow-lg shadow-[#0AC18E]/20">
-            <Zap className="w-6 h-6 text-black fill-black" />
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0AC18E] to-[#0a7d5c] flex items-center justify-center">
+            <Droplets className="w-5 h-5 text-black" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight text-white flex items-center">
-                AgentPay<span className="text-[#0AC18E]">.cash</span>
+              <span className="text-lg font-bold tracking-tight text-white">
+                StreamVault<span className="text-[#0AC18E]">.cash</span>
               </span>
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-[#0AC18E]/10 text-[#0AC18E] border border-[#0AC18E]/30">
+              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                PUSD
+              </span>
+              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-800 text-slate-300 border border-slate-700">
                 BCH BLAZE 2026
               </span>
             </div>
-            <p className="text-xs text-gray-400">Non-Custodial AI Agent Allowance Vault & Micro-Payment Gateway</p>
+            <p className="text-[11px] text-slate-400">Non-custodial PUSD streaming payroll &amp; subscription vault</p>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2.5 flex-wrap justify-end">
-          {/* Slides Deck Button */}
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           <button
             onClick={onOpenSlides}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-950/70 hover:bg-purple-900 text-purple-300 border border-purple-800/60 transition shadow-sm"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
           >
-            <Presentation className="w-3.5 h-3.5 text-purple-400" />
-            <span>7-Page Deck</span>
+            <Presentation className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Deck</span>
           </button>
-
-          {/* Docs button */}
           <button
             onClick={onOpenDocs}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800/80 hover:bg-gray-700 text-gray-200 border border-gray-700 transition"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
           >
             <BookOpen className="w-3.5 h-3.5 text-[#0AC18E]" />
-            <span>Docs & PRD</span>
+            <span>Docs</span>
           </button>
 
-          {/* Chipnet Faucet External Link */}
-          <a
-            href="https://chipnet.chaingraph.cash/faucet"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-800 transition"
-            title="Official Chipnet Faucet"
-          >
-            <span>Faucet</span>
-            <ExternalLink className="w-3 h-3 text-gray-500" />
-          </a>
-
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg p-0.5 text-xs">
+          <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-xs">
             <button
               onClick={() => setMode('SANDBOX')}
-              className={`px-2.5 py-1 rounded-md font-medium transition ${
-                mode === 'SANDBOX'
-                  ? 'bg-[#0AC18E] text-black font-semibold shadow'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
+              className={`px-2.5 py-1 rounded-md font-medium transition ${mode === 'SANDBOX' ? 'bg-[#0AC18E] text-black font-semibold' : 'text-slate-400 hover:text-slate-200'}`}
             >
-              Sandbox Demo
+              Sandbox
             </button>
             <button
               onClick={() => setMode('LIVE')}
-              className={`px-2.5 py-1 rounded-md font-medium transition ${
-                mode === 'LIVE'
-                  ? 'bg-blue-600 text-white font-semibold shadow'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
+              className={`px-2.5 py-1 rounded-md font-medium transition ${mode === 'LIVE' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'}`}
             >
-              Live Wallet
+              Live
             </button>
           </div>
 
-          {/* Network Selector */}
-          <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-gray-300">
-            <Globe className="w-3.5 h-3.5 text-gray-400" />
+          <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-300">
+            <Globe className="w-3.5 h-3.5 text-slate-400" />
             <select
               value={network}
               onChange={(e) => setNetwork(e.target.value as NetworkType)}
-              className="bg-transparent text-xs text-gray-200 outline-none cursor-pointer"
+              className="bg-transparent text-xs text-slate-200 outline-none cursor-pointer"
             >
-              <option value="sandbox" className="bg-gray-900">Chipnet (Testnet)</option>
-              <option value="mainnet" className="bg-gray-900">BCH Mainnet</option>
+              <option value="chipnet" className="bg-slate-900">Chipnet</option>
+              <option value="mainnet" className="bg-slate-900">Mainnet</option>
             </select>
           </div>
 
-          {/* Connect Wallet */}
-          <button
-            onClick={onConnectWallet}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm ${
-              walletConnected
-                ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-600/50'
-                : 'bg-gradient-to-r from-[#0AC18E] to-emerald-500 hover:from-emerald-400 hover:to-[#0AC18E] text-black font-bold'
-            }`}
-          >
-            <Wallet className="w-3.5 h-3.5" />
-            <span>
-              {walletConnected
-                ? `${walletAddress.slice(0, 10)}...${walletAddress.slice(-4)}`
-                : 'Connect Wallet'}
-            </span>
-          </button>
+          {wallet.connected ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-950/70 text-emerald-300 border border-emerald-600/50">
+              <Wallet className="w-3.5 h-3.5" />
+              <span>{wallet.name ?? 'Wallet'}</span>
+              <span className="text-emerald-500/70 font-mono">{wallet.address ? shortAddress(wallet.address, 6, 4) : ''}</span>
+              <button onClick={onDisconnect} title="Disconnect" className="text-emerald-400 hover:text-white">
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onConnectWallet}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0AC18E] hover:bg-emerald-400 text-black transition"
+            >
+              <Wallet className="w-3.5 h-3.5" />
+              <span>Connect Wallet</span>
+            </button>
+          )}
         </div>
       </div>
     </header>
