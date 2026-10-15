@@ -26,5 +26,6 @@ The hackathon has seven mandatory requirements. Failing any one disqualifies the
 
 ## Media track (optional second submission)
 
+- Media assets: poster docs/media/poster.png, brand banner docs/assets/banner.svg.
 - A 90-second explainer video ("paid per period, cancellable by the sponsor"). Storyboard in
   `docs/MEDIA_SCRIPT.md`. Host on YouTube/X and link the DoraHacks media entry.

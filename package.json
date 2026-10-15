@@ -14,6 +14,8 @@
     "test:engine": "node tests/run-engine.mjs",
     "test:derive": "node tests/run-derive.mjs",
     "test:chain": "node tests/run-chain.mjs",
+    "verify:network": "node tests/run-network.mjs",
+    "settle": "node scripts/settle.mjs",
     "deploy": "vercel --prod"
   },
   "dependencies": {

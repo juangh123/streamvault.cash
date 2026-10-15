@@ -11,3 +11,6 @@
 | 0:50-1:05 | The Covenant Visualizer highlighting Output 1 returning to the same bytecode. | "Change is forced back into the very same contract - the VM proves it. The payee can never pull more than the ceiling." |
 | 1:05-1:20 | Sponsor clicks Cancel; funds return instantly. | "And control never leaves the sponsor: one signature cancels the stream and reclaims 100% of the remaining PUSD." |
 | 1:20-1:30 | Title card: StreamVault.cash + QR + BCH BLAZE 2026. | "StreamVault.cash - money that flows, on Bitcoin Cash." |
+---
+
+Key visual / poster: `docs/media/poster.png` (source `docs/media/poster.html`).

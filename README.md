@@ -1,5 +1,7 @@
 # StreamVault.cash
 
+![StreamVault.cash](docs/assets/banner.svg)
+
 > Non-custodial **PUSD streaming payroll & subscription vault** on Bitcoin Cash, enforced by CashScript covenants and relative timelocks.
 
 [![BCH BLAZE 2026](https://img.shields.io/badge/BCH%20BLAZE-2026-brightgreen.svg)](https://dorahacks.io/hackathon/bchblaze2026)
@@ -26,6 +28,8 @@ Typical uses:
 - **Creator / grant streams** - continuous funding that stays cancellable by the sponsor.
 
 ---
+
+![StreamVault.cash cockpit](docs/assets/app-claim.png)
 
 ## Why Bitcoin Cash
 
