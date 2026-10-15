@@ -5,7 +5,7 @@ The hackathon has seven mandatory requirements. Failing any one disqualifies the
 | # | Requirement | Status | Where |
 | :-- | :--- | :--- | :--- |
 | 1 | Real BCH Mainnet transaction | TODO (Phase 4) | broadcast a real `claim`/`cancel`, record the txid in README |
-| 2 | Live, clickable demo (no local build) | TODO (Phase 4) | deploy `dist/` to Vercel/Cloudflare Pages |
+| 2 | Live, clickable demo (no local build) | DONE | https://streamvault-cash.vercel.app |
 | 3 | WizardConnect wallet integration | DONE (code) | `src/components/WalletConnectDialog.tsx` uses `@wizardconnect/react` |
 | 4 | Official 7-page Widget Factory slides | TODO | `docs/SLIDES.md` -> port to the official template |
 | 5 | Attend a livestream + roll call | TODO (10/17) | Information Session, Beijing 22:00 |
@@ -17,8 +17,7 @@ The hackathon has seven mandatory requirements. Failing any one disqualifies the
 1. **Mainnet transaction** - acquire a small amount of BCH + PUSD, fund a vault, and broadcast one `claim`.
    If PUSD is hard to obtain, run the full flow on Chipnet and broadcast a real BCH Mainnet transaction to
    satisfy the literal requirement.
-2. **Live demo** - `npm run build` produces `dist/`; `vercel.json` and `public/_redirects` are already
-   configured. Deploy and paste the URL into the submission.
+2. **Live demo** - deployed and live at https://streamvault-cash.vercel.app (Vercel, master).
 3. **WizardConnect** - the pairing dialog is real; the hook manages relay + session persistence.
 4. **Slides** - rebuild the 7 pages in the official Google Slides template (content in `docs/SLIDES.md`).
 5. **Livestream** - at least one team member must appear and sign in during roll call.

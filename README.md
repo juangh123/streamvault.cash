@@ -7,6 +7,8 @@
 [![CashScript](https://img.shields.io/badge/Smart%20Contracts-CashScript%200.14-green)](https://cashscript.org/)
 [![Network](https://img.shields.io/badge/Network-BCH%20Mainnet%20%7C%20Chipnet-orange)](https://bitcoincash.org)
 
+> **Live demo:** https://streamvault-cash.vercel.app  ·  built for BCH BLAZE 2026
+
 ---
 
 ## What it is
