@@ -1,0 +1,61 @@
+{
+  "contractName": "StreamVault",
+  "constructorInputs": [
+    { "name": "payerPk", "type": "pubkey" },
+    { "name": "payeePk", "type": "pubkey" },
+    { "name": "amountPerPeriod", "type": "int" },
+    { "name": "periodBlocks", "type": "int" },
+    { "name": "pusdCategory", "type": "bytes" }
+  ],
+  "abi": [
+    {
+      "name": "claim",
+      "inputs": [
+        { "name": "payeeSig", "type": "sig" },
+        { "name": "amount", "type": "int" }
+      ]
+    },
+    {
+      "name": "cancel",
+      "inputs": [
+        { "name": "payerSig", "type": "sig" },
+        { "name": "payerLockingBytecode", "type": "bytes" }
+      ]
+    }
+  ],
+  "bytecode": "OP_5 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_6 OP_ROLL OP_ROT OP_CHECKSIGVERIFY OP_ROT OP_CHECKSEQUENCEVERIFY OP_DROP OP_4 OP_PICK OP_0 OP_GREATERTHAN OP_VERIFY OP_4 OP_PICK OP_ROT OP_LESSTHANOREQUAL OP_VERIFY OP_TXOUTPUTCOUNT OP_2 OP_NUMEQUALVERIFY OP_0 OP_OUTPUTTOKENCATEGORY OP_2 OP_PICK OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENAMOUNT OP_4 OP_PICK OP_NUMEQUALVERIFY OP_INPUTINDEX OP_UTXOTOKENAMOUNT OP_4 OP_ROLL OP_SUB OP_DUP OP_0 OP_GREATERTHAN OP_VERIFY OP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUALVERIFY OP_1 OP_OUTPUTTOKENCATEGORY OP_3 OP_ROLL OP_EQUALVERIFY OP_1 OP_OUTPUTTOKENAMOUNT OP_NUMEQUAL OP_NIP OP_NIP OP_ELSE OP_5 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_5 OP_ROLL OP_SWAP OP_CHECKSIGVERIFY OP_0 OP_OUTPUTBYTECODE OP_5 OP_ROLL OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENCATEGORY OP_4 OP_ROLL OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENAMOUNT OP_INPUTINDEX OP_UTXOTOKENAMOUNT OP_NUMEQUAL OP_NIP OP_NIP OP_NIP OP_ENDIF",
+  "source": "pragma cashscript ^0.14.0;\n\n/**\n * @title StreamVault\n * @notice Non-custodial PUSD (ParyonUSD) streaming payroll / subscription vault on Bitcoin Cash.\n *\n * A payer locks a balance of PUSD (a CashTokens fungible token) inside this covenant together with\n * a rate policy. The payee may claim at most `amountPerPeriod` PUSD per `periodBlocks` blocks. The\n * relative period is enforced with OP_CHECKSEQUENCEVERIFY (`this.age`): every spend produces a\n * change UTXO that restarts the clock, so a fresh claim is only valid once the covenant UTXO is at\n * least `periodBlocks` blocks old. The payer keeps an unconditional `cancel` claw-back.\n *\n * Token conservation is enforced by the VM (fungible CashTokens cannot be created or burned here):\n * Output 0 carries exactly `amount` PUSD for the payee, Output 1 carries the remaining PUSD back to\n * this exact covenant bytecode. No third output is permitted, so the vault's BCH buffer (used to pay\n * future miner fees and satisfy the token dust floor) cannot be siphoned off by the payee.\n */\ncontract StreamVault(\n    pubkey payerPk,          // Payer / employer key (can cancel and reclaim the stream)\n    pubkey payeePk,          // Payee / contractor key (can claim per-period tranches)\n    int amountPerPeriod,     // Max PUSD base units claimable per period (e.g. cents)\n    int periodBlocks,        // Relative period in blocks (BIP68 block-based, e.g. 144 == ~1 day)\n    bytes pusdCategory       // CashTokens category id of PUSD (32-byte token category)\n) {\n    /**\n     * @notice Payee claims one tranche of the stream.\n     * @param payeeSig Signature from the payee session key\n     * @param amount PUSD base units to pay out this period (must be <= amountPerPeriod)\n     */\n    function claim(sig payeeSig, int amount) {\n        // 1. Authorization: only the payee may pull a tranche.\n        require(checkSig(payeeSig, payeePk));\n\n        // 2. Relative timelock: the covenant UTXO must be at least `periodBlocks` old.\n        //    Every spend recreates the vault, resetting the clock for the next period.\n        require(this.age >= periodBlocks);\n\n        // 3. Rate policy: never pay more than the per-period allowance, and never pay nothing.\n        require(amount > 0);\n        require(amount <= amountPerPeriod);\n\n        // 4. Exactly two outputs: the payee tranche and the vault change. This blocks any attempt\n        //    to add a third output that would leak the vault's BCH fee buffer.\n        require(tx.outputs.length == 2);\n\n        // 5. Output 0 must carry exactly `amount` PUSD for the payee.\n        require(tx.outputs[0].tokenCategory == pusdCategory);\n        require(tx.outputs[0].tokenAmount == amount);\n\n        // 6. Output 1 must carry the remaining PUSD back to this exact covenant bytecode.\n        int remaining = tx.inputs[this.activeInputIndex].tokenAmount - amount;\n        require(remaining > 0);\n        require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);\n        require(tx.outputs[1].tokenCategory == pusdCategory);\n        require(tx.outputs[1].tokenAmount == remaining);\n    }\n\n    /**\n     * @notice Payer cancels the stream and sweeps all remaining PUSD back to a payer-owned address.\n     * @param payerSig Signature from the payer key\n     * @param payerLockingBytecode The payer destination locking bytecode (e.g. their P2PKH script)\n     */\n    function cancel(sig payerSig, bytes payerLockingBytecode) {\n        require(checkSig(payerSig, payerPk));\n        // The entire remaining PUSD balance must go to the payer-selected destination.\n        require(tx.outputs[0].lockingBytecode == payerLockingBytecode);\n        require(tx.outputs[0].tokenCategory == pusdCategory);\n        require(tx.outputs[0].tokenAmount == tx.inputs[this.activeInputIndex].tokenAmount);\n    }\n}\n",
+  "fingerprint": "5ae4729808b018a6f2ba51dcdd12bcbc67541cc54bbb89e9467706bcc125685f",
+  "debug": {
+    "bytecode": "5579009c63567a7bad7bb275547900a06954797ba169c4529d00d152798800d354799dc0d0547a947600a06951cdc0c78851d1537a8851d39c777767557a519d557a7cad00cd557a8800d1547a8800d3c0d09c77777768",
+    "sourceMap": "30:4:56:5;;;;;32:25:32:33;;:35::42;:8::45:1;36:28:36:40:0;:8::42:1;;39:16:39:22:0;;:25::26;:16:::1;:8::28;40:16:40:22:0;;:26::41;:16:::1;:8::43;44:16:44:33:0;:37::38;:8::40:1;47:27:47:28:0;:16::43:1;:47::59:0;;:8::61:1;48:27:48:28:0;:16::41:1;:45::51:0;;:8::53:1;51:34:51:55:0;:24::68:1;:71::77:0;;:24:::1;52:16:52:25:0;:28::29;:16:::1;:8::31;53:27:53:28:0;:16::45:1;:59::80:0;:49::97:1;:8::99;54:27:54:28:0;:16::43:1;:47::59:0;;:8::61:1;55:27:55:28:0;:16::41:1;:8::56;30:45:56:5;;:4;63::69::0;;;;64:25:64:33;;:35::42;:8::45:1;66:27:66:28:0;:16::45:1;:49::69:0;;:8::71:1;67:27:67:28:0;:16::43:1;:47::59:0;;:8::61:1;68:27:68:28:0;:16::41:1;:55::76:0;:45::89:1;:8::91;63:62:69:5;;;18:0:70:1",
+    "logs": [],
+    "requires": [
+      { "ip": 13, "line": 32 },
+      { "ip": 15, "line": 36 },
+      { "ip": 21, "line": 39 },
+      { "ip": 26, "line": 40 },
+      { "ip": 29, "line": 44 },
+      { "ip": 34, "line": 47 },
+      { "ip": 39, "line": 48 },
+      { "ip": 48, "line": 52 },
+      { "ip": 53, "line": 53 },
+      { "ip": 58, "line": 54 },
+      { "ip": 62, "line": 55 },
+      { "ip": 72, "line": 64 },
+      { "ip": 77, "line": 66 },
+      { "ip": 82, "line": 67 },
+      { "ip": 88, "line": 68 }
+    ],
+    "sourceTags": "57:58:sc;83:85:sc"
+  },
+  "compiler": {
+    "name": "cashc",
+    "version": "0.14.0",
+    "options": {
+      "enforceFunctionParameterTypes": true,
+      "enforceLocktimeGuard": true
+    }
+  },
+  "updatedAt": "2026-10-15T12:42:18.749Z"
+}

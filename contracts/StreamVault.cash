@@ -1,0 +1,70 @@
+pragma cashscript ^0.14.0;
+
+/**
+ * @title StreamVault
+ * @notice Non-custodial PUSD (ParyonUSD) streaming payroll / subscription vault on Bitcoin Cash.
+ *
+ * A payer locks a balance of PUSD (a CashTokens fungible token) inside this covenant together with
+ * a rate policy. The payee may claim at most `amountPerPeriod` PUSD per `periodBlocks` blocks. The
+ * relative period is enforced with OP_CHECKSEQUENCEVERIFY (`this.age`): every spend produces a
+ * change UTXO that restarts the clock, so a fresh claim is only valid once the covenant UTXO is at
+ * least `periodBlocks` blocks old. The payer keeps an unconditional `cancel` claw-back.
+ *
+ * Token conservation is enforced by the VM (fungible CashTokens cannot be created or burned here):
+ * Output 0 carries exactly `amount` PUSD for the payee, Output 1 carries the remaining PUSD back to
+ * this exact covenant bytecode. No third output is permitted, so the vault's BCH buffer (used to pay
+ * future miner fees and satisfy the token dust floor) cannot be siphoned off by the payee.
+ */
+contract StreamVault(
+    pubkey payerPk,          // Payer / employer key (can cancel and reclaim the stream)
+    pubkey payeePk,          // Payee / contractor key (can claim per-period tranches)
+    int amountPerPeriod,     // Max PUSD base units claimable per period (e.g. cents)
+    int periodBlocks,        // Relative period in blocks (BIP68 block-based, e.g. 144 == ~1 day)
+    bytes pusdCategory       // CashTokens category id of PUSD (32-byte token category)
+) {
+    /**
+     * @notice Payee claims one tranche of the stream.
+     * @param payeeSig Signature from the payee session key
+     * @param amount PUSD base units to pay out this period (must be <= amountPerPeriod)
+     */
+    function claim(sig payeeSig, int amount) {
+        // 1. Authorization: only the payee may pull a tranche.
+        require(checkSig(payeeSig, payeePk));
+
+        // 2. Relative timelock: the covenant UTXO must be at least `periodBlocks` old.
+        //    Every spend recreates the vault, resetting the clock for the next period.
+        require(this.age >= periodBlocks);
+
+        // 3. Rate policy: never pay more than the per-period allowance, and never pay nothing.
+        require(amount > 0);
+        require(amount <= amountPerPeriod);
+
+        // 4. Exactly two outputs: the payee tranche and the vault change. This blocks any attempt
+        //    to add a third output that would leak the vault's BCH fee buffer.
+        require(tx.outputs.length == 2);
+
+        // 5. Output 0 must carry exactly `amount` PUSD for the payee.
+        require(tx.outputs[0].tokenCategory == pusdCategory);
+        require(tx.outputs[0].tokenAmount == amount);
+
+        // 6. Output 1 must carry the remaining PUSD back to this exact covenant bytecode.
+        int remaining = tx.inputs[this.activeInputIndex].tokenAmount - amount;
+        require(remaining > 0);
+        require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);
+        require(tx.outputs[1].tokenCategory == pusdCategory);
+        require(tx.outputs[1].tokenAmount == remaining);
+    }
+
+    /**
+     * @notice Payer cancels the stream and sweeps all remaining PUSD back to a payer-owned address.
+     * @param payerSig Signature from the payer key
+     * @param payerLockingBytecode The payer destination locking bytecode (e.g. their P2PKH script)
+     */
+    function cancel(sig payerSig, bytes payerLockingBytecode) {
+        require(checkSig(payerSig, payerPk));
+        // The entire remaining PUSD balance must go to the payer-selected destination.
+        require(tx.outputs[0].lockingBytecode == payerLockingBytecode);
+        require(tx.outputs[0].tokenCategory == pusdCategory);
+        require(tx.outputs[0].tokenAmount == tx.inputs[this.activeInputIndex].tokenAmount);
+    }
+}
