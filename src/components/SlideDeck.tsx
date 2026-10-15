@@ -6,7 +6,7 @@ interface SlideDeckProps {
   onLaunchDemo: () => void;
 }
 
-const REPO = 'https://github.com/streamvault/streamvault.cash';
+const REPO = 'https://github.com/juangh123/streamvault.cash';
 const SITE = 'https://streamvault.cash';
 
 export const SlideDeck: React.FC<SlideDeckProps> = ({ onClose, onLaunchDemo }) => {

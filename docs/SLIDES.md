@@ -16,7 +16,7 @@ Port this content into the official Widget Factory Google Slides template.
 **Slide 2 - One-liner & repo**
 - "Programmable BCH money streams that pay themselves - capped on-chain, cancellable by the payer, settled
   in a stablecoin."
-- Repo: github.com/streamvault/streamvault.cash
+- Repo: github.com/juangh123/streamvault.cash
 - Non-custodial - PUSD settlement - hard covenants
 
 **Slide 3 - Story / origin**
