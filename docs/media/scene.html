@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body { background: #0A0F1D; color: #F1F5F9; font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+  .scene { width: 1280px; height: 720px; padding: 64px 72px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .bar { position: absolute; left: 0; top: 0; width: 10px; height: 720px; background: #0AC18E; }
+  .eyebrow { color: #0AC18E; font-size: 15px; font-weight: 700; letter-spacing: 2px; }
+  h1 { font-size: 74px; font-weight: 800; line-height: 1.05; margin-top: 16px; }
+  p.sub { color: #94A3B8; font-size: 24px; max-width: 940px; margin-top: 22px; line-height: 1.45; }
+  .foot { display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 22px; font-weight: 800; }
+  .brand span { color: #0AC18E; }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 999px; background: #1F2937; }
+  .dot.on { background: #0AC18E; width: 26px; }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="bar"></div>
+    <div>
+      <div class="eyebrow" id="eyebrow"></div>
+      <h1 id="title"></h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <div class="foot">
+      <div class="brand">StreamVault<span>.cash</span></div>
+      <div class="dots" id="dots"></div>
+    </div>
+  </div>
+  <script>
+    const scenes = {
+      1: { eyebrow: 'THE PROBLEM', title: 'Paid in lumps.<br/>Late.', sub: 'Freelancers and vendors wait all month for a lump sum, and sponsors over-commit up front.' },
+      2: { eyebrow: 'THE IDEA', title: 'A steady stream<br/>of PUSD.', sub: 'StreamVault turns a lump sum into a programmable money stream on Bitcoin Cash.' },
+      3: { eyebrow: 'HOW IT WORKS', title: 'One tranche<br/>per period.', sub: 'A CashScript covenant caps each payout (amountPerPeriod) and gates it with a relative timelock (this.age).' },
+      4: { eyebrow: 'THE GUARANTEE', title: 'Change never<br/>leaves the vault.', sub: 'Introspection forces the change output back into the identical covenant bytecode - proven by the BCH VM.' },
+      5: { eyebrow: 'SOVEREIGN CONTROL', title: 'Cancel and<br/>reclaim anytime.', sub: 'One signature cancels the stream and returns 100% of the remaining PUSD to the payer.' },
+      6: { eyebrow: 'STREAMVAULT.CASH', title: 'Money that<br/>flows.', sub: 'streamvault-cash.vercel.app   -   Built for BCH BLAZE 2026' }
+    };
+    const n = Number(new URLSearchParams(location.search).get('n') || 1);
+    const s = scenes[n] || scenes[1];
+    document.getElementById('eyebrow').textContent = s.eyebrow;
+    document.getElementById('title').innerHTML = s.title;
+    document.getElementById('sub').textContent = s.sub;
+    document.getElementById('dots').innerHTML = Object.keys(scenes).map((k) => `<div class="dot ${Number(k) === n ? 'on' : ''}"></div>`).join('');
+  </script>
+</body>
+</html>

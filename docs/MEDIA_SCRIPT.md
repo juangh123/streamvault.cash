@@ -14,3 +14,6 @@
 ---
 
 Key visual / poster: `docs/media/poster.png` (source `docs/media/poster.html`).
+
+Produced draft video: `docs/media/streamvault-explainer.mp4` (90s, 1280x720, 30fps, captions baked in).
+Scene source frames: `docs/media/scenes/scene-1..6.png` (generator: `docs/media/scene.html`).
