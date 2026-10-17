@@ -33,6 +33,10 @@ final media are scheduled for 2026-11-14 through 2026-11-22. The full disclosure
 6. **Telegram** - confirm authenticity in the official group.
 7. **CashTokens address** - required to receive EMBER2026 votes and the airdrop.
 
+Prepared disclosure text and roll-call questions are in
+[ORGANIZER_DISCLOSURE.md](ORGANIZER_DISCLOSURE.md). Completing the text does not count as
+attendance or Telegram verification.
+
 PUSD mainnet metadata was verified on 2026-10-17: category
 `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The app still uses
 the `aa...aa` demo category until the v2 build period. See
