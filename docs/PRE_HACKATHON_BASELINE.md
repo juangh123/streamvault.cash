@@ -64,11 +64,16 @@ additional UTXO under the same locking bytecode, which weakens the one-tranche-p
 The current `cancel` path also validates only `tx.outputs[this.activeInputIndex]`, so it cannot reclaim
 multiple vault UTXOs in one transaction.
 
-### Mainnet token metadata is unverified
+### Mainnet token metadata
 
-`PUSD_CATEGORY` in `src/lib/constants.ts` is a demo category (`aa...aa`). The real ParyonUSD category
-and token decimals must be verified from a primary source such as BCMR or a reviewed mainnet
-transaction before any mainnet configuration is changed.
+At the frozen baseline, `PUSD_CATEGORY` in `src/lib/constants.ts` is a demo category (`aa...aa`) and
+the real token metadata had not been verified.
+
+On 2026-10-17 the official ParyonUSD site, app bundle and contracts repository were cross-checked.
+The mainnet category is
+`2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544` and PUSD uses 2 decimals.
+See [PUSD_VERIFICATION.md](PUSD_VERIFICATION.md). The application configuration remains unchanged
+until the competition build period.
 
 ### Agent budget layer is not implemented
 

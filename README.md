@@ -157,6 +157,7 @@ building. The UI currently derives covenant addresses, queries vault UTXOs and p
 See [docs/COMPLIANCE.md](docs/COMPLIANCE.md) for the seven mandatory requirements checklist.
 See [docs/PRE_HACKATHON_BASELINE.md](docs/PRE_HACKATHON_BASELINE.md) for the pre-hackathon
 disclosure and the competition-period change scope.
+See [docs/V2_SPEC.md](docs/V2_SPEC.md) for the build-period contract, wallet and Agent design.
 
 ## Roadmap
 

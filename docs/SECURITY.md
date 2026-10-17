@@ -43,3 +43,6 @@ The following are not v1 invariants and must not be claimed as such:
 - Fund Mainnet vaults with a small amount during the first live settlement.
 - `PUSD_CATEGORY` in `src/lib/constants.ts` must be set to the real ParyonUSD category before Mainnet.
 - Verify PUSD category and decimals from BCMR or a reviewed Mainnet transaction before changing config.
+
+The current verification result and source list are in `docs/PUSD_VERIFICATION.md`. The config is
+still intentionally set to the demo category during the pre-hackathon period.

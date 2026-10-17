@@ -41,8 +41,9 @@ in addition to the derive and network probes.
 5. **Live signing.** No private key is stored in the browser; payer/payee sign with their own wallets
    (WizardConnect) or a throwaway demo key on Chipnet. In the baseline the UI only pairs the wallet;
    `signTransaction` wiring is a v2 deliverable. Never reuse a demo key with real funds.
-6. **`PUSD_CATEGORY` placeholder.** `src/lib/constants.ts` ships a demo category; set the real ParyonUSD
-   category before any Mainnet settlement.
+6. **`PUSD_CATEGORY` placeholder.** `src/lib/constants.ts` ships a demo category. The mainnet category
+   and 2-decimal scale were verified on 2026-10-17 in `PUSD_VERIFICATION.md`; apply the configuration
+   change during the v2 build period and re-verify it before settlement.
 7. **Dependency surface.** `cashscript` 0.14 + `@bitauth/libauth` 3.1 pre-release + `@wizardconnect/*`.
    `npm audit` reports transitive advisories; pin versions and re-audit before launch.
 8. **Multiple vault UTXOs.** A direct PUSD transfer can create another UTXO under the same covenant.

@@ -33,8 +33,10 @@ final media are scheduled for 2026-11-14 through 2026-11-22. The full disclosure
 6. **Telegram** - confirm authenticity in the official group.
 7. **CashTokens address** - required to receive EMBER2026 votes and the airdrop.
 
-The real PUSD category and decimals remain unverified. Do not use the `aa...aa` demo category for a
-Mainnet submission.
+PUSD mainnet metadata was verified on 2026-10-17: category
+`2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The app still uses
+the `aa...aa` demo category until the v2 build period. See
+[PUSD_VERIFICATION.md](PUSD_VERIFICATION.md). Do not use the demo category for a Mainnet submission.
 
 ## Media track (optional second submission)
 

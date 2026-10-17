@@ -23,6 +23,9 @@ node scripts/settle.mjs --action=cancel
 **Then settle on Mainnet** with real PUSD:
 
 1. Obtain a small amount of **PUSD + BCH** in the payer wallet (ParyonUSD app: https://paryonusd.com).
+   Verified metadata: category
+   `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`
+   (`docs/PUSD_VERIFICATION.md`). Re-check the official Token ID before sending funds.
 2. Fund the vault by sending PUSD (and a little BCH for the fee buffer) to the covenant token address
    printed by `node scripts/settle.mjs` - or send from your wallet UI.
 3. Run a real `claim`, capture the txid:
