@@ -65,8 +65,9 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 - [ ] Real wallet device test on Selene or Paytaca
 - [ ] Official Widget Factory Google Slides port published
 - [ ] CashTokens receiving address added
-- [ ] Telegram project confirmation
+- [x] Telegram disclosure posted 2026-10-17; organizer reply pending
+- [x] DoraHacks registration completed
 - [ ] At least one preparation-stream roll call
-- [ ] DoraHacks project submitted
+- [ ] DoraHacks project submission completed
 - [ ] Commit and push the build-period product diff
 - [ ] Old/new repository and pre-hackathon demo links added to the submission

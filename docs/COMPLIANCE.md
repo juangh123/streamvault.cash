@@ -8,7 +8,8 @@ The StreamVault.cash covenant, sandbox cockpit and documentation were seeded on 
 2026-10-15. They are frozen at tag `v0-prehackathon-baseline` and are not presented as
 competition-period work. The current sprint adds v1.2 contract hardening, WizardConnect signing, the
 Agent Sandbox/API and an updated deck. Real Mainnet evidence, the official Google Slides port,
-Telegram/roll-call confirmation and the CashTokens address remain pending. The full disclosure is in
+roll-call attendance, the CashTokens address and an organizer reply to the Telegram disclosure remain
+pending. The full disclosure is in
 [PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md).
 
 | # | Requirement | Status | Where |
@@ -27,13 +28,13 @@ Telegram/roll-call confirmation and the CashTokens address remain pending. The f
    `claim`, and run at least one Agent service payment. Record the txids in README. The baseline does
    not contain a project-owned Mainnet PUSD transaction.
 2. **Live demo** - deployed and live at https://streamvault-cash.vercel.app (Vercel, master).
-3. **WizardConnect** - the persistent manager now signs fund, claim and cancel WalletConnect objects
+3. **WizardConnect** - the persistent manager now signs fund, top-up, claim and cancel WalletConnect objects
    and broadcasts the signed response through Electrum. A real Selene/Paytaca device test is still
    required before claiming this complete.
 4. **Slides** - the in-app and local deck now use the Agent + payroll story. Port the 7 pages into
    the official Google Slides template before submitting.
 5. **Livestream** - at least one team member must appear and sign in during roll call.
-6. **Telegram** - confirm authenticity in the official group.
+6. **Telegram** - the project disclosure was posted on 2026-10-17; an organizer reply is still pending.
 7. **CashTokens address** - required to receive EMBER2026 votes and the airdrop.
 
 Prepared disclosure text and roll-call questions are in
