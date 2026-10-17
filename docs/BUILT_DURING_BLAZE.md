@@ -15,11 +15,11 @@ This file separates the disclosed pre-hackathon baseline from the current sprint
 | :--- | :--- |
 | Start commit | `4c9c083` (last baseline disclosure commit) |
 | Sprint code | v1.2 contract, WalletProvider signing, Agent API, Agent-first cockpit |
-| Final commit | Fill after the sprint commit is made |
-| Baseline-to-final diff | Record with `git diff --stat v0-prehackathon-baseline..HEAD` |
+| Final code commit | `268e4b898832c18eb066389a874890e3a00fede5` |
+| Baseline-to-final diff | `git diff --stat v0-prehackathon-baseline..268e4b8` (65 files, +4235/-693) |
 
-The final commit and diff must be filled before submission. Do not describe uncommitted work as a
-build-period commit.
+The code commit above is the current build-period candidate. The final evidence commit may add
+Mainnet txids and the official deck link after those external steps are complete.
 
 ## Contract v1.2
 
