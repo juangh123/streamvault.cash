@@ -25,7 +25,7 @@
 | Works today | Simulated | Pending before submission |
 | :--- | :--- | :--- |
 | Agent allowance Sandbox Fast-Track | Sandbox ledger and demo addresses | Real Mainnet fund/claim/cancel txids |
-| PUSD streaming payroll Sandbox | Agent service response and request id | Telegram confirmation and prep-stream roll call |
+| PUSD streaming payroll Sandbox | Agent service response and request id | Preparation-stream roll call and organizer reply |
 | v1.2 covenant: 21 real VM tests | 0-conf interactive verification | Official Widget Factory Google Slides port |
 | WizardConnect signing code | Sandbox ledger | CashTokens receiving address |
 | Live top-up (merge one PUSD UTXO) |  | Final deck/media links |
@@ -223,7 +223,7 @@ disclosure and the competition-period change scope.
 See [docs/V2_SPEC.md](docs/V2_SPEC.md) for the contract, wallet and Agent design.
 
 **Still pending before submission:** real Mainnet fund/claim/cancel and agent-service txids,
-Telegram confirmation, at least one preparation-stream roll call, the official Widget Factory
+an organizer reply to the Telegram disclosure, at least one preparation-stream roll call, the official Widget Factory
 Google Slides port, and the CashTokens receiving address.
 
 ## Roadmap
