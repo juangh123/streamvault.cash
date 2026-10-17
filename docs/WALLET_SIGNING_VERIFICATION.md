@@ -4,8 +4,9 @@ Verified: 2026-10-17 (Asia/Shanghai)
 
 Scope: the installed `@wizardconnect/*` packages and a public BCH wallet implementation.
 
-This is a code-level verification, not a device test. A real Chipnet wallet test is still required
-during the build period.
+This is a code-level verification. The app now implements the persistent manager and
+`signTransaction` path; a real Selene/Paytaca device test on Chipnet and Mainnet is still required
+before claiming the wallet flow complete.
 
 ## Installed versions
 

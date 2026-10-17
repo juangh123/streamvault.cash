@@ -2,8 +2,8 @@
 
 Verified: 2026-10-17 (Asia/Shanghai)
 
-Status: category and decimals confirmed for planning. The application configuration is intentionally
-unchanged until the BCH BLAZE 2026 build period.
+Status: category and decimals confirmed. The application now uses the verified category by default
+and refuses Mainnet if a demo category is configured.
 
 ## Confirmed values
 
@@ -38,10 +38,8 @@ rests on the three official sources and the live official API.
 
 ## Decision
 
-Do not edit `src/lib/constants.ts` before the competition build period. The category and decimals are
-now recorded for the v2 implementation and Mainnet rehearsal, but the application must continue to use
-its clearly labelled demo category until the configuration change is made, reviewed and committed
-during the build period.
+The category and decimals are recorded in `src/lib/constants.ts`. Re-check the official Token ID
+before the first Mainnet settlement.
 
 Before the first Mainnet settlement, re-open the official Token ID section and verify the category
 again. Tokens with a similar name or icon must not be accepted.

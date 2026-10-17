@@ -7,7 +7,21 @@
  */
 import { MockNetworkProvider, SignatureTemplate } from 'cashscript';
 import { lockingBytecodeToCashAddress, publicKeyToP2pkhLockingBytecode } from '@bitauth/libauth';
-import { buildCancelHex, buildCancelWcObject, buildClaimHex, buildClaimWcObject, makeContract } from '../src/lib/chain';
+import {
+  buildCancelHex,
+  buildCancelWcObject,
+  buildClaimHex,
+  buildClaimWcObject,
+  buildFundHex,
+  buildFundWcObject,
+  buildTopUpHex,
+  buildTopUpWcObject,
+  fundInputPaths,
+  makeContract,
+  serializeWcTransaction,
+  TOP_UP_INPUT_PATHS,
+  tokenAddressForPublicKey,
+} from '../src/lib/chain';
 
 const CATEGORY = 'a'.repeat(64);
 const PERIOD_BLOCKS = 10;
@@ -91,6 +105,150 @@ function setup() {
     check(claimHasContract && cancelHasContract && claimHasTx, 'CHAIN-04', 'WalletConnect objects include the covenant redeem script', `claimContract=${claimHasContract} cancelContract=${cancelHasContract} outputs=${claimObj.transaction?.outputs?.length}`);
   } catch (e) {
     check(false, 'CHAIN-04', 'WalletConnect objects include the covenant redeem script', (e as Error).message.split('\n')[0]);
+  }
+}
+
+// CHAIN-05: fund WC object serializes to wallet-ready hex and carries the token output
+{
+  try {
+    const { provider, contract } = setup();
+    const prefix = contract.address.startsWith('bitcoincash:') ? 'bitcoincash' : 'bchtest';
+    const payerAddress = (lockingBytecodeToCashAddress({
+      bytecode: publicKeyToP2pkhLockingBytecode({ publicKey: payer.publicKey }),
+      prefix,
+    }) as { address: string }).address;
+    const payerTokenAddress = tokenAddressForPublicKey(payer.publicKey, prefix);
+    const walletUtxo = provider.addUtxo(payerTokenAddress, {
+      txid: '12'.repeat(32),
+      vout: 0,
+      satoshis: 100000n,
+      token: { amount: 5000n, category: CATEGORY },
+    });
+    const object = buildFundWcObject({
+      contract,
+      walletAddress: payerAddress,
+      walletTokenAddress: payerTokenAddress,
+      walletUtxos: [walletUtxo],
+      deposit: 2000n,
+      category: CATEGORY,
+      vaultBch: 50000n,
+    });
+    const hex = serializeWcTransaction(object);
+    const paths = fundInputPaths(1);
+    check(
+      hex.length > 20 && /^[0-9a-f]+$/.test(hex) && paths[0][1] === 'receive',
+      'CHAIN-05',
+      'Fund WC object serializes and input paths target receive/0',
+      `hex=${hex.slice(0, 16)}... paths=${JSON.stringify(paths)}`,
+    );
+  } catch (e) {
+    check(false, 'CHAIN-05', 'Fund WC object serializes and input paths target receive/0', (e as Error).message.split('\n')[0]);
+  }
+}
+
+// CHAIN-06: locally signed funding transaction creates the vault token UTXO
+{
+  try {
+    const { provider, contract } = setup();
+    const prefix = contract.address.startsWith('bitcoincash:') ? 'bitcoincash' : 'bchtest';
+    const payerAddress = (lockingBytecodeToCashAddress({
+      bytecode: publicKeyToP2pkhLockingBytecode({ publicKey: payer.publicKey }),
+      prefix,
+    }) as { address: string }).address;
+    const payerTokenAddress = tokenAddressForPublicKey(payer.publicKey, prefix);
+    const walletUtxo = provider.addUtxo(payerTokenAddress, {
+      txid: '23'.repeat(32),
+      vout: 0,
+      satoshis: 100000n,
+      token: { amount: 5000n, category: CATEGORY },
+    });
+    const hex = buildFundHex({
+      contract,
+      walletAddress: payerAddress,
+      walletTokenAddress: payerTokenAddress,
+      walletUtxos: [walletUtxo],
+      deposit: 2000n,
+      category: CATEGORY,
+      vaultBch: 50000n,
+      walletSigner: payer,
+    });
+    const txid = await provider.sendRawTransaction(hex);
+    const vaultUtxos = await contract.getUtxos();
+    const funded = vaultUtxos.some((utxo) => utxo.token?.amount === 2000n && utxo.token.category === CATEGORY);
+    check(funded && txid.length === 64, 'CHAIN-06', 'Signed fund transaction creates the vault UTXO', `txid=${txid.slice(0, 16)}... vaultUtxos=${vaultUtxos.length}`);
+  } catch (e) {
+    check(false, 'CHAIN-06', 'Signed fund transaction creates the vault UTXO', (e as Error).message.split('\n')[0]);
+  }
+}
+
+// CHAIN-07: top-up WC object serializes with both payer inputs
+{
+  try {
+    const { provider, contract, utxo } = setup();
+    const prefix = contract.address.startsWith('bitcoincash:') ? 'bitcoincash' : 'bchtest';
+    const payerAddress = (lockingBytecodeToCashAddress({
+      bytecode: publicKeyToP2pkhLockingBytecode({ publicKey: payer.publicKey }),
+      prefix,
+    }) as { address: string }).address;
+    const payerTokenAddress = tokenAddressForPublicKey(payer.publicKey, prefix);
+    const walletUtxo = provider.addUtxo(payerTokenAddress, {
+      txid: '34'.repeat(32),
+      vout: 0,
+      satoshis: 50000n,
+      token: { amount: 5000n, category: CATEGORY },
+    });
+    const object = buildTopUpWcObject({
+      contract,
+      vaultUtxo: utxo,
+      walletUtxo,
+      walletAddress: payerAddress,
+    });
+    const hex = serializeWcTransaction(object);
+    check(
+      hex.length > 20 &&
+        object.transaction.inputs.length === 2 &&
+        object.transaction.outputs.length === 1 &&
+        TOP_UP_INPUT_PATHS.length === 2 &&
+        TOP_UP_INPUT_PATHS[1][1] === 'receive',
+      'CHAIN-07',
+      'Top-up WC object has two inputs and one merged output',
+      `inputs=${object.transaction.inputs.length} outputs=${object.transaction.outputs.length} paths=${JSON.stringify(TOP_UP_INPUT_PATHS)}`,
+    );
+  } catch (e) {
+    check(false, 'CHAIN-07', 'Top-up WC object has two inputs and one merged output', (e as Error).message.split('\n')[0]);
+  }
+}
+
+// CHAIN-08: signed top-up merges the wallet PUSD UTXO into the vault
+{
+  try {
+    const { provider, contract, utxo } = setup();
+    const prefix = contract.address.startsWith('bitcoincash:') ? 'bitcoincash' : 'bchtest';
+    const payerAddress = (lockingBytecodeToCashAddress({
+      bytecode: publicKeyToP2pkhLockingBytecode({ publicKey: payer.publicKey }),
+      prefix,
+    }) as { address: string }).address;
+    const payerTokenAddress = tokenAddressForPublicKey(payer.publicKey, prefix);
+    const walletUtxo = provider.addUtxo(payerTokenAddress, {
+      txid: '45'.repeat(32),
+      vout: 0,
+      satoshis: 50000n,
+      token: { amount: 5000n, category: CATEGORY },
+    });
+    const hex = buildTopUpHex({
+      contract,
+      vaultUtxo: utxo,
+      walletUtxo,
+      walletAddress: payerAddress,
+      payerSigner: payer,
+    });
+    const txid = await provider.sendRawTransaction(hex);
+    const merged = (await contract.getUtxos()).some(
+      (candidate) => candidate.token?.amount === 105000n,
+    );
+    check(merged && txid.length === 64, 'CHAIN-08', 'Signed top-up merges the vault UTXO', `txid=${txid.slice(0, 16)}...`);
+  } catch (e) {
+    check(false, 'CHAIN-08', 'Signed top-up merges the vault UTXO', (e as Error).message.split('\n')[0]);
   }
 }
 

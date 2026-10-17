@@ -20,20 +20,21 @@ conservation. The payer keeps a one-signature `cancel`.
 ### 4. Personas
 - **Payer** - a studio, sponsor or employer that wants scheduled, cancellable payouts in a stable unit.
 - **Payee** - a freelancer, creator or vendor that wants to withdraw on schedule without invoicing or a custodian.
-- **Service provider / agent** - a machine that draws a per-call budget (future SDK/MCP phase).
+- **Service provider / agent** - a machine that draws a bounded per-period budget and pays a service
+  per request. The Agent Sandbox and server API are implemented; the SDK/MCP packaging is future work.
 
 ### 5. Functional requirements
 5.1 **Create & fund** - configure per-period amount, period (blocks) and deposit; lock PUSD into the covenant.
 5.2 **Claim** - payee withdraws up to `amountPerPeriod` once per period; change returns to the vault.
 5.3 **Cancel** - payer sweeps 100% of the remaining PUSD to a payer address.
-5.4 **Top up** - payer adds more PUSD and the covenant merges it into the existing vault UTXO
-   (v2; the sandbox currently simulates this and v1 only supports a direct transfer).
+5.4 **Top up** - payer adds more PUSD and the covenant merges it into the existing vault UTXO.
+   v1.2 implements this with one payer-owned PUSD input; the vault's relative clock restarts.
 5.5 **Visualizer** - show the PUSD input/outputs, the `this.age` gate and the recursive-change check.
 5.6 **Ledger** - every fund/claim/cancel event with a (real, when live) txid.
 
 ### 6. Non-functional requirements
 - No private keys stored in the browser; signing is delegated to a wallet (WizardConnect).
-  Pairing exists in the baseline; transaction signing is a v2 deliverable.
+  The current sprint implements persistent pairing and fund/claim/cancel signing; a device test is pending.
 - Sandbox mode runs the whole flow with zero prerequisites (judge fallback).
 - First paint < 1.5s; responsive from 375px to desktop.
 - `npm test` evaluates the covenant against the real BCH VM.

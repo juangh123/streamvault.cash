@@ -67,7 +67,7 @@ export const StreamControls: React.FC<StreamControlsProps> = ({
             <h2 className="text-sm font-bold text-white">Payer - Stream Policy</h2>
           </div>
           <span className="text-[10px] text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800 font-semibold">
-            CashScript active
+            {mode === 'SANDBOX' ? 'Sandbox policy' : 'Live policy'}
           </span>
         </div>
 
@@ -102,16 +102,19 @@ export const StreamControls: React.FC<StreamControlsProps> = ({
             inputMode="decimal"
             className="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#0AC18E]"
           />
-          <button
-            onClick={() => {
-              const amount = Math.round(parseFloat(topUpUsd) * 100);
-              if (amount > 0) onTopUp(amount);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Top up PUSD</span>
-          </button>
+          {mode === 'SANDBOX' && (
+            <button
+              onClick={() => {
+                const amount = Math.round(parseFloat(topUpUsd) * 100);
+                if (amount > 0) onTopUp(amount);
+              }}
+              title="Sandbox top-up: merges PUSD and resets the relative clock, matching the topUp covenant."
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Top up PUSD (sandbox)</span>
+            </button>
+          )}
           <button
             onClick={onCancel}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-800/60 transition ml-auto"

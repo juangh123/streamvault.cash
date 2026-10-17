@@ -1,4 +1,4 @@
-import artifactJson from '../../contracts/artifacts/StreamVault.json';
+import artifactJson from '../../contracts/artifacts/StreamVault.json' with { type: 'json' };
 import type { Artifact } from 'cashscript';
 
 /**
@@ -12,4 +12,4 @@ export const STREAMVAULT_ARTIFACT = artifactJson as unknown as Artifact;
 export const CONTRACT_BYTECODE_HEX = STREAMVAULT_ARTIFACT.bytecode;
 
 // Re-export the pure constants so existing `from '../lib/covenant'` imports keep working.
-export * from './constants';
+export * from './constants.js';

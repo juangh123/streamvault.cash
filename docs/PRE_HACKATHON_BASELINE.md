@@ -16,8 +16,9 @@ The repository history begins on 2026-10-14 with the former AgentPay.cash direct
 StreamVault.cash covenant, tests, app, documentation and media draft were committed on 2026-10-15.
 Those commits are not presented as hackathon-period work.
 
-All product changes described as competition upgrades below are scheduled for 2026-11-14 through
-2026-11-22. No new product code will be merged before that window.
+The current sprint implements the v1.2 contract hardening (including `topUp`), WizardConnect signing
+path, Agent Sandbox and Agent API described below. Multi-UTXO cancel, official Google Slides and real
+Mainnet evidence remain pending. See [BUILT_DURING_BLAZE.md](BUILT_DURING_BLAZE.md) for the exact status.
 
 ## What exists in the baseline
 
@@ -128,17 +129,17 @@ Result on 2026-10-17:
 12 passed, 0 failed (of 12)
 ```
 
-The other automated suites and the production build will be re-run during the competition window
-after the wallet and agent changes are implemented.
+The other automated suites and the production build were re-run after the wallet and agent changes.
+See `docs/BUILT_DURING_BLAZE.md` for current results.
 
 ## Compliance statement
 
 The code reachable from `v0-prehackathon-baseline` is prior seed work. The project does not claim it
 as work completed during BCH BLAZE 2026.
 
-The contract v2, real wallet transactions, Agent budget layer, Mainnet evidence, final deck and final
-Media submission will be implemented, reviewed, committed and documented during the competition
-build period. `docs/BUILT_DURING_BLAZE.md` will contain the commit range and transaction evidence.
+The current sprint implements the hardened v1.2 contract, WizardConnect signing path, Agent Sandbox
+and Agent API. Real Mainnet evidence, the official Google Slides port and final Media remain
+outstanding. `docs/BUILT_DURING_BLAZE.md` contains the commit range and transaction evidence fields.
 
 If the organizers determine that seed code may not be used at all, the fallback is to rebuild from an
 empty repository during the build period. In that case the same core scope remains: contract, wallet

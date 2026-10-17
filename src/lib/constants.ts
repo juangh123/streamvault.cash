@@ -14,10 +14,16 @@ export const BCH_USD_PRICE = 320;
 
 /**
  * ParyonUSD (PUSD) CashTokens category id.
- * Set this to the live ParyonUSD category id before a Mainnet settlement. The default is a
- * clearly-labelled demo category used by the sandbox and the Chipnet walkthrough.
+ * Verified against the official ParyonUSD site and app on 2026-10-17.
+ * See docs/PUSD_VERIFICATION.md before changing this value.
  */
-export const PUSD_CATEGORY = 'a'.repeat(64);
+export const PUSD_CATEGORY = '2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544';
+
+/** Never use this category for a Mainnet settlement. Kept for defensive checks and old fixtures. */
+export const DEMO_PUSD_CATEGORY = 'a'.repeat(64);
+
+export const SITE_URL = 'https://streamvault-cash.vercel.app';
+export const REPO_URL = 'https://github.com/juangh123/streamvault.cash';
 
 /** Default relative period: 144 BCH blocks (~1 day). */
 export const DEFAULT_PERIOD_BLOCKS = 144;
@@ -32,6 +38,16 @@ const EXPLORER_BASE: Record<NetworkType, string> = {
 
 export function explorerUrl(network: NetworkType, txid: string): string {
   return EXPLORER_BASE[network] + txid;
+}
+
+export function isDemoCategory(category: string): boolean {
+  return category.trim().toLowerCase() === DEMO_PUSD_CATEGORY;
+}
+
+export function assertMainnetCategory(network: NetworkType, category: string): void {
+  if (network === 'mainnet' && isDemoCategory(category)) {
+    throw new Error('Refusing Mainnet: the demo PUSD category is not valid for real funds.');
+  }
 }
 
 export function randomTxid(): string {

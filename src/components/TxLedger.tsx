@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDownLeft, ArrowUpRight, Undo2, ExternalLink } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Undo2, ExternalLink, Bot } from 'lucide-react';
 import { LedgerEntry, NetworkType } from '../types';
 import { pusdToDisplay, shortAddress, timeAgo } from '../lib/format';
 
@@ -12,6 +12,7 @@ const typeMeta: Record<LedgerEntry['type'], { icon: React.ReactNode; tone: strin
   FUND: { icon: <ArrowDownLeft className="w-3.5 h-3.5" />, tone: 'text-emerald-400', label: 'Fund' },
   CLAIM: { icon: <ArrowUpRight className="w-3.5 h-3.5" />, tone: 'text-indigo-400', label: 'Claim' },
   CANCEL: { icon: <Undo2 className="w-3.5 h-3.5" />, tone: 'text-rose-400', label: 'Cancel' },
+  PAYMENT: { icon: <Bot className="w-3.5 h-3.5" />, tone: 'text-emerald-400', label: 'Agent pay' },
 };
 
 export const TxLedger: React.FC<TxLedgerProps> = ({ entries }) => {

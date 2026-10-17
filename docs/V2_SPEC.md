@@ -1,11 +1,13 @@
 # StreamVault v2 specification
 
-Status: design draft for the BCH BLAZE 2026 build period.
+Status: partially implemented. The current sprint ships a hardened v1.2 contract with `topUp`,
+WizardConnect fund/top-up/claim/cancel signing, an Agent budget Sandbox and the Vercel Agent
+status/run/verify API. Multi-UTXO cancel and the official Google Slides port remain future work.
 
 Target window: 2026-11-14 through 2026-11-22 (Asia/Shanghai).
 
-This document is a specification, not an implementation. No v2 contract or wallet code is merged
-before the build window.
+This document began as a design specification. See `docs/BUILT_DURING_BLAZE.md` for what is actually
+implemented in the current branch; do not infer that every bullet below is shipped.
 
 ## Product scope
 

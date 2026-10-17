@@ -1,4 +1,4 @@
-import type { LedgerEntry, StreamConfig } from '../types';
+import type { LedgerEntry, NetworkType, StreamConfig } from '../types';
 import { randomTxid } from './constants';
 
 export interface CreateStreamInput {
@@ -12,6 +12,7 @@ export interface CreateStreamInput {
   vaultAddress: string;
   contractBytecode: string;
   block: number;
+  network?: NetworkType;
 }
 
 export interface ActionOutcome {
@@ -37,6 +38,7 @@ export function createStream(input: CreateStreamInput): StreamConfig {
   return {
     id: Math.random().toString(36).slice(2, 9),
     label: input.label,
+    network: input.network ?? 'chipnet',
     payerAddress: input.payerAddress,
     payeeAddress: input.payeeAddress,
     amountPerPeriod: input.amountPerPeriod,
@@ -68,6 +70,7 @@ function makeEntry(
   actorAddress: string,
   counterpartyAddress: string,
   blockHeight: number,
+  network: NetworkType,
 ): LedgerEntry {
   return {
     id: Math.random().toString(36).slice(2, 9),
@@ -81,6 +84,9 @@ function makeEntry(
     counterpartyAddress,
     blockHeight,
     simulated: true,
+    network,
+    confirmed: false,
+    source: 'sandbox',
     explorerUrl: '',
   };
 }
@@ -124,7 +130,7 @@ export function claim(stream: StreamConfig, amount: number, currentBlock: number
     claimsCount: stream.claimsCount + 1,
     clockBlock: currentBlock,
   };
-  const entry = makeEntry('CLAIM', amount, updated.remaining, stream, stream.payeeAddress, stream.vaultAddress, currentBlock);
+  const entry = makeEntry('CLAIM', amount, updated.remaining, stream, stream.payeeAddress, stream.vaultAddress, currentBlock, stream.network);
   return { ok: true, stream: updated, entry };
 }
 
@@ -135,7 +141,7 @@ export function cancel(stream: StreamConfig, currentBlock: number): ActionOutcom
   }
   const swept = stream.remaining;
   const updated: StreamConfig = { ...stream, remaining: 0, clockBlock: currentBlock };
-  const entry = makeEntry('CANCEL', swept, 0, stream, stream.payerAddress, stream.vaultAddress, currentBlock);
+  const entry = makeEntry('CANCEL', swept, 0, stream, stream.payerAddress, stream.vaultAddress, currentBlock, stream.network);
   return { ok: true, stream: updated, entry };
 }
 
@@ -148,6 +154,6 @@ export function topUp(stream: StreamConfig, amount: number, currentBlock: number
     remaining: stream.remaining + amount,
     clockBlock: currentBlock,
   };
-  const entry = makeEntry('FUND', amount, updated.remaining, stream, stream.payerAddress, stream.vaultAddress, currentBlock);
+  const entry = makeEntry('FUND', amount, updated.remaining, stream, stream.payerAddress, stream.vaultAddress, currentBlock, stream.network);
   return { ok: true, stream: updated, entry };
 }

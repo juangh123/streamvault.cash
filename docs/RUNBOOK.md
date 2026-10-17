@@ -5,7 +5,9 @@ This is the step-by-step to close the ones that need your wallet, funds or accou
 
 ## 1. Mainnet real transaction (hard requirement #1)
 
-The covenant lifecycle is implemented in `src/lib/chain.ts` and exposed as a CLI.
+The browser wallet flow is implemented in `src/wallet/WalletProvider.tsx` and
+`src/components/LiveVaultPanel.tsx`. The settlement CLI remains useful for local dry runs and
+claim/cancel fallbacks; it does not implement a live `fund` action.
 
 **Rehearse on Chipnet first** (free coins from `https://chipnet.chaingraph.cash/faucet`):
 
@@ -14,8 +16,7 @@ The covenant lifecycle is implemented in `src/lib/chain.ts` and exposed as a CLI
 set NETWORK=chipnet
 set PAYER_WIF=<chipnet payer wif>
 set PAYEE_WIF=<chipnet payee wif>
-set CATEGORY=<a demo token category you hold on chipnet>
-node scripts/settle.mjs --action=fund --deposit=100000
+set CATEGORY=<a token category you hold on chipnet>
 node scripts/settle.mjs --action=claim --amount=2500
 node scripts/settle.mjs --action=cancel
 ```
@@ -26,8 +27,9 @@ node scripts/settle.mjs --action=cancel
    Verified metadata: category
    `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`
    (`docs/PUSD_VERIFICATION.md`). Re-check the official Token ID before sending funds.
-2. Fund the vault by sending PUSD (and a little BCH for the fee buffer) to the covenant token address
-   printed by `node scripts/settle.mjs` - or send from your wallet UI.
+2. Fund the vault from the app's **Payroll → Live** panel, or send PUSD (and at least 50,000 sats BCH
+   for the fee buffer) to the covenant token address. The app derives the address from the connected
+   wallet's receive/0 and change/0 keys.
 3. Run a real `claim`, capture the txid:
 
 ```bash
@@ -40,13 +42,18 @@ node scripts/settle.mjs --action=claim --amount=2500
 
 4. Record the txid in `README.md` and mark requirement #1 in `docs/COMPLIANCE.md`.
 
+5. For the Agent demo, set `AGENT_ENABLED=true`, `AGENT_WIF` (dedicated low-balance key),
+   `SERVICE_ADDRESS` (PUSD token address), and keep `AGENT_MAX_BALANCE=10`. Pre-fund the agent hot
+   wallet with 20,000 sats BCH and fund the agent vault with 2.00 PUSD + 50,000 sats BCH.
+   Use `GET /api/agent/status?payerPubkey=...` before the first run.
+
 > `--dry-run` executes the whole lifecycle against the local BCH VM with no keys or funds:
 > `node scripts/settle.mjs --dry-run`
 
 ## 4. Official 7-page Widget Factory slides (hard requirement #4)
 
-1. Import `docs/deck/StreamVault-BCH-Blaze-2026.pptx` into Google Slides
-   (or use the PDF `docs/deck/StreamVault-BCH-Blaze-2026.pdf` for reference).
+1. Regenerate the local deck if needed, then import `docs/deck/StreamVault-BCH-Blaze-2026.pptx`
+   into Google Slides. The committed PDF is an older draft; do not submit it.
 2. Apply the official **Widget Factory** template; keep the 7-page structure in `docs/SLIDES.md`.
 3. Publish the slides and put the link in the DoraHacks submission.
 
@@ -66,4 +73,5 @@ Add a BCH address that can receive CashTokens to the submission (needed for the 
 ## Deploy / CI
 
 - Live demo: `vercel --prod` (already deployed at https://streamvault-cash.vercel.app).
-- CI: `.github/workflows/ci.yml` runs compile + four test suites + typecheck + build on every push.
+- CI: `.github/workflows/ci.yml` runs compile + covenant/engine/agent/API/derive/chain suites + typecheck + build,
+  plus a Playwright judge-path job.

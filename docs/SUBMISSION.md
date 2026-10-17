@@ -1,0 +1,72 @@
+# DoraHacks submission sheet
+
+Use this file as the single source of truth when filling the BCH BLAZE 2026 submission form.
+
+## Project
+
+| Field | Value |
+| :--- | :--- |
+| Project name | StreamVault.cash |
+| Former name | AgentPay.cash |
+| Tagline | Give an AI an allowance, not your bank account. |
+| Tracks | Mainnet; Media optional |
+| Repository | https://github.com/juangh123/streamvault.cash |
+| Live demo | https://streamvault-cash.vercel.app |
+| Pre-hackathon baseline | tag `v0-prehackathon-baseline` |
+| Pre-hackathon demo | PENDING: deploy the baseline tag or link the baseline video/commit |
+| Deck | `docs/deck/StreamVault-BCH-Blaze-2026.pptx`; official Google Slides port PENDING |
+| Video | `docs/media/streamvault-explainer.mp4` is a sandbox draft; do not submit it as final |
+| CashTokens receiving address | PENDING |
+
+## Required mainnet evidence
+
+| Action | Txid | Explorer | Confirmed |
+| :--- | :--- | :--- | :--- |
+| Fund | PENDING | PENDING | PENDING |
+| Claim | PENDING | PENDING | PENDING |
+| Top-up (optional) | PENDING | PENDING | PENDING |
+| Cancel | PENDING | PENDING | PENDING |
+| Agent service payment | PENDING | PENDING | PENDING |
+
+Do not replace `PENDING` with a testnet, simulator or fabricated txid. Label Chipnet evidence as
+Chipnet everywhere.
+
+## Agent API configuration
+
+| Variable | Required value |
+| :--- | :--- |
+| `AGENT_ENABLED` | `true` for the live path |
+| `AGENT_WIF` | dedicated low-balance agent key; never expose |
+| `SERVICE_ADDRESS` | PUSD token address that receives the 0.01 PUSD call payment |
+| `PUSD_CATEGORY` | `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544` |
+| `AGENT_AMOUNT_PER_PERIOD` | `10` (0.10 PUSD) |
+| `AGENT_PERIOD_BLOCKS` | `2` |
+| `AGENT_SERVICE_PRICE` | `1` (0.01 PUSD) |
+| `AGENT_MAX_BALANCE` | `10` |
+| `AGENT_RATE_LIMIT` | `30` |
+
+The Agent hot wallet needs BCH for fees. Pre-fund it with about 20,000 sats.
+
+## Judge path
+
+1. Open the live demo.
+2. Keep **Agent** selected and **Sandbox** active.
+3. Launch agent budget.
+4. Run paid request.
+5. Run until budget exhausted.
+6. Fast-forward one period and run again.
+7. Cancel and reclaim.
+
+Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 stream.
+
+## Submission checklist
+
+- [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md`
+- [ ] Real wallet device test on Selene or Paytaca
+- [ ] Official Widget Factory Google Slides port published
+- [ ] CashTokens receiving address added
+- [ ] Telegram project confirmation
+- [ ] At least one preparation-stream roll call
+- [ ] DoraHacks project submitted
+- [ ] Commit and push the build-period product diff
+- [ ] Old/new repository and pre-hackathon demo links added to the submission

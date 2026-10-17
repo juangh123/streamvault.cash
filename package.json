@@ -12,8 +12,11 @@
     "typecheck": "tsc --noEmit",
     "test": "node contracts/test-streamvault.mjs",
     "test:engine": "node tests/run-engine.mjs",
+    "test:agent": "node tests/run-agent.mjs",
+    "test:api": "node tests/run-agent-server.mjs",
     "test:derive": "node tests/run-derive.mjs",
     "test:chain": "node tests/run-chain.mjs",
+    "test:e2e": "playwright test",
     "verify:network": "node tests/run-network.mjs",
     "settle": "node scripts/settle.mjs",
     "deploy": "vercel --prod"
@@ -31,6 +34,7 @@
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

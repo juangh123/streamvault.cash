@@ -6,16 +6,17 @@ The hackathon has seven mandatory requirements. Failing any one disqualifies the
 
 The StreamVault.cash covenant, sandbox cockpit and documentation were seeded on 2026-10-14 and
 2026-10-15. They are frozen at tag `v0-prehackathon-baseline` and are not presented as
-competition-period work. Contract v2, wallet-signed live transactions, the Agent budget layer and
-final media are scheduled for 2026-11-14 through 2026-11-22. The full disclosure is in
+competition-period work. The current sprint adds v1.2 contract hardening, WizardConnect signing, the
+Agent Sandbox/API and an updated deck. Real Mainnet evidence, the official Google Slides port,
+Telegram/roll-call confirmation and the CashTokens address remain pending. The full disclosure is in
 [PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md).
 
 | # | Requirement | Status | Where |
 | :-- | :--- | :--- | :--- |
-| 1 | Real BCH Mainnet transaction | TODO (Phase 4) | broadcast a real `claim`/`cancel`, record the txid in README |
+| 1 | Real BCH Mainnet transaction | TODO | fund a v1.2 vault and record real `claim`/`cancel` txids |
 | 2 | Live, clickable demo (no local build) | DONE | https://streamvault-cash.vercel.app |
-| 3 | WizardConnect wallet integration | PARTIAL | pairing exists in `WalletConnectDialog.tsx`; `signTransaction` wiring is TODO in v2 |
-| 4 | Official 7-page Widget Factory slides | TODO | `docs/SLIDES.md` -> port to the official template |
+| 3 | WizardConnect wallet integration | IMPLEMENTED, pending device test | `WalletProvider.tsx` + fund/claim/cancel signing |
+| 4 | Official 7-page Widget Factory slides | PARTIAL | in-app deck updated; Google Slides port still required |
 | 5 | Attend a livestream + roll call | TODO (10/17) | Information Session, Beijing 22:00 |
 | 6 | Telegram verification | DONE (disclosure posted) | joined `t.me/bchblaze` and posted the project disclosure on 2026-10-17 at 20:18 |
 | 7 | CashTokens-receiving BCH address | TODO | add a mainnet address to the submission + README |
@@ -26,9 +27,11 @@ final media are scheduled for 2026-11-14 through 2026-11-22. The full disclosure
    `claim`, and run at least one Agent service payment. Record the txids in README. The baseline does
    not contain a project-owned Mainnet PUSD transaction.
 2. **Live demo** - deployed and live at https://streamvault-cash.vercel.app (Vercel, master).
-3. **WizardConnect** - the pairing dialog is real; transaction signing is not wired into the UI yet.
-   The v2 build must call `signTransaction({ transaction, inputPaths })` for all four actions.
-4. **Slides** - rebuild the 7 pages in the official Google Slides template (content in `docs/SLIDES.md`).
+3. **WizardConnect** - the persistent manager now signs fund, claim and cancel WalletConnect objects
+   and broadcasts the signed response through Electrum. A real Selene/Paytaca device test is still
+   required before claiming this complete.
+4. **Slides** - the in-app and local deck now use the Agent + payroll story. Port the 7 pages into
+   the official Google Slides template before submitting.
 5. **Livestream** - at least one team member must appear and sign in during roll call.
 6. **Telegram** - confirm authenticity in the official group.
 7. **CashTokens address** - required to receive EMBER2026 votes and the airdrop.
@@ -46,9 +49,9 @@ attendance or Telegram verification.
   team representative actually attends and checks in.
 
 PUSD mainnet metadata was verified on 2026-10-17: category
-`2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The app still uses
-the `aa...aa` demo category until the v2 build period. See
-[PUSD_VERIFICATION.md](PUSD_VERIFICATION.md). Do not use the demo category for a Mainnet submission.
+`2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The application now
+uses this verified category by default and blocks Mainnet if a demo category is configured. See
+[PUSD_VERIFICATION.md](PUSD_VERIFICATION.md).
 
 ## Media track (optional second submission)
 

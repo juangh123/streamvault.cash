@@ -1,22 +1,39 @@
 # Judge walkthrough (60 seconds)
 
-No wallet, no testnet coins, no local build required - the sandbox mirrors the token, timelock and
-per-period ceiling rules. The v1 BCH buffer limitation is disclosed in
-[PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md).
+Open https://streamvault-cash.vercel.app. No wallet, testnet coins or local build is required for the
+Agent Sandbox.
 
-1. **Open the demo** and click **Launch Demo Stream** in the Judge Fast-Track bar. A $1,000.00 PUSD payroll
-   stream is created: payer "Design retainer" funds a CashScript covenant with a $25.00 / period policy.
-2. **Fast-forward 1 period** (or click **Run 3-period workflow**). The block clock advances; the covenant
-   becomes eligible for the next tranche.
-3. Click **Claim**. The payee withdraws $25.00; the remaining PUSD returns to the vault under the *identical*
-   bytecode - watch the Covenant Visualizer light up Output 1.
-4. **Prove the ceiling**: set the claim amount above $25.00 and claim - the covenant rejects it
-   (`amount <= amountPerPeriod`).
-5. **Cancel & reclaim**: the payer sweeps 100% of the remaining PUSD back. The payee key is now powerless.
+## Agent path
 
-Key files:
+1. Keep **Agent** selected and **Sandbox** active.
+2. Click **Launch agent budget**. A 2.00 PUSD vault is created with a 0.10 PUSD tranche every 2 blocks.
+3. Click **Run paid request**. The agent claims 0.10 PUSD, pays 0.01 PUSD to the service and the
+   service log shows the verified result.
+4. Click **Run until budget exhausted**. After 10 calls the UI shows **This period's budget is used
+   up** and the next claim block. This is the covenant's relative period gate, not a prompt rule.
+5. Click **Fast-forward 1 period** and run one more request to show the next tranche.
+6. Click **Cancel & reclaim**. The payer sweeps the remaining vault PUSD; the payee/agent key becomes
+   powerless over the vault.
+
+The Sandbox ledger is labelled `simulated`. Live mode only shows real wallet/Electrum data.
+
+## Payroll fallback
+
+Switch to **Payroll** → **Sandbox** and click **Launch Demo Stream ($1,000 payroll)**. Fast-forward one
+period, claim a $25 tranche, then cancel and reclaim. The visualizer shows the last settlement:
+input = tranche + change, output 0 = tranche, output 1 = change.
+
+## Key files
 
 - Covenant: `contracts/StreamVault.cash`
-- Real VM tests: `contracts/test-streamvault.mjs` (`npm test`)
-- Live layer: `src/lib/chain.ts`
+- Real VM tests: `contracts/test-streamvault.mjs` (`npm test`, 16 cases)
+- Chain layer: `src/lib/chain.ts`
+- Wallet manager: `src/wallet/WalletProvider.tsx`
+- Agent API: `src/lib/agent-server.ts`, `api/agent/*`, `api/service/insight.ts`
 - Mechanics: `docs/STREAM_MECHANICS.md`
+
+## Live mode
+
+The live payroll demo uses `receive/0` as payer and `change/0` as payee from one connected wallet.
+The live Agent demo additionally uses the server-side `AGENT_WIF` as the payee/hot wallet. Mainnet
+txids must be confirmed and linked in the README before they are presented as evidence.

@@ -42,21 +42,23 @@ Fungible CashTokens cannot be minted or burned by the covenant, so the outputs m
 combined with the checks above, the payee can never walk away with more than `amountPerPeriod` PUSD in
 one period. This statement is about PUSD only; the BCH buffer gap is described below.
 
-### Exactly two outputs
+### Exactly two outputs and the BCH buffer
 
 `require(tx.outputs.length == 2)` prevents a malicious payee from adding a third output. It does
-**not** preserve the vault's BCH fee buffer: within the two-output shape, a payee can put most of the
-vault's BCH on Output 0 and leave Output 1 at the token dust floor.
+not by itself preserve the vault's BCH fee buffer. v1.2 therefore adds a lower bound on the vault
+change: `tx.outputs[1].value >= tx.inputs[0].value - 2000`. The payee can choose the payee
+destination, but cannot drain the vault's fee buffer.
 
-This is a known v1 limitation. Contract v2 adds a lower bound on the vault change:
-`tx.outputs[1].value >= tx.inputs[this.activeInputIndex].value - 2000`.
+The claim also requires exactly one vault input, `this.activeInputIndex == 0`, and the vault input
+category to equal the configured PUSD category.
 
 ### Top-up and multiple UTXOs
 
-The v1 covenant has no `topUp` function. Sending PUSD directly to the vault address can create a
-second UTXO with the same locking bytecode, which weakens the one-tranche-per-period accounting. The
-UI does not offer direct top-up, but direct transfers remain possible. Contract v2 adds a
-`topUp(sig payerSig)` path that merges the existing vault UTXO with new PUSD inputs.
+v1.2 adds `topUp(sig payerSig)`. It spends the existing vault UTXO plus one payer-owned PUSD input and
+creates a single merged vault UTXO. The PUSD category must match, the merged token amount must be
+exact, and the output preserves all but at most 2000 sats of the combined BCH. The fresh UTXO restarts
+the relative period. Direct PUSD transfers can still create extra UTXOs; the UI warns and a future
+version can add multi-UTXO cancel.
 
 ### Cancel
 
@@ -74,16 +76,16 @@ can trigger it.
 | claim that would empty the vault | rejected - use `cancel` |
 | change to any other address | rejected (bytecode mismatch) |
 | third output | rejected (`outputs.length == 2`) |
-| most BCH moved to the payee within two outputs | accepted in v1; v2 rejects changes larger than 2000 sats |
-| direct PUSD transfer creates another vault UTXO | accepted by v1; v2 merges through `topUp` and claim requires one vault input |
+| most BCH moved to the payee within two outputs | rejected by v1.2 when vault change < input - 2000 sats |
+| direct PUSD transfer creates another vault UTXO | claim requires one vault input; UI warns; `topUp` merges one wallet UTXO |
 | non-payer cancel | rejected (signature) |
 
 ## Fee & dust
 
 The covenant UTXO carries PUSD **plus** BCH. The builder keeps the change UTXO above the token/BCH dust floor
-and the remainder covers the miner fee. That builder choice is not enforced by v1 for a payee-signed
-claim; see the buffer limitation above. Fee estimation is size-based (see
-`src/lib/covenant.ts` / `src/lib/chain.ts`).
+and the remainder covers the miner fee. v1.2 enforces the 2000-sat reduction bound. Claims use a
+1 sat/byte size-based fee so the 1000-sat payee output plus fee stays within the bound; fund, top-up
+and cancel use 2 sat/byte. Fee estimation is in `src/lib/chain.ts`.
 
 ## Trademark caveat
 

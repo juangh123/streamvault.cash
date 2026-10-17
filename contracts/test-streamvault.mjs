@@ -16,7 +16,7 @@ import { hexToBin, lockingBytecodeToCashAddress, publicKeyToP2pkhLockingBytecode
 
 const NETWORK_PREFIX = 'bchtest'; // MockNetworkProvider uses the bchtest prefix
 const DUST = 1000n; // BCH satoshis kept on each token output
-const FEE_RATE = 2n; // target sats per byte
+const FEE_RATE = 1n; // keep the 1000-sat tranche output plus fee within the 2000-sat bound
 const MAX_FEE_RATE = 5; // sanity cap enforced by the builder
 const CATEGORY = 'a'.repeat(64); // deterministic 32-byte CashTokens category
 const AMOUNT_PER_PERIOD = 1000n;
@@ -39,6 +39,7 @@ const toTokenAddress = (publicKey) =>
   }).address;
 
 const payeeTokenAddress = toTokenAddress(payee.publicKey);
+const payerTokenAddress = toTokenAddress(payer.publicKey);
 const attackerTokenAddress = toTokenAddress(attacker.publicKey);
 
 function freshSetup() {
@@ -65,19 +66,23 @@ function sizeFee(builder) {
 /** Build a claim transaction; changeTo defaults to the vault (correct behaviour). */
 function buildClaim({ provider, contract, vaultUtxo }, amount, sequence, changeTo, opts = {}) {
   const signer = opts.signer ?? payee;
+  const tokenCategory = opts.tokenCategory ?? CATEGORY;
   const builder = new TransactionBuilder({ provider, maximumFeeSatsPerByte: MAX_FEE_RATE });
+  if (opts.extraInput) {
+    builder.addInput(opts.extraInput, opts.extraInputUnlocker);
+  }
   builder.addInput(vaultUtxo, contract.unlock.claim(signer, amount), { sequence });
-  builder.addOutput({ to: payeeTokenAddress, amount: DUST, token: { amount, category: CATEGORY } });
+  builder.addOutput({ to: payeeTokenAddress, amount: DUST, token: { amount, category: tokenCategory } });
   builder.addOutput({
     to: changeTo ?? contract.tokenAddress,
     amount: DUST,
-    token: { amount: vaultUtxo.token.amount - amount, category: CATEGORY },
+    token: { amount: vaultUtxo.token.amount - amount, category: tokenCategory },
   });
   if (opts.extraOutput) {
     builder.addOutput({ to: attackerTokenAddress, amount: 1000n });
   }
   const extra = opts.extraOutput ? 1000n : 0n;
-  builder.outputs[1].amount = vaultUtxo.satoshis - DUST - extra - sizeFee(builder);
+  builder.outputs[1].amount = opts.changeAmount ?? (vaultUtxo.satoshis - DUST - extra - sizeFee(builder));
   return builder;
 }
 
@@ -90,6 +95,26 @@ function buildCancel({ provider, contract, vaultUtxo }, signer, lockBytecode, de
     token: { amount: vaultUtxo.token.amount, category: CATEGORY },
   });
   builder.outputs[0].amount = vaultUtxo.satoshis - sizeFee(builder);
+  return builder;
+}
+
+function buildTopUp({ provider, contract, vaultUtxo, walletUtxo }, opts = {}) {
+  const contractSigner = opts.contractSigner ?? payer;
+  const walletSigner = opts.walletSigner ?? payer;
+  const category = opts.outputCategory ?? CATEGORY;
+  const builder = new TransactionBuilder({ provider, maximumFeeSatsPerByte: 10 });
+  builder.addInput(vaultUtxo, contract.unlock.topUp(contractSigner));
+  builder.addInput(walletUtxo, walletSigner.unlockP2PKH());
+  builder.addOutput({
+    to: contract.tokenAddress,
+    amount: DUST,
+    token: {
+      amount: opts.mergedAmount ?? (vaultUtxo.token.amount + walletUtxo.token.amount),
+      category: CATEGORY,
+    },
+  });
+  builder.outputs[0].amount =
+    opts.changeAmount ?? (vaultUtxo.satoshis + walletUtxo.satoshis - sizeFee(builder));
   return builder;
 }
 
@@ -133,11 +158,23 @@ function expectAccept(id, name, fn) {
 {
   const fnNames = artifact.abi.map((f) => f.name).sort();
   const { contract } = freshSetup();
-  if (fnNames.join(',') === 'cancel,claim' && artifact.bytecode.length > 0 && contract.lockingBytecode.length > 0) {
-    ok('TEST-00', 'Covenant compiles with claim/cancel ABI', `ABI=[${fnNames.join(', ')}], bytecode=${artifact.bytecode.length / 2} bytes`);
+  if (fnNames.join(',') === 'cancel,claim,topUp' && artifact.bytecode.length > 0 && contract.lockingBytecode.length > 0) {
+    ok('TEST-00', 'Covenant compiles with claim/cancel/topUp ABI', `ABI=[${fnNames.join(', ')}], bytecode=${artifact.bytecode.length / 2} bytes`);
   } else {
     bad('TEST-00', 'Covenant compiles with claim/cancel ABI', `Unexpected artifact: ABI=[${fnNames.join(', ')}]`);
   }
+}
+
+function addPayerWalletUtxo(setup, overrides = {}) {
+  return setup.provider.addUtxo(payerTokenAddress, {
+    txid: overrides.txid ?? 'bc'.repeat(32),
+    vout: 0,
+    satoshis: overrides.satoshis ?? 50000n,
+    token: {
+      amount: overrides.amount ?? 5000n,
+      category: overrides.category ?? CATEGORY,
+    },
+  });
 }
 
 expectAccept('TEST-01', 'Valid claim within limit (800 <= 1000)', () => {
@@ -202,6 +239,106 @@ expectReject('TEST-10', 'Claim with a third output rejected', () => {
 // --- TEST-11: cancel routed to a non-payer address (VM rejects) ------------
 expectReject('TEST-11', 'Cancel routed to a non-payer address rejected', () => {
   buildCancel(freshSetup(), payer, payerLockingBytecode, attackerTokenAddress).debug();
+});
+
+// --- TEST-12: claim must spend exactly one input ---------------------------
+expectReject('TEST-12', 'Claim with a second wallet input rejected', () => {
+  const setup = freshSetup();
+  const walletUtxo = setup.provider.addUtxo(payeeTokenAddress, {
+    txid: 'cd'.repeat(32),
+    vout: 0,
+    satoshis: 1500n,
+  });
+  buildClaim(setup, 800n, PERIOD_BLOCKS, undefined, {
+    extraInput: walletUtxo,
+    extraInputUnlocker: payee.unlockP2PKH(),
+  }).debug();
+});
+
+// --- TEST-13: claim must use the configured PUSD category on the input ------
+expectReject('TEST-13', 'Claim with a wrong input token category rejected', () => {
+  const provider = new MockNetworkProvider();
+  const wrongCategory = 'b'.repeat(64);
+  const contract = new Contract(
+    artifact,
+    [payer.publicKey, payee.publicKey, AMOUNT_PER_PERIOD, BigInt(PERIOD_BLOCKS), hexToBin(CATEGORY)],
+    { provider },
+  );
+  const vaultUtxo = provider.addUtxo(contract.tokenAddress, {
+    txid: 'ef'.repeat(32),
+    vout: 0,
+    satoshis: VAULT_BCH,
+    token: { amount: VAULT_TOKENS, category: wrongCategory },
+  });
+  buildClaim({ provider, contract, vaultUtxo }, 800n, PERIOD_BLOCKS, undefined, {
+    tokenCategory: wrongCategory,
+  }).debug();
+});
+
+// --- TEST-14: the vault change must preserve its BCH buffer ----------------
+expectReject('TEST-14', 'Claim draining the vault BCH buffer rejected', () => {
+  const setup = freshSetup();
+  buildClaim(setup, 800n, PERIOD_BLOCKS, undefined, {
+    changeAmount: setup.vaultUtxo.satoshis - 3000n,
+  }).debug();
+});
+
+// --- TEST-15: a claim at the 2000-sat buffer boundary is accepted ----------
+expectAccept('TEST-15', 'Claim preserving the 2000-sat BCH buffer accepted', () => {
+  const setup = freshSetup();
+  const builder = buildClaim(setup, 800n, PERIOD_BLOCKS, undefined, {
+    changeAmount: setup.vaultUtxo.satoshis - 2000n,
+  });
+  builder.debug();
+  return 'VM accepted a claim whose vault change is exactly input minus 2000 sats.';
+});
+
+// --- TEST-16..20: top-up path ------------------------------------------------
+{
+  const setup = freshSetup();
+  try {
+    const walletUtxo = addPayerWalletUtxo(setup);
+    const builder = buildTopUp({ ...setup, walletUtxo });
+    const txid = await builder.send();
+    const merged = (await setup.contract.getUtxos()).find(
+      (utxo) => utxo.token?.amount === VAULT_TOKENS + walletUtxo.token.amount,
+    );
+    if (txid && merged) {
+      ok('TEST-16', 'Payer top-up merges PUSD into one vault UTXO', `merged=${merged.token.amount}`);
+    } else {
+      bad('TEST-16', 'Payer top-up merges PUSD into one vault UTXO', 'merged UTXO not found');
+    }
+  } catch (error) {
+    bad('TEST-16', 'Payer top-up merges PUSD into one vault UTXO', `${error.name}: ${String(error.message).split('\n')[0]}`);
+  }
+}
+
+expectReject('TEST-17', 'Top-up with a non-payer signature rejected', () => {
+  const setup = freshSetup();
+  const walletUtxo = addPayerWalletUtxo(setup, { txid: 'bd'.repeat(32) });
+  buildTopUp({ ...setup, walletUtxo }, { contractSigner: attacker, walletSigner: payer }).debug();
+});
+
+expectReject('TEST-18', 'Top-up with a wrong input category rejected', () => {
+  const setup = freshSetup();
+  const walletUtxo = addPayerWalletUtxo(setup, { txid: 'be'.repeat(32), category: 'b'.repeat(64) });
+  buildTopUp({ ...setup, walletUtxo }, { outputCategory: 'b'.repeat(64) }).debug();
+});
+
+expectReject('TEST-19', 'Top-up with the wrong merged amount rejected', () => {
+  const setup = freshSetup();
+  const walletUtxo = addPayerWalletUtxo(setup, { txid: 'bf'.repeat(32) });
+  buildTopUp({ ...setup, walletUtxo }, {
+    mergedAmount: VAULT_TOKENS + walletUtxo.token.amount - 1n,
+  }).debug();
+});
+
+expectReject('TEST-20', 'Top-up draining the vault BCH buffer rejected', () => {
+  const setup = freshSetup();
+  const walletUtxo = addPayerWalletUtxo(setup, { txid: 'c0'.repeat(32) });
+  buildTopUp({ ...setup, walletUtxo }, {
+    changeAmount: setup.vaultUtxo.satoshis + walletUtxo.satoshis - 3000n,
+  }).debug();
 });
 
 console.log('==================================================================');

@@ -1,61 +1,75 @@
 # Built during BCH BLAZE 2026
 
-Status: template. Fill this file during the build period and before submission.
-
-This file distinguishes the disclosed pre-hackathon baseline from work claimed as completed during
-BCH BLAZE 2026.
+This file separates the disclosed pre-hackathon baseline from the current sprint work.
 
 ## Baseline
 
 - Tag: `v0-prehackathon-baseline`
 - Commit: `491287e600621013f4ad53beca7a8b914588d1ae`
 - Disclosure: [PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md)
+- Baseline tag date: 2026-10-15
 
-## Build-period evidence
+## Current sprint evidence
 
 | Item | Value |
 | :--- | :--- |
-| Build window | 2026-11-14 to 2026-11-22 |
-| Start commit | TODO |
-| End commit | TODO |
-| Baseline-to-final diff | TODO |
+| Start commit | `4c9c083` (last baseline disclosure commit) |
+| Sprint code | v1.2 contract, WalletProvider signing, Agent API, Agent-first cockpit |
+| Final commit | Fill after the sprint commit is made |
+| Baseline-to-final diff | Record with `git diff --stat v0-prehackathon-baseline..HEAD` |
 
-## Contract v2
+The final commit and diff must be filled before submission. Do not describe uncommitted work as a
+build-period commit.
 
-- Claim input/output shape:
-- BCH buffer bound:
-- Token category check:
-- `topUp`:
-- Multi-UTXO `cancel`:
-- VM test result:
+## Contract v1.2
+
+- Claim input/output shape: one vault input, two outputs.
+- BCH buffer bound: `output[1].value >= input.value - 2000`.
+- Token category check: input and both outputs must match the configured PUSD category.
+- `topUp`: merges one payer-owned PUSD UTXO and restarts the relative period.
+- Multi-UTXO cancel: not in v1.2; cancel one vault UTXO at a time.
+- VM test result: 21 passed, 0 failed (`npm test`).
+- Chain test result: 9 passed (`npm run test:chain`).
 
 ## Wallet transactions
 
 | Action | Network | Txid | Explorer |
 | :--- | :--- | :--- | :--- |
-| Fund | Mainnet | TODO | TODO |
-| Claim | Mainnet | TODO | TODO |
-| Top-up | Chipnet | TODO | TODO |
-| Cancel | Mainnet | TODO | TODO |
-| Agent service payment | Mainnet | TODO | TODO |
+| Fund | Mainnet | PENDING `PAYER` wallet | PENDING |
+| Claim | Mainnet | PENDING `PAYEE` wallet | PENDING |
+| Cancel | Mainnet | PENDING `PAYER` wallet | PENDING |
+| Agent service payment | Mainnet | PENDING `AGENT_WIF` | PENDING |
+
+Do not replace `PENDING` with a fabricated or unpublished txid. The app's interactive agent path
+accepts 0-conf; evidence should wait for at least one confirmation.
 
 ## Agent demo
 
-- Service endpoint:
-- Request id format:
-- Verification method:
-- Budget-exhausted evidence:
-- Rate limit and hot-wallet controls:
+- Status endpoint: `GET /api/agent/status?payerPubkey=...`
+- Run endpoint: `POST /api/agent/run`
+- Service endpoint: `GET /api/service/insight?requestId=...&txid=...`
+- Request id format: `SV1:<requestId>` in an OP_RETURN output.
+- Verification: amount, destination, PUSD category, request id and confirmation state via Electrum.
+- Budget exhausted: the covenant rejects a new tranche until the relative period elapses; the API
+  returns `BUDGET_EXHAUSTED` with `nextClaimBlock`.
+- Rate limit and hot-wallet controls: `AGENT_RATE_LIMIT`, `AGENT_MAX_BALANCE`, `AGENT_ENABLED`.
+- Request-id de-duplication: process-local Set plus on-chain OP_RETURN check. A durable KV is future work.
 
 ## Deliverables
 
-- Live demo:
-- 7-page Widget Factory slides:
-- Media submission:
-- CashTokens receiving address:
+- Live demo: https://streamvault-cash.vercel.app
+- Agent sandbox: `/` → Agent → Launch agent budget
+- Payroll sandbox: `/` → Payroll → Launch Demo Stream
+- Local deck: `docs/deck/StreamVault-BCH-Blaze-2026.pptx`
+- In-app deck: `src/components/SlideDeck.tsx`
+- Media draft: `docs/media/streamvault-explainer.mp4` (sandbox only; do not submit as final)
+- CashTokens receiving address: PENDING
+- Official Widget Factory Google Slides: PENDING
+- Telegram confirmation / roll call: PENDING
 
 ## Compliance statement
 
-The v2 contract, wallet signing, Agent budget layer, Mainnet evidence, final slides and final Media
-were implemented, reviewed and committed during the build window above. The baseline tag is prior
-seed work and is not included in the claimed build-period improvement.
+The current branch implements the v1.2 contract hardening, a persistent WizardConnect signing path,
+the Agent budget API and an Agent-first cockpit. Real Mainnet transaction evidence, the official
+Google Slides port, Telegram confirmation, roll-call attendance and the CashTokens receiving address
+are still pending and must be completed before submission.

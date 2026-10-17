@@ -21,12 +21,13 @@ still pending.
 >
 > The repository contains a prototype built on 2026-10-14 and 2026-10-15, before the official build
 > period. It includes a CashScript covenant, a sandbox cockpit, tests, documentation, a draft deck and
-> a draft explainer video. The prototype has no project-owned BCH Mainnet PUSD transaction, and the
-> browser wallet flow currently supports pairing but not transaction signing.
+> a draft explainer video. The baseline prototype has no project-owned BCH Mainnet PUSD transaction.
+> The current sprint now adds the v1.2 contract hardening, persistent WizardConnect signing path and
+> Agent budget API; real Mainnet evidence is still pending.
 >
-> We are not presenting the prototype as work completed during BCH BLAZE 2026. During the build period
-> (2026-11-14 to 2026-11-22) we plan to implement and submit a safer contract v2, real WizardConnect
-> wallet transactions, a live Agent budget demo, Mainnet transaction evidence and the final media.
+> We are not presenting the prototype as work completed during BCH BLAZE 2026. The current sprint adds
+> a hardened v1.2 contract, real WizardConnect signing code, an Agent budget Sandbox/API and an updated
+> deck. We still need to publish real Mainnet evidence and finish the official slides/media.
 > The build-period commit range and transaction evidence will be documented in
 > `docs/BUILT_DURING_BLAZE.md`.
 >
@@ -43,12 +44,13 @@ still pending.
 > 赛前基线标签：`v0-prehackathon-baseline`
 >
 > 仓库里有一份在 2026-10-14 和 2026-10-15 完成的原型，早于正式赛期。原型包含 CashScript 合约、
-> 沙盒界面、测试、文档、草稿演示文稿和草稿视频。原型没有项目自己的 BCH 主网 PUSD 交易，浏览器
-> 钱包目前只完成了配对，还没有交易签名。
+> 沙盒界面、测试、文档、草稿演示文稿和草稿视频。原型没有项目自己的 BCH 主网 PUSD 交易。当前
+> 冲刺分支已加入 v1.2 合约加固、持久化 WizardConnect 签名路径和 Agent 预算 API，主网证据仍在准备。
 >
 > 我们不会把这份原型当成 BCH BLAZE 2026 赛期内完成的工作。赛期（2026-11-14 至 2026-11-22）
-> 我们会实现并提交更安全的合约 v2、真实 WizardConnect 钱包交易、Agent 预算演示、主网交易证据和
-> 最终 Media，并在 `docs/BUILT_DURING_BLAZE.md` 记录赛期提交范围和链上证据。
+> 当前冲刺已加入更安全的 v1.2 合约、WizardConnect 签名代码、Agent 预算 Sandbox/API 和更新后的
+> deck；我们仍需发布真实主网证据并完成官方 slides/media，并在 `docs/BUILT_DURING_BLAZE.md`
+> 记录赛期提交范围和链上证据。
 >
 > 请问这种处理是否符合规则？如果赛前代码不能使用，我们会在赛期内从空仓库重建核心产品。谢谢。
 

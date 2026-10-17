@@ -1,11 +1,13 @@
 import React from 'react';
-import { Wallet, Globe, BookOpen, Presentation, Droplets, LogOut } from 'lucide-react';
-import { AppMode, NetworkType, WalletState } from '../types';
+import { Wallet, Globe, BookOpen, Presentation, Droplets, LogOut, Bot, Landmark } from 'lucide-react';
+import { AppMode, AppView, NetworkType, WalletState } from '../types';
 import { shortAddress } from '../lib/format';
 
 interface HeaderProps {
   mode: AppMode;
   setMode: (mode: AppMode) => void;
+  view: AppView;
+  setView: (view: AppView) => void;
   network: NetworkType;
   setNetwork: (net: NetworkType) => void;
   onOpenDocs: () => void;
@@ -18,6 +20,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   mode,
   setMode,
+  view,
+  setView,
   network,
   setNetwork,
   onOpenDocs,
@@ -45,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
                 BCH BLAZE 2026
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Non-custodial PUSD streaming payroll &amp; subscription vault</p>
+            <p className="text-[11px] text-slate-400">PUSD allowance for people and AI agents</p>
           </div>
         </div>
 
@@ -64,6 +68,23 @@ export const Header: React.FC<HeaderProps> = ({
             <BookOpen className="w-3.5 h-3.5 text-[#0AC18E]" />
             <span>Docs</span>
           </button>
+
+          <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-xs">
+            <button
+              onClick={() => setView('AGENT')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md font-medium transition ${view === 'AGENT' ? 'bg-indigo-500 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              <Bot className="w-3 h-3" />
+              Agent
+            </button>
+            <button
+              onClick={() => setView('PAYROLL')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md font-medium transition ${view === 'PAYROLL' ? 'bg-indigo-500 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              <Landmark className="w-3 h-3" />
+              Payroll
+            </button>
+          </div>
 
           <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-xs">
             <button

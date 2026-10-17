@@ -12,8 +12,8 @@ pragma cashscript ^0.14.0;
  *
  * Token conservation is enforced by the VM (fungible CashTokens cannot be created or burned here):
  * Output 0 carries exactly `amount` PUSD for the payee, Output 1 carries the remaining PUSD back to
- * this exact covenant bytecode. No third output is permitted, so the vault's BCH buffer (used to pay
- * future miner fees and satisfy the token dust floor) cannot be siphoned off by the payee.
+ * this exact covenant bytecode. No third output is permitted, and the vault change must preserve
+ * all but at most 2000 sats of the input BCH, so the payee cannot drain the fee buffer.
  */
 contract StreamVault(
     pubkey payerPk,          // Payer / employer key (can cancel and reclaim the stream)
@@ -31,28 +31,54 @@ contract StreamVault(
         // 1. Authorization: only the payee may pull a tranche.
         require(checkSig(payeeSig, payeePk));
 
-        // 2. Relative timelock: the covenant UTXO must be at least `periodBlocks` old.
+        // 2. One vault input only. This keeps the per-period accounting tied to a single UTXO.
+        require(tx.inputs.length == 1);
+        require(this.activeInputIndex == 0);
+
+        // 3. The vault input must carry the configured PUSD category.
+        require(tx.inputs[0].tokenCategory == pusdCategory);
+
+        // 4. Relative timelock: the covenant UTXO must be at least `periodBlocks` old.
         //    Every spend recreates the vault, resetting the clock for the next period.
         require(this.age >= periodBlocks);
 
-        // 3. Rate policy: never pay more than the per-period allowance, and never pay nothing.
+        // 5. Rate policy: never pay more than the per-period allowance, and never pay nothing.
         require(amount > 0);
         require(amount <= amountPerPeriod);
 
-        // 4. Exactly two outputs: the payee tranche and the vault change. This blocks any attempt
-        //    to add a third output that would leak the vault's BCH fee buffer.
+        // 6. Exactly two outputs: the payee tranche and the vault change.
         require(tx.outputs.length == 2);
 
-        // 5. Output 0 must carry exactly `amount` PUSD for the payee.
-        require(tx.outputs[0].tokenCategory == pusdCategory);
-        require(tx.outputs[0].tokenAmount == amount);
-
-        // 6. Output 1 must carry the remaining PUSD back to this exact covenant bytecode.
+        // 7. Output 1 must carry the remaining PUSD back to this exact covenant bytecode.
         int remaining = tx.inputs[this.activeInputIndex].tokenAmount - amount;
         require(remaining > 0);
         require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);
         require(tx.outputs[1].tokenCategory == pusdCategory);
         require(tx.outputs[1].tokenAmount == remaining);
+
+        // 8. The vault change must preserve all but at most 2000 sats of its BCH buffer.
+        //    The payee chooses output 0's destination, but cannot drain the fee buffer.
+        require(tx.outputs[1].value >= tx.inputs[0].value - 2000);
+
+        // 9. Output 0 must carry exactly `amount` PUSD for the payee.
+        require(tx.outputs[0].tokenCategory == pusdCategory);
+        require(tx.outputs[0].tokenAmount == amount);
+    }
+
+    /**
+     * @notice Merge one payer-owned PUSD input into the existing vault UTXO.
+     * @dev This creates a fresh vault UTXO and therefore restarts the relative period.
+     */
+    function topUp(sig payerSig) {
+        require(checkSig(payerSig, payerPk));
+        require(tx.inputs.length == 2);
+        require(this.activeInputIndex == 0);
+        require(tx.inputs[1].tokenCategory == pusdCategory);
+        require(tx.outputs.length == 1);
+        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
+        require(tx.outputs[0].tokenCategory == pusdCategory);
+        require(tx.outputs[0].tokenAmount == tx.inputs[0].tokenAmount + tx.inputs[1].tokenAmount);
+        require(tx.outputs[0].value >= tx.inputs[0].value + tx.inputs[1].value - 2000);
     }
 
     /**
