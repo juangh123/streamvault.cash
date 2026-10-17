@@ -46,6 +46,7 @@ Chipnet everywhere.
 | `AGENT_SERVICE_PRICE` | `1` (0.01 PUSD) |
 | `AGENT_MAX_BALANCE` | `10` |
 | `AGENT_RATE_LIMIT` | `30` |
+| `VITE_AGENT_DEMO_PAYER_PUBKEY` | optional public payer key for the pre-funded Live demo vault |
 
 The Agent hot wallet needs BCH for fees. Pre-fund it with about 20,000 sats.
 

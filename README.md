@@ -210,6 +210,10 @@ Server-side variables:
 | `AGENT_MAX_BALANCE` | Hot-wallet PUSD ceiling (default `10`) |
 | `AGENT_RATE_LIMIT` | Requests per IP per minute (default `30`) |
 
+`VITE_AGENT_DEMO_PAYER_PUBKEY` is an optional public build-time payer key for a pre-funded
+Live demo vault. It lets the Agent view load real Mainnet status and run paid requests without
+connecting a wallet. Never use a WIF or private key in this variable.
+
 The interactive agent demo accepts 0-conf and labels it; evidence in this README should wait for at
 least one confirmation. Rate limiting and request-id de-duplication are in-memory hackathon controls,
 not a durable production queue.

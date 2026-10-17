@@ -56,6 +56,8 @@ interface AgentPanelProps {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const LIVE_DEMO_PAYER_PUBKEY = String(import.meta.env.VITE_AGENT_DEMO_PAYER_PUBKEY ?? '').trim();
+
 function liveEntry(
   type: LedgerEntry['type'],
   amount: number,
@@ -72,6 +74,8 @@ function liveEntry(
 export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwork }) => {
   const walletCtx = useWallet();
   const wallet = walletCtx.wallet;
+  const payerPubkey = wallet.payerPubkey ?? LIVE_DEMO_PAYER_PUBKEY;
+  const usingDemoPayer = !wallet.payerPubkey && Boolean(LIVE_DEMO_PAYER_PUBKEY);
   const [agent, setAgent] = useState<AgentSimState | null>(null);
   const [liveStatus, setLiveStatus] = useState<AgentStatus | null>(null);
   const [liveLedger, setLiveLedger] = useState<LedgerEntry[]>([]);
@@ -84,9 +88,9 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
   }, []);
 
   const refreshLive = useCallback(async () => {
-    if (!wallet.payerPubkey) return;
+    if (!payerPubkey) return;
     try {
-      const res = await fetch(`/api/agent/status?payerPubkey=${encodeURIComponent(wallet.payerPubkey)}`);
+      const res = await fetch(`/api/agent/status?payerPubkey=${encodeURIComponent(payerPubkey)}`);
       const body = (await res.json()) as AgentStatus & { message?: string };
       if (!res.ok) {
         throw new Error(
@@ -104,7 +108,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
         `${(e as Error).message} The live Agent API is served by the Vercel deployment; use Sandbox for the local-only demo.`,
       );
     }
-  }, [wallet.payerPubkey, network, setNetwork]);
+  }, [payerPubkey, network, setNetwork]);
 
   useEffect(() => {
     if (mode === 'LIVE') refreshLive();
@@ -167,8 +171,8 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
   };
 
   const runLiveOnce = useCallback(async (): Promise<AgentRunResponse | null> => {
-    if (!wallet.payerPubkey) {
-      setError('Connect the payer wallet first.');
+    if (!payerPubkey) {
+      setError('No payer public key is available for the live agent.');
       return null;
     }
     try {
@@ -176,7 +180,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          payerPubkey: wallet.payerPubkey,
+          payerPubkey,
           requestId: crypto.randomUUID(),
         }),
       });
@@ -233,7 +237,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
       note(message);
       return null;
     }
-  }, [wallet.payerPubkey, liveStatus, network, refreshLive, note]);
+  }, [payerPubkey, liveStatus, network, refreshLive, note]);
 
   const topUpLive = async () => {
     if (!liveStatus || !wallet.payerPubkey || !wallet.payerAddress) {
@@ -439,10 +443,18 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
     mode === 'SANDBOX' ? agent?.vaultRemaining ?? 0 : liveStatus?.vault.tokenAmount ?? 0;
   const agentBalance =
     mode === 'SANDBOX' ? agent?.agentBalance ?? 0 : liveStatus?.agent.tokenAmount ?? 0;
-  const spent = mode === 'SANDBOX' ? agent?.spent ?? 0 : liveStatus ? (200 - liveStatus.vault.tokenAmount - liveStatus.agent.tokenAmount) : 0;
+  const liveTracked = (liveStatus?.vault.tokenAmount ?? 0) + (liveStatus?.agent.tokenAmount ?? 0);
+  const spent =
+    mode === 'SANDBOX'
+      ? agent?.spent ?? 0
+      : liveTracked > 0
+        ? Math.max(0, 200 - liveTracked)
+        : 0;
   const nextClaim = mode === 'SANDBOX' ? agent?.nextClaimBlock : liveStatus?.vault.nextClaimBlock;
   const isLive = mode === 'LIVE';
-  const canRun = isLive ? Boolean(liveStatus) : Boolean(agent && !agent.cancelled);
+  const canRun = isLive
+    ? Boolean(liveStatus && liveStatus.vault.tokenAmount > 0)
+    : Boolean(agent && !agent.cancelled);
 
   const stats = useMemo(
     () => [
@@ -575,7 +587,9 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
         {isLive && !wallet.connected && (
           <div className="flex items-center gap-2 border border-slate-800 rounded-lg p-3 text-xs text-slate-300">
             <Wallet className="w-4 h-4 text-emerald-400" />
-            Connect a wallet to read the live agent vault and fund it.
+            {usingDemoPayer
+              ? 'Demo vault payer loaded. Connect a wallet to fund, top up, or cancel.'
+              : 'Connect a wallet to read the live agent vault and fund it.'}
           </div>
         )}
 
@@ -592,7 +606,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
             <div className="border border-slate-800 rounded-lg p-3">
               <div className="text-slate-500">Next claim</div>
               <div className="font-mono text-amber-300 mt-1">
-                {liveStatus.vault.nextClaimBlock ? `block ${liveStatus.vault.nextClaimBlock}` : 'available now'}
+                {liveStatus.vault.nextClaimBlock
+                  ? `block ${liveStatus.vault.nextClaimBlock}`
+                  : liveStatus.vault.tokenAmount > 0
+                    ? 'available now'
+                    : 'no active vault'}
               </div>
             </div>
           </div>
