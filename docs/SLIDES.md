@@ -5,43 +5,47 @@
 > Restyle it inside the official Widget Factory Google Slides template before submitting.
 
 
-Port this content into the official Widget Factory Google Slides template.
+Port this content into the official Widget Factory Google Slides template. This is the v2 content;
+the committed PPTX is still the pre-hackathon draft and must be regenerated during the build period.
 
 **Slide 1 - Cover**
 - StreamVault.cash
-- Non-custodial PUSD streaming payroll & subscription vault on Bitcoin Cash
+- PUSD limit flows for people and AI agents
 - BCH BLAZE 2026 - Team Autonomous Cash
-- streamvault.cash | @StreamVaultCash
+- streamvault.cash | github.com/juangh123/streamvault.cash
 
-**Slide 2 - One-liner & repo**
-- "Programmable BCH money streams that pay themselves - capped on-chain, cancellable by the payer, settled
-  in a stablecoin."
-- Repo: github.com/juangh123/streamvault.cash
-- Non-custodial - PUSD settlement - hard covenants
+**Slide 2 - The trust gap**
+- Payroll and vendor payments still arrive as lumps, with a custodian in the middle.
+- An AI agent with a wallet has the same problem in miniature: it can spend everything it can reach.
+- A prompt can be ignored. A cap that lives in a prompt is not a financial control.
 
-**Slide 3 - Story / origin**
-- Contractors, creators and SaaS vendors are paid in lumps that arrive late or need a custodian.
-- Cards and mandates are custodial and reversible; lump-sum crypto has no schedule; EVM gas exceeds the tranche.
-- BCH's near-zero fees + introspection covenants are the natural rail for programmable streams.
+**Slide 3 - One covenant, three users**
+- Payer locks a PUSD budget and keeps a cancel key.
+- Employee or freelancer claims one tranche per period.
+- AI Agent claims a small budget, then pays a service per request.
+- Same contract primitive: `amountPerPeriod`, `periodBlocks`, `claim`, `topUp`, `cancel`.
 
-**Slide 4 - Benefits**
-- Payees: withdraw on schedule without invoicing or a custodian.
-- Payers: per-period ceiling, cancel and reclaim anytime.
-- Stable value: denominated in PUSD, not a volatile token.
-- Any wallet: sign with Selene, Paytaca or Cashonize.
+**Slide 4 - How the limit is enforced**
+- PUSD is a CashTokens fungible asset; the VM enforces conservation.
+- `this.age` is the relative period gate.
+- `claim` requires one vault input and two outputs; the change returns to the same covenant.
+- The vault change preserves all but at most 2000 sats of its BCH buffer.
+- The payer can cancel one or many vault UTXOs.
 
-**Slide 5 - BCH usage (core scoring)**
-- PUSD is a CashTokens fungible token; the covenant enforces token conservation.
-- `this.age` (OP_CHECKSEQUENCEVERIFY) gates each tranche - the stream's rate limit.
-- `output[1].lockingBytecode == input.lockingBytecode` - recursive change, enforced by introspection.
-- Signed via WizardConnect, broadcast to BCH; everything is consensus-enforced.
+**Slide 5 - Agent budget demo**
+- Vault: 2.00 PUSD; per period: 0.10 PUSD; period: 6 blocks; service call: 0.01 PUSD.
+- Agent claims its tranche, pays the service, and binds each request with an OP_RETURN request id.
+- The service verifies amount, destination, category and request id through Electrum.
+- When the period budget is exhausted, the UI says so and shows the existing transaction.
 
-**Slide 6 - Vision & roadmap**
-- Phase 1: covenant + cockpit + Chipnet/Mainnet settlement.
-- Phase 2: SDK + MCP server so AI agents stream per-call budgets.
-- Phase 3: marketplace of PUSD-denominated recurring services.
+**Slide 6 - Why BCH and the business model**
+- Near-zero settlement makes 0.01 PUSD service calls practical.
+- Relative timelocks + introspection + native CashTokens are the enforcement layer.
+- WizardConnect keeps keys in the user's wallet.
+- Revenue: service-provider SDK, agent billing gateway and a hosted budget console. No protocol fee in
+  the covenant.
 
-**Slide 7 - Thank you & demo**
+**Slide 7 - Demo and ask**
 - Live demo: streamvault.cash
-- Judge walkthrough (one click, no wallet)
-- "Bitcoin Cash is peer-to-peer cash for people - and now, for their money streams."
+- 60-second judge path: agent run, wallet flow or sandbox fallback.
+- "Give an AI an allowance, not your bank account."

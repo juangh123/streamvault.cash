@@ -44,6 +44,8 @@ the `aa...aa` demo category until the v2 build period. See
 
 ## Media track (optional second submission)
 
-- Media assets: poster docs/media/poster.png, 90s explainer docs/media/streamvault-explainer.mp4, brand banner docs/assets/banner.svg.
-- A 90-second explainer video ("paid per period, cancellable by the sponsor"). Storyboard in
-  `docs/MEDIA_SCRIPT.md`. Host on YouTube/X and link the DoraHacks media entry.
+- Final Media target: [MEDIA_SCRIPT_V2.md](MEDIA_SCRIPT_V2.md), a 60-90 second agent-budget short
+  with a real Mainnet operation.
+- Baseline assets: poster `docs/media/poster.png`, sandbox explainer
+  `docs/media/streamvault-explainer.mp4`, brand banner `docs/assets/banner.svg`.
+- Host the final video on YouTube/X and link the DoraHacks media entry.

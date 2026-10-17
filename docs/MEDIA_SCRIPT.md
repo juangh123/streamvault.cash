@@ -1,5 +1,11 @@
 # Media track - 90-second explainer
 
+> **Current target:** the v2 Media plan is
+> [MEDIA_SCRIPT_V2.md](MEDIA_SCRIPT_V2.md). It replaces this sandbox-only draft with a 75-second
+> agent-budget story and a real Mainnet operation.
+
+This file remains as the baseline draft.
+
 **Title:** "Get Paid Every Period, Not Every Quarter"
 **Format:** 1080p, 16:9, English voiceover + subtitles.
 
