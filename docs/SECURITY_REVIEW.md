@@ -19,11 +19,15 @@ stepping through every `require` and the transaction-building code, plus the aut
 | Cancel pays the payer destination | `output[0].lockingBytecode == payerLockingBytecode` - TEST-11 |
 | Real networks reachable | `npm run verify:network` (Chipnet + Mainnet) |
 
-26 automated checks across `npm test` (12), `npm run test:engine` (12), `npm run test:chain` (5 in
-addition to the derive/network probes).
+29 automated checks across `npm test` (12), `npm run test:engine` (12) and `npm run test:chain` (5),
+in addition to the derive and network probes.
 
 ## Residual risks and notes
 
+0. **BCH buffer reduction is not prevented.** The payee can keep the two-output shape, put most of
+   the vault's BCH on Output 0 and leave Output 1 at the token dust floor. `outputs.length == 2` does
+   not bound the value of Output 1. Contract v2 must enforce
+   `tx.outputs[1].value >= input.value - 2000`.
 1. **Per-period, not per-total.** The covenant caps each tranche but has no cumulative budget. Payers
    bound total exposure with the deposit size and by cancelling; this is by design for a payroll stream.
 2. **Output 0 destination is payer/payee-chosen.** The covenant requires output 0 to carry `amount` PUSD
@@ -35,14 +39,21 @@ addition to the derive/network probes).
    version-2 with the input `nSequence` set to `>= periodBlocks`. Full nodes enforce the age; the mock
    provider validates the script branch only (documented).
 5. **Live signing.** No private key is stored in the browser; payer/payee sign with their own wallets
-   (WizardConnect) or a throwaway demo key on Chipnet. Never reuse a demo key with real funds.
-6. **`PUSD_CATEGORY` placeholder.** `src/lib/covenant.ts` ships a demo category; set the real ParyonUSD
+   (WizardConnect) or a throwaway demo key on Chipnet. In the baseline the UI only pairs the wallet;
+   `signTransaction` wiring is a v2 deliverable. Never reuse a demo key with real funds.
+6. **`PUSD_CATEGORY` placeholder.** `src/lib/constants.ts` ships a demo category; set the real ParyonUSD
    category before any Mainnet settlement.
 7. **Dependency surface.** `cashscript` 0.14 + `@bitauth/libauth` 3.1 pre-release + `@wizardconnect/*`.
    `npm audit` reports transitive advisories; pin versions and re-audit before launch.
+8. **Multiple vault UTXOs.** A direct PUSD transfer can create another UTXO under the same covenant.
+   v1 has no `topUp` merge and no multi-UTXO cancel. v2 must close both gaps.
+9. **No explicit input category check.** The v1 output checks rely on CashTokens conservation. v2
+   must compare the active vault input's token category directly.
 
 ## Recommendations before Mainnet
 
 - Set the real PUSD category and re-run `npm run verify:network`.
 - Settle on Chipnet first, then a small Mainnet amount.
 - Add an upper bound check on `amountPerPeriod` at stream creation (UI guard already present).
+- Implement the v2 claim, top-up and multi-UTXO cancel rules before enabling Mainnet.
+- Wire WizardConnect signing for fund, top-up, claim and cancel, then record real txids.

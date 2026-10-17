@@ -1,6 +1,8 @@
 # Judge walkthrough (60 seconds)
 
-No wallet, no testnet coins, no local build required - the sandbox mirrors every covenant rule.
+No wallet, no testnet coins, no local build required - the sandbox mirrors the token, timelock and
+per-period ceiling rules. The v1 BCH buffer limitation is disclosed in
+[PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md).
 
 1. **Open the demo** and click **Launch Demo Stream** in the Judge Fast-Track bar. A $1,000.00 PUSD payroll
    stream is created: payer "Design retainer" funds a CashScript covenant with a $25.00 / period policy.

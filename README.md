@@ -11,6 +11,11 @@
 
 > **Live demo:** https://streamvault-cash.vercel.app  ·  built for BCH BLAZE 2026
 
+> **Pre-hackathon baseline:** the current deployment is a sandbox and wallet-pairing prototype.
+> It is frozen at tag `v0-prehackathon-baseline`. Contract v2, wallet-signed Mainnet transactions
+> and the Agent budget layer are scheduled for the BCH BLAZE 2026 build period. See
+> [docs/PRE_HACKATHON_BASELINE.md](docs/PRE_HACKATHON_BASELINE.md) for the exact scope and limits.
+
 ---
 
 ## What it is
@@ -54,14 +59,18 @@ contract StreamVault(pubkey payerPk, pubkey payeePk, int amountPerPeriod, int pe
   - `checkSig(payeeSig, payeePk)` - only the payee can pull a tranche.
   - `this.age >= periodBlocks` - relative period must have elapsed.
   - `amount > 0 && amount <= amountPerPeriod` - per-period ceiling.
-  - `tx.outputs.length == 2` - the payee tranche plus the vault change; no third output can siphon the BCH buffer.
+  - `tx.outputs.length == 2` - the payee tranche plus the vault change; no third output is allowed.
   - Output 0 carries exactly `amount` PUSD to the payee (`tokenCategory == pusdCategory`).
   - Output 1 carries the remaining PUSD back to the **identical covenant bytecode**; the new UTXO restarts the clock.
 - `cancel(sig payerSig, bytes payerLockingBytecode)`
   - The payer signature sweeps **100%** of the remaining PUSD to a payer-selected address.
 
-Token conservation is guaranteed by the VM: a claim can never drain the vault (the covenant requires a
-positive remainder), so only the payer's `cancel` can empty it.
+Token conservation is guaranteed by the VM: a claim cannot drain the remaining PUSD balance (the
+covenant requires a positive remainder), so only the payer's `cancel` can empty the token balance.
+
+Known v1 limitation: the two-output rule does not constrain the BCH value of Output 1. A payee can
+leave the token change at dust and reduce the vault's BCH fee buffer. Contract v2 adds a bound of at
+most 2000 sats of BCH reduction on the vault change.
 
 See [docs/STREAM_MECHANICS.md](docs/STREAM_MECHANICS.md) for the full mechanics, edge cases and the
 "why relative locks" rationale.
@@ -73,13 +82,13 @@ See [docs/STREAM_MECHANICS.md](docs/STREAM_MECHANICS.md) for the full mechanics,
 ```bash
 npm install
 npm run compile   # cashc contracts/StreamVault.cash -> contracts/artifacts/StreamVault.json
-npm test          # 9 covenant tests evaluated against the real BCH VM (MockNetworkProvider)
+npm test          # 12 covenant tests evaluated against the real BCH VM (MockNetworkProvider)
 npm run dev       # http://localhost:5173
 ```
 
 Open `http://localhost:5173` and use the **Judge Fast-Track**: *Launch demo stream* -> *Fast-forward 1 period*
--> *Claim* -> *Cancel & reclaim*. The sandbox mirrors every covenant rule, so no wallet or testnet coins are
-required.
+-> *Claim* -> *Cancel & reclaim*. The sandbox mirrors the token, timelock and per-period ceiling rules; the
+BCH buffer limitation is documented separately below. No wallet or testnet coins are required.
 
 ---
 
@@ -105,6 +114,9 @@ on a `MockNetworkProvider` (real VM validation) and asserts both accepted and re
 | TEST-06 | Payer cancel sweeps 100% | VM accepts |
 | TEST-07 | Cancel with a non-payer key | covenant reverts |
 | TEST-08 | Broadcast updates the covenant UTXO | stream continues |
+| TEST-09 | Claim signed by a non-payee key | covenant reverts |
+| TEST-10 | Claim with a third output | covenant reverts |
+| TEST-11 | Cancel routed to a non-payer address | covenant reverts |
 
 ---
 
@@ -132,15 +144,19 @@ StreamVault.cash/
 ## Live settlement
 
 `src/lib/chain.ts` wires the real stack: `ElectrumNetworkProvider` for Chipnet/Mainnet, `Contract`
-instantiation, live UTXO/Tokens queries, and real `claim` transaction building. Wallet signing goes through
-**WizardConnect** (`@wizardconnect/react` + `@wizardconnect/dapp`), so no private key is ever stored in the
-browser. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the signing flow.
+instantiation, live UTXO/Tokens queries, and `claim`/`cancel` transaction and WalletConnect object
+building. The UI currently derives covenant addresses, queries vault UTXOs and pairs a wallet through
+**WizardConnect** (`@wizardconnect/react` + `@wizardconnect/dapp`). End-to-end wallet signing for
+`fund`, `topUp`, `claim` and `cancel` is part of the v2 build scope. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the current and planned signing flow.
 
 ---
 
 ## Compliance (BCH BLAZE 2026)
 
 See [docs/COMPLIANCE.md](docs/COMPLIANCE.md) for the seven mandatory requirements checklist.
+See [docs/PRE_HACKATHON_BASELINE.md](docs/PRE_HACKATHON_BASELINE.md) for the pre-hackathon
+disclosure and the competition-period change scope.
 
 ## Roadmap
 
