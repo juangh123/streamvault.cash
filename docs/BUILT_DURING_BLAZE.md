@@ -8,6 +8,8 @@ This file separates the disclosed pre-hackathon baseline from the current sprint
 - Commit: `491287e600621013f4ad53beca7a8b914588d1ae`
 - Disclosure: [PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md)
 - Baseline tag date: 2026-10-15
+- Baseline demo: https://streamvault-baseline.vercel.app
+- Current demo: https://streamvault-cash.vercel.app
 
 ## Current sprint evidence
 

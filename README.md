@@ -14,6 +14,8 @@
 > **Agent demo:** open the app, keep **Agent** selected, and use the Sandbox Fast-Track. No wallet or funds are required.
 >
 > Formerly **AgentPay.cash**. The original agent-allowance thesis is now the Agent tab; payroll is the second use case.
+>
+> **Before / after disclosure:** [baseline code](https://github.com/juangh123/streamvault.cash/tree/v0-prehackathon-baseline) · [before demo](https://streamvault-baseline.vercel.app) · [current demo](https://streamvault-cash.vercel.app)
 
 > **Pre-hackathon baseline:** the covenant, sandbox cockpit and documentation were seeded before the
 > build period and are frozen at tag `v0-prehackathon-baseline`. The current branch adds the v1.2

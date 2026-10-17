@@ -28,6 +28,8 @@ pending. The full disclosure is in
    `claim`, and run at least one Agent service payment. Record the txids in README. The baseline does
    not contain a project-owned Mainnet PUSD transaction.
 2. **Live demo** - deployed and live at https://streamvault-cash.vercel.app (Vercel, master).
+   The pre-hackathon demo is public at https://streamvault-baseline.vercel.app, with the baseline
+   code tagged `v0-prehackathon-baseline`.
 3. **WizardConnect** - the persistent manager now signs fund, top-up, claim and cancel WalletConnect objects
    and broadcasts the signed response through Electrum. A real Selene/Paytaca device test is still
    required before claiming this complete.
