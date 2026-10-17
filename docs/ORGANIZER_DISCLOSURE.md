@@ -6,6 +6,10 @@ Use this message in the official BCH BLAZE Telegram group before the Information
 the attendance or Telegram requirements complete until an organizer responds or the team actually
 joins the session.
 
+Status: the English message was posted to BCH BLAZE Chat on 2026-10-17 at 20:18
+(Asia/Shanghai). The group membership and message were visible in Telegram Web. Organizer response is
+still pending.
+
 ## English message
 
 > Hello BCH BLAZE organizers. Before submitting, we want to disclose the state of our repository.

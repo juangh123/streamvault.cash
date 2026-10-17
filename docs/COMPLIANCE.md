@@ -17,7 +17,7 @@ final media are scheduled for 2026-11-14 through 2026-11-22. The full disclosure
 | 3 | WizardConnect wallet integration | PARTIAL | pairing exists in `WalletConnectDialog.tsx`; `signTransaction` wiring is TODO in v2 |
 | 4 | Official 7-page Widget Factory slides | TODO | `docs/SLIDES.md` -> port to the official template |
 | 5 | Attend a livestream + roll call | TODO (10/17) | Information Session, Beijing 22:00 |
-| 6 | Telegram verification | TODO | join `t.me/bchblaze` and confirm the project |
+| 6 | Telegram verification | DONE (disclosure posted) | joined `t.me/bchblaze` and posted the project disclosure on 2026-10-17 at 20:18 |
 | 7 | CashTokens-receiving BCH address | TODO | add a mainnet address to the submission + README |
 
 ## Per-requirement notes
@@ -36,6 +36,14 @@ final media are scheduled for 2026-11-14 through 2026-11-22. The full disclosure
 Prepared disclosure text and roll-call questions are in
 [ORGANIZER_DISCLOSURE.md](ORGANIZER_DISCLOSURE.md). Completing the text does not count as
 attendance or Telegram verification.
+
+## 2026-10-17 progress
+
+- DoraHacks BCH BLAZE 2026 registration completed; the success dialog was visible on 2026-10-17.
+- The BCH BLAZE Telegram chat was joined and the pre-hackathon disclosure was posted at 20:18
+  (Asia/Shanghai). An organizer reply is still pending.
+- The Information Session roll call is still pending. Do not mark requirement 5 complete until a
+  team representative actually attends and checks in.
 
 PUSD mainnet metadata was verified on 2026-10-17: category
 `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The app still uses
