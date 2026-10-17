@@ -8,8 +8,9 @@ The StreamVault.cash covenant, sandbox cockpit and documentation were seeded on 
 2026-10-15. They are frozen at tag `v0-prehackathon-baseline` and are not presented as
 competition-period work. The current sprint adds v1.2 contract hardening, WizardConnect signing, the
 Agent Sandbox/API and an updated deck. Real Mainnet evidence, the official Google Slides port,
-roll-call attendance, the CashTokens address and an organizer reply to the Telegram disclosure remain
-pending. The full disclosure is in
+and the CashTokens address remain pending. Roll-call attendance is complete (2026-10-17) and an
+organizer replied in Telegram with the pre-existing-work rules (banner plus before/after code and
+demo links). The full disclosure is in
 [PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md).
 
 | # | Requirement | Status | Where |
@@ -18,7 +19,7 @@ pending. The full disclosure is in
 | 2 | Live, clickable demo (no local build) | DONE | https://streamvault-cash.vercel.app |
 | 3 | WizardConnect wallet integration | IMPLEMENTED, pending device test | `WalletProvider.tsx` + fund/claim/cancel signing |
 | 4 | Official 7-page Widget Factory slides | PARTIAL | in-app deck updated; Google Slides port still required |
-| 5 | Attend a livestream + roll call | TODO (10/17) | Information Session, Beijing 22:00 |
+| 5 | Attend a livestream + roll call | DONE (2026-10-17 22:56 Beijing) | Information Session #1, Vdo.ninja room `bchblaze`, project name posted in room chat |
 | 6 | Telegram verification | DONE (disclosure posted) | joined `t.me/bchblaze` and posted the project disclosure on 2026-10-17 at 20:18 |
 | 7 | CashTokens-receiving BCH address | TODO | add a mainnet address to the submission + README |
 
@@ -35,7 +36,13 @@ pending. The full disclosure is in
    required before claiming this complete.
 4. **Slides** - the in-app and local deck now use the Agent + payroll story. Port the 7 pages into
    the official Google Slides template before submitting.
-5. **Livestream** - at least one team member must appear and sign in during roll call.
+5. **Livestream** - completed on 2026-10-17 during the first Information Session. A representative
+   joined the Vdo.ninja room `bchblaze` (camera and mic off, project poster used as the placeholder
+   tile) and posted `Jason - StreamVault.cash` plus
+   `roll call: StreamVault.cash (Jason, Autonomous Cash) - Mainnet + Media` in the room chat when the
+   host opened roll call. The live stream is
+   https://www.youtube.com/watch?v=9qudgWloY1g; the session is one of four roll-call chances, so this
+   requirement is satisfied and needs no further attendance.
 6. **Telegram** - the project disclosure was posted on 2026-10-17; an organizer reply is still pending.
 7. **CashTokens address** - required to receive EMBER2026 votes and the airdrop.
 
@@ -48,8 +55,9 @@ attendance or Telegram verification.
 - DoraHacks BCH BLAZE 2026 registration completed; the success dialog was visible on 2026-10-17.
 - The BCH BLAZE Telegram chat was joined and the pre-hackathon disclosure was posted at 20:18
   (Asia/Shanghai). An organizer reply is still pending.
-- The Information Session roll call is still pending. Do not mark requirement 5 complete until a
-  team representative actually attends and checks in.
+- Information Session #1 roll call completed at 22:56 Beijing time; the project name was posted in the
+  Vdo.ninja room chat (`Jason - StreamVault.cash` and
+  `roll call: StreamVault.cash (Jason, Autonomous Cash) - Mainnet + Media`). Requirement 5 is closed.
 
 PUSD mainnet metadata was verified on 2026-10-17: category
 `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The application now
