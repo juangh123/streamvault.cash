@@ -14,7 +14,7 @@
 > **Agent demo:** open the app, keep **Agent** selected, and use the Sandbox Fast-Track. No wallet or funds are required.
 >
 > **CashTokens receiving address (Mainnet):** `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
-> **Submission deck:** [official Widget Factory template port](docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pdf)
+> **Submission deck:** [Google Slides](https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present)
 >
 > Formerly **AgentPay.cash**. The original agent-allowance thesis is now the Agent tab; payroll is the second use case.
 >
@@ -31,7 +31,7 @@
 | :--- | :--- | :--- |
 | Agent allowance Sandbox Fast-Track | Sandbox ledger and demo addresses | Real Mainnet fund/claim/cancel txids |
 | PUSD streaming payroll Sandbox | Agent service response and request id | Real Selene/Paytaca device test |
-| v1.2 covenant: 21 real VM tests | 0-conf interactive verification | Publish the template-based deck to Google Slides |
+| v1.2 covenant: 21 real VM tests | 0-conf interactive verification | Final media / DoraHacks form |
 | WizardConnect signing code + CashTokens address | Sandbox ledger | Final deck/media links |
 | Live top-up (merge one PUSD UTXO) |  | DoraHacks project form |
 | Vercel Functions: status/run/verify |  |  |
@@ -232,8 +232,7 @@ disclosure and the competition-period change scope.
 See [docs/V2_SPEC.md](docs/V2_SPEC.md) for the contract, wallet and Agent design.
 
 **Still pending before submission:** real Mainnet fund/claim/cancel and agent-service txids,
-a real Selene/Paytaca device test, the Google Slides publish link for the template-based deck,
-final media, and the DoraHacks project form.
+a real Selene/Paytaca device test, final media, and the DoraHacks project form.
 
 ## Roadmap
 

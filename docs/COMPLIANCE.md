@@ -8,7 +8,7 @@ The StreamVault.cash covenant, sandbox cockpit and documentation were seeded on 
 2026-10-15. They are frozen at tag `v0-prehackathon-baseline` and are not presented as
 competition-period work. The current sprint adds v1.2 contract hardening, WizardConnect signing, the
 Agent Sandbox/API and a deck ported into the official Widget Factory template. Real Mainnet evidence
-and the Google Slides publish link remain pending. Roll-call attendance is complete (2026-10-17) and an
+remains pending. Roll-call attendance is complete (2026-10-17) and an
 organizer replied in Telegram with the pre-existing-work rules (banner plus before/after code and
 demo links). The full disclosure is in
 [PRE_HACKATHON_BASELINE.md](PRE_HACKATHON_BASELINE.md).
@@ -18,7 +18,7 @@ demo links). The full disclosure is in
 | 1 | Real BCH Mainnet transaction | TODO | fund a v1.2 vault and record real `claim`/`cancel` txids |
 | 2 | Live, clickable demo (no local build) | DONE | https://streamvault-cash.vercel.app |
 | 3 | WizardConnect wallet integration | IMPLEMENTED, pending device test | `WalletProvider.tsx` + fund/claim/cancel signing |
-| 4 | Official 7-page Widget Factory slides | TEMPLATE PORTED, publish pending | `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx` + public PDF; upload to Google Slides |
+| 4 | Official 7-page Widget Factory slides | DONE | [Google Slides](https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present) + PPTX/PDF in `docs/deck` |
 | 5 | Attend a livestream + roll call | DONE (2026-10-17 22:56 Beijing) | Information Session #1, Vdo.ninja room `bchblaze`, project name posted in room chat |
 | 6 | Telegram verification | DONE (organizer replied) | joined `t.me/bchblaze`, posted the disclosure on 2026-10-17 at 20:18, and received the pre-existing-work rules |
 | 7 | CashTokens-receiving BCH address | DONE | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` in README + submission sheet |
@@ -34,9 +34,9 @@ demo links). The full disclosure is in
 3. **WizardConnect** - the persistent manager now signs fund, top-up, claim and cancel WalletConnect objects
    and broadcasts the signed response through Electrum. A real Selene/Paytaca device test is still
    required before claiming this complete.
-4. **Slides** - the 7-page deck now follows the official Widget Factory template and passes local
-   structure/layout validation. The live app links to the rendered PDF at
-   `/StreamVault-BCH-Blaze-2026.pdf`. Upload the PPTX to Google Slides and publish the final link.
+4. **Slides** - the 7-page deck follows the official Widget Factory template and is published at
+   https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present.
+   Public unauthenticated PDF export was verified at 7 pages.
 5. **Livestream** - completed on 2026-10-17 during the first Information Session. A representative
    joined the Vdo.ninja room `bchblaze` (camera and mic off, project poster used as the placeholder
    tile) and posted `Jason - StreamVault.cash` plus
@@ -71,6 +71,8 @@ attendance or Telegram verification.
   3 API guard tests, 9 chain tests, typecheck, production build and the Playwright judge path all pass.
 - Ported all 7 slides into the official Widget Factory template, exported a public PDF, and added the
   submission banner required by the DoraHacks page.
+- Published the native Google Slides deck with link-view access and switched the site banner to the
+  Google Slides presentation.
 - Confirmed the production deployment includes the latest payer fallback. The funded Mainnet evidence
   remains blocked on adding BCH + verified PUSD to the demo wallets.
 

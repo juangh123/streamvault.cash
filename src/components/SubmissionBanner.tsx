@@ -3,6 +3,8 @@ import { Check, Copy, ExternalLink, Github, Presentation } from 'lucide-react';
 import { REPO_URL } from '../lib/constants';
 
 const CASH_TOKENS_ADDRESS = 'bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv';
+const GOOGLE_SLIDES_URL =
+  'https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present';
 
 const linkClass =
   'inline-flex items-center gap-1 text-slate-300 hover:text-white transition-colors';
@@ -31,7 +33,7 @@ export const SubmissionBanner: React.FC = () => {
             BCH BLAZE 2026
           </span>
           <a
-            href="/StreamVault-BCH-Blaze-2026.pdf"
+            href={GOOGLE_SLIDES_URL}
             target="_blank"
             rel="noreferrer"
             className={linkClass}

@@ -64,16 +64,17 @@ accepts 0-conf; evidence should wait for at least one confirmation.
 - Payroll sandbox: `/` → Payroll → Launch Demo Stream
 - Official-template deck: `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx`
 - Public deck PDF: `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pdf` and `/StreamVault-BCH-Blaze-2026.pdf`
+- Google Slides: https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present
 - In-app deck: `src/components/SlideDeck.tsx`
 - Media draft: `docs/media/streamvault-explainer.mp4` (sandbox only; do not submit as final)
 - CashTokens receiving address: `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
 - Official Widget Factory template port: DONE (7 slides, local structure/layout validation passed)
-- Google Slides publish link: PENDING
+- Google Slides publish link: DONE (link view, 7 pages)
 - Telegram organizer response: DONE (pre-existing-work rules confirmed)
 - Preparation-stream roll call: DONE (2026-10-17 22:56 Beijing)
 
 ## Compliance statement
 
 The current branch implements the v1.2 contract hardening, a persistent WizardConnect signing path,
-the Agent budget API and an Agent-first cockpit. Real Mainnet transaction evidence and the Google
-Slides publish link are still pending and must be completed before submission.
+the Agent budget API and an Agent-first cockpit. Real Mainnet transaction evidence is still pending
+and must be completed before submission.

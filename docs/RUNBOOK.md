@@ -54,9 +54,11 @@ node scripts/settle.mjs --action=claim --amount=2500
 
 1. The 7-page content has been ported into the official Widget Factory template:
    `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx`.
-2. The public PDF is served at
+2. The native deck is published at
+   https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present.
+   The public PDF is also served at
    `https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf`.
-3. Upload the PPTX to Google Slides, publish it, and put that link in the DoraHacks submission.
+3. Use the Google Slides link in the DoraHacks submission. Requirement #4 is complete.
 
 ## 5. Livestream roll call (#5)
 
