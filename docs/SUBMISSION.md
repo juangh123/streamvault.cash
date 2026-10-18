@@ -16,7 +16,7 @@ Use this file as the single source of truth when filling the BCH BLAZE 2026 subm
 | Pre-hackathon code | https://github.com/juangh123/streamvault.cash/tree/v0-prehackathon-baseline |
 | Pre-hackathon demo | https://streamvault-baseline.vercel.app |
 | Current demo | https://streamvault-cash.vercel.app |
-| Deck | [Google Slides](https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present); PPTX/PDF in `docs/deck` |
+| Deck | [Google Slides](https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present); final PPTX/PDF in `docs/deck` |
 | Video | `docs/media/streamvault-explainer.mp4` is a sandbox draft; do not submit it as final |
 | CashTokens receiving address | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` |
 

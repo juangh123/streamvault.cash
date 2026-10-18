@@ -62,9 +62,9 @@ accepts 0-conf; evidence should wait for at least one confirmation.
 - Live demo: https://streamvault-cash.vercel.app
 - Agent sandbox: `/` → Agent → Launch agent budget
 - Payroll sandbox: `/` → Payroll → Launch Demo Stream
-- Official-template deck: `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx`
-- Public deck PDF: `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pdf` and `/StreamVault-BCH-Blaze-2026.pdf`
-- Google Slides: https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present
+- Final editable deck: `docs/deck/StreamVault-BCH-Blaze-2026-Final.pptx`
+- Public deck PDF: `docs/deck/StreamVault-BCH-Blaze-2026-Final.pdf` and `/StreamVault-BCH-Blaze-2026.pdf`
+- Google Slides: https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present
 - In-app deck: `src/components/SlideDeck.tsx`
 - Media draft: `docs/media/streamvault-explainer.mp4` (sandbox only; do not submit as final)
 - CashTokens receiving address: `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`

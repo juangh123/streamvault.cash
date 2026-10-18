@@ -18,7 +18,7 @@ demo links). The full disclosure is in
 | 1 | Real BCH Mainnet transaction | TODO | fund a v1.2 vault and record real `claim`/`cancel` txids |
 | 2 | Live, clickable demo (no local build) | DONE | https://streamvault-cash.vercel.app |
 | 3 | WizardConnect wallet integration | IMPLEMENTED, pending device test | `WalletProvider.tsx` + fund/claim/cancel signing |
-| 4 | Official 7-page Widget Factory slides | DONE | [Google Slides](https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present) + PPTX/PDF in `docs/deck` |
+| 4 | Official 7-page Widget Factory slides | DONE | [Google Slides](https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present) + final PPTX/PDF in `docs/deck` |
 | 5 | Attend a livestream + roll call | DONE (2026-10-17 22:56 Beijing) | Information Session #1, Vdo.ninja room `bchblaze`, project name posted in room chat |
 | 6 | Telegram verification | DONE (organizer replied) | joined `t.me/bchblaze`, posted the disclosure on 2026-10-17 at 20:18, and received the pre-existing-work rules |
 | 7 | CashTokens-receiving BCH address | DONE | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` in README + submission sheet |
@@ -35,7 +35,7 @@ demo links). The full disclosure is in
    and broadcasts the signed response through Electrum. A real Selene/Paytaca device test is still
    required before claiming this complete.
 4. **Slides** - the 7-page deck follows the official Widget Factory template and is published at
-   https://docs.google.com/presentation/d/1BzxVggQbZwCJYZYxea0GdbgamPEyYG7fT6dWfYD66N0/present.
+   https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present.
    Public unauthenticated PDF export was verified at 7 pages.
 5. **Livestream** - completed on 2026-10-17 during the first Information Session. A representative
    joined the Vdo.ninja room `bchblaze` (camera and mic off, project poster used as the placeholder
@@ -73,6 +73,13 @@ attendance or Telegram verification.
   submission banner required by the DoraHacks page.
 - Published the native Google Slides deck with link-view access and switched the site banner to the
   Google Slides presentation.
+
+## 2026-10-19 progress
+
+- Completed the presentation design pass: three-column trust comparison, compressed user and BCH
+  narratives, clearer cover/CTA, and a native editable VM enforcement diagram.
+- Re-exported and republished the final 7-page Google Slides deck after checking the Google Slides
+  rendering itself rather than relying only on the local PPTX preview.
 - Confirmed the production deployment includes the latest payer fallback. The funded Mainnet evidence
   remains blocked on adding BCH + verified PUSD to the demo wallets.
 
