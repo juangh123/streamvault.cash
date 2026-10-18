@@ -1,9 +1,9 @@
 # Official 7-page Widget Factory deck (content)
 
 > The in-app deck and the local PPTX now use the Agent + payroll story. The official-template version
-> is `docs/deck/StreamVault-BCH-Blaze-2026-Final.pptx`, with a rendered public PDF at
+> is `docs/deck/StreamVault-BCH-Blaze-2026-Submission.pptx`, with a rendered public PDF at
 > `/StreamVault-BCH-Blaze-2026.pdf`. The published Google Slides link is
-> https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present.
+> https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present.
 
 **Slide 1 - Cover**
 - StreamVault.cash

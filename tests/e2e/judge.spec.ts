@@ -9,7 +9,7 @@ test('agent and payroll judge paths work without a wallet', async ({ page }) => 
   await page.goto('/');
   await expect(page.getByRole('link', { name: /Slides/ })).toHaveAttribute(
     'href',
-    'https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present',
+    'https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present',
   );
   await expect(page.getByRole('link', { name: /GitHub/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Before \/ after/ })).toBeVisible();

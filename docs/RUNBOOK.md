@@ -53,9 +53,9 @@ node scripts/settle.mjs --action=claim --amount=2500
 ## 4. Official 7-page Widget Factory slides (hard requirement #4)
 
 1. The final 7-page content has been ported and visually optimized in the official Widget Factory
-   template: `docs/deck/StreamVault-BCH-Blaze-2026-Final.pptx`.
+   template: `docs/deck/StreamVault-BCH-Blaze-2026-Submission.pptx`.
 2. The native deck is published at
-   https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present.
+   https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present.
    The public PDF is also served at
    `https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf`.
 3. Use the Google Slides link in the DoraHacks submission. Requirement #4 is complete.

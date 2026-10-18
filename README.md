@@ -14,7 +14,7 @@
 > **Agent demo:** open the app, keep **Agent** selected, and use the Sandbox Fast-Track. No wallet or funds are required.
 >
 > **CashTokens receiving address (Mainnet):** `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
-> **Submission deck:** [Google Slides](https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present)
+> **Submission deck:** [Google Slides](https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present)
 >
 > Formerly **AgentPay.cash**. The original agent-allowance thesis is now the Agent tab; payroll is the second use case.
 >

@@ -4,7 +4,7 @@ import { REPO_URL } from '../lib/constants';
 
 const CASH_TOKENS_ADDRESS = 'bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv';
 const GOOGLE_SLIDES_URL =
-  'https://docs.google.com/presentation/d/129g6s6Pte-Rzf3tn_pD6hFjXtJ8j7t2Q0e2QCTxp8-k/present';
+  'https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present';
 
 const linkClass =
   'inline-flex items-center gap-1 text-slate-300 hover:text-white transition-colors';
