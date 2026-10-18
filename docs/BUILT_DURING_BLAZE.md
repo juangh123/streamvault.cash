@@ -17,8 +17,8 @@ This file separates the disclosed pre-hackathon baseline from the current sprint
 | :--- | :--- |
 | Start commit | `4c9c083` (last baseline disclosure commit) |
 | Sprint code | v1.2 contract, WalletProvider signing, Agent API, Agent-first cockpit |
-| Final code commit | `268e4b898832c18eb066389a874890e3a00fede5` |
-| Baseline-to-final diff | `git diff --stat v0-prehackathon-baseline..268e4b8` (65 files, +4235/-693) |
+| Final code commit | `2ebd6558e2e7d35192bbca08e6c96ef7274ff936` |
+| Baseline-to-final diff | `git diff --stat v0-prehackathon-baseline..2ebd655` (68 files, +5064/-603) |
 
 The code commit above is the current build-period candidate. The final evidence commit may add
 Mainnet txids and the official deck link after those external steps are complete.
@@ -62,16 +62,18 @@ accepts 0-conf; evidence should wait for at least one confirmation.
 - Live demo: https://streamvault-cash.vercel.app
 - Agent sandbox: `/` → Agent → Launch agent budget
 - Payroll sandbox: `/` → Payroll → Launch Demo Stream
-- Local deck: `docs/deck/StreamVault-BCH-Blaze-2026.pptx`
+- Official-template deck: `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx`
+- Public deck PDF: `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pdf` and `/StreamVault-BCH-Blaze-2026.pdf`
 - In-app deck: `src/components/SlideDeck.tsx`
 - Media draft: `docs/media/streamvault-explainer.mp4` (sandbox only; do not submit as final)
-- CashTokens receiving address: PENDING
-- Official Widget Factory Google Slides: PENDING
-- Telegram confirmation / roll call: PENDING
+- CashTokens receiving address: `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
+- Official Widget Factory template port: DONE (7 slides, local structure/layout validation passed)
+- Google Slides publish link: PENDING
+- Telegram organizer response: DONE (pre-existing-work rules confirmed)
+- Preparation-stream roll call: DONE (2026-10-17 22:56 Beijing)
 
 ## Compliance statement
 
 The current branch implements the v1.2 contract hardening, a persistent WizardConnect signing path,
-the Agent budget API and an Agent-first cockpit. Real Mainnet transaction evidence, the official
-Google Slides port, Telegram confirmation, roll-call attendance and the CashTokens receiving address
-are still pending and must be completed before submission.
+the Agent budget API and an Agent-first cockpit. Real Mainnet transaction evidence and the Google
+Slides publish link are still pending and must be completed before submission.

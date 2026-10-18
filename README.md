@@ -13,6 +13,9 @@
 >
 > **Agent demo:** open the app, keep **Agent** selected, and use the Sandbox Fast-Track. No wallet or funds are required.
 >
+> **CashTokens receiving address (Mainnet):** `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
+> **Submission deck:** [official Widget Factory template port](docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pdf)
+>
 > Formerly **AgentPay.cash**. The original agent-allowance thesis is now the Agent tab; payroll is the second use case.
 >
 > **Before / after disclosure:** [baseline code](https://github.com/juangh123/streamvault.cash/tree/v0-prehackathon-baseline) · [before demo](https://streamvault-baseline.vercel.app) · [current demo](https://streamvault-cash.vercel.app)
@@ -27,13 +30,13 @@
 | Works today | Simulated | Pending before submission |
 | :--- | :--- | :--- |
 | Agent allowance Sandbox Fast-Track | Sandbox ledger and demo addresses | Real Mainnet fund/claim/cancel txids |
-| PUSD streaming payroll Sandbox | Agent service response and request id | Preparation-stream roll call and organizer reply |
-| v1.2 covenant: 21 real VM tests | 0-conf interactive verification | Official Widget Factory Google Slides port |
-| WizardConnect signing code | Sandbox ledger | CashTokens receiving address |
-| Live top-up (merge one PUSD UTXO) |  | Final deck/media links |
+| PUSD streaming payroll Sandbox | Agent service response and request id | Real Selene/Paytaca device test |
+| v1.2 covenant: 21 real VM tests | 0-conf interactive verification | Publish the template-based deck to Google Slides |
+| WizardConnect signing code + CashTokens address | Sandbox ledger | Final deck/media links |
+| Live top-up (merge one PUSD UTXO) |  | DoraHacks project form |
 | Vercel Functions: status/run/verify |  |  |
 
-The deployed Agent API is intentionally disabled until `AGENT_ENABLED=true` and the server-side
+The deployed Agent API only runs when `AGENT_ENABLED=true` and the server-side
 `AGENT_WIF` / `SERVICE_ADDRESS` are configured. The Sandbox agent demo works without those values.
 
 ---
@@ -229,8 +232,8 @@ disclosure and the competition-period change scope.
 See [docs/V2_SPEC.md](docs/V2_SPEC.md) for the contract, wallet and Agent design.
 
 **Still pending before submission:** real Mainnet fund/claim/cancel and agent-service txids,
-an organizer reply to the Telegram disclosure, at least one preparation-stream roll call, the official Widget Factory
-Google Slides port, and the CashTokens receiving address.
+a real Selene/Paytaca device test, the Google Slides publish link for the template-based deck,
+final media, and the DoraHacks project form.
 
 ## Roadmap
 

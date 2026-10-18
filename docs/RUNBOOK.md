@@ -52,23 +52,26 @@ node scripts/settle.mjs --action=claim --amount=2500
 
 ## 4. Official 7-page Widget Factory slides (hard requirement #4)
 
-1. Regenerate the local deck if needed, then import `docs/deck/StreamVault-BCH-Blaze-2026.pptx`
-   into Google Slides. The committed PDF is an older draft; do not submit it.
-2. Apply the official **Widget Factory** template; keep the 7-page structure in `docs/SLIDES.md`.
-3. Publish the slides and put the link in the DoraHacks submission.
+1. The 7-page content has been ported into the official Widget Factory template:
+   `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx`.
+2. The public PDF is served at
+   `https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf`.
+3. Upload the PPTX to Google Slides, publish it, and put that link in the DoraHacks submission.
 
 ## 5. Livestream roll call (#5)
 
-At least one team member must attend and sign in during a live session (Information Session 10/17, or a
-Workshop). Beijing time 22:00 on the announced Saturdays.
+DONE on 2026-10-17 at 22:56 Beijing time during Information Session #1. The project name was posted
+in the Vdo.ninja roll call.
 
 ## 6. Telegram verification (#6)
 
-Join `https://t.me/bchblaze` and confirm the project's authenticity with the organisers.
+DONE. The disclosure was posted in `https://t.me/bchblaze` on 2026-10-17, and an organizer replied
+with the pre-existing-work rules.
 
 ## 7. CashTokens receiving address (#7)
 
-Add a BCH address that can receive CashTokens to the submission (needed for the EMBER2026 vote airdrop).
+DONE. The submission and README now list
+`bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` for the EMBER2026 vote airdrop.
 
 ## Deploy / CI
 

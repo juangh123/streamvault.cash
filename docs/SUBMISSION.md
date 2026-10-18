@@ -16,9 +16,9 @@ Use this file as the single source of truth when filling the BCH BLAZE 2026 subm
 | Pre-hackathon code | https://github.com/juangh123/streamvault.cash/tree/v0-prehackathon-baseline |
 | Pre-hackathon demo | https://streamvault-baseline.vercel.app |
 | Current demo | https://streamvault-cash.vercel.app |
-| Deck | `docs/deck/StreamVault-BCH-Blaze-2026.pptx`; official Google Slides port PENDING |
+| Deck | [template-based PDF](https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf); PPTX in `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx`; Google Slides publish PENDING |
 | Video | `docs/media/streamvault-explainer.mp4` is a sandbox draft; do not submit it as final |
-| CashTokens receiving address | PENDING |
+| CashTokens receiving address | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` |
 
 ## Required mainnet evidence
 
@@ -66,11 +66,12 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 
 - [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md`
 - [ ] Real wallet device test on Selene or Paytaca
-- [ ] Official Widget Factory Google Slides port published
-- [ ] CashTokens receiving address added
-- [x] Telegram disclosure posted 2026-10-17; organizer reply pending
+- [x] Official Widget Factory template port rendered as PPTX + PDF
+- [ ] Template-based deck uploaded and published in Google Slides
+- [x] CashTokens receiving address added
+- [x] Telegram disclosure posted 2026-10-17; organizer replied with pre-existing-work rules
 - [x] DoraHacks registration completed
-- [ ] At least one preparation-stream roll call
+- [x] At least one preparation-stream roll call
 - [ ] DoraHacks project submission completed
 - [ ] Commit and push the build-period product diff
 - [ ] Old/new repository and pre-hackathon demo links added to the submission

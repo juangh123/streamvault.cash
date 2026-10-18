@@ -2,13 +2,13 @@
 
 Prepared: 2026-10-17 (Asia/Shanghai)
 
-Use this message in the official BCH BLAZE Telegram group before the Information Session. Do not mark
-the attendance or Telegram requirements complete until an organizer responds or the team actually
-joins the session.
+The message and roll-call checklist below are retained as a record of what was sent to the official
+BCH BLAZE Telegram group and used during Information Session #1.
 
 Status: the English message was posted to BCH BLAZE Chat on 2026-10-17 at 20:18
-(Asia/Shanghai). The group membership and message were visible in Telegram Web. Organizer response is
-still pending.
+(Asia/Shanghai). The group membership and message were visible in Telegram Web. An organizer
+replied with the pre-existing-work rules: keep the disclosure visible, include before/after code and
+demo links, and do not present seeded work as build-period work.
 
 ## English message
 

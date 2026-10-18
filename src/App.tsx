@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Header } from './components/Header';
+import { SubmissionBanner } from './components/SubmissionBanner';
 import { JudgeFastTrack } from './components/JudgeFastTrack';
 import { StreamControls } from './components/StreamControls';
 import { ClaimPanel } from './components/ClaimPanel';
@@ -222,6 +223,7 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
 
   return (
     <div className="min-h-screen bg-[#070a12] text-gray-100 flex flex-col font-sans selection:bg-[#0AC18E] selection:text-black">
+      <SubmissionBanner />
       <Header
         mode={mode}
         setMode={setMode}

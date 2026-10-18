@@ -1,8 +1,8 @@
 # Official 7-page Widget Factory deck (content)
 
-> The in-app deck and the local PPTX now use the Agent + payroll story. Port this content into the
-> official BCH Blaze Widget Factory Google Slides template before submission. The local PPTX is a
-> preview, not a substitute for the official template.
+> The in-app deck and the local PPTX now use the Agent + payroll story. The official-template version
+> is `docs/deck/StreamVault-BCH-Blaze-2026-Widget-Factory.pptx`, with a rendered public PDF at
+> `/StreamVault-BCH-Blaze-2026.pdf`. Upload that PPTX to Google Slides and publish the final link.
 
 **Slide 1 - Cover**
 - StreamVault.cash

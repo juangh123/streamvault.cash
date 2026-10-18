@@ -7,6 +7,14 @@ test('agent and payroll judge paths work without a wallet', async ({ page }) => 
   });
 
   await page.goto('/');
+  await expect(page.getByRole('link', { name: /Slides/ })).toHaveAttribute(
+    'href',
+    '/StreamVault-BCH-Blaze-2026.pdf',
+  );
+  await expect(page.getByRole('link', { name: /GitHub/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Before \/ after/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Before demo/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copy CashTokens address' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Agent allowance' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Launch agent budget' }).click();
