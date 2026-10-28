@@ -17,6 +17,10 @@
     "test:derive": "node tests/run-derive.mjs",
     "test:chain": "node tests/run-chain.mjs",
     "test:e2e": "playwright test",
+    "test:all": "npm test && npm run test:engine && npm run test:agent && npm run test:api && npm run test:derive && npm run test:chain",
+    "verify:client-secrets": "node scripts/check-client-secrets.mjs .env.agent-wallet.local",
+    "verify:wallet-config": "node scripts/check-wallet-env.mjs .env.agent-wallet.local",
+    "verify:release": "npm run test:all && npm run typecheck && npm run build && npm run verify:client-secrets",
     "verify:network": "node tests/run-network.mjs",
     "settle": "node scripts/settle.mjs",
     "deploy": "vercel --prod"

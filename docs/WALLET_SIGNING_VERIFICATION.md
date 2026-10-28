@@ -128,8 +128,9 @@ This avoids double-broadcast and gives the app a single source of truth for the 
 ## Implications for StreamVault v2
 
 1. Payer and payee keys must be derived from known wallet paths before the covenant is created.
-2. The contract input index must appear in `inputPaths` for `topUp`, `claim` and `cancel`.
-3. The source output must carry the full CashScript contract object.
-4. The transaction must be serialized to hex before the sign request.
-5. The app must show a wallet rejection or abort as a user-facing failure, not as a broadcast.
-6. A Chipnet test with Selene or Paytaca is still required before Mainnet.
+2. Payer and payee should use separate WizardConnect sessions; both sign with receive/0.
+3. The contract input index must appear in `inputPaths` for `topUp`, `claim` and `cancel`.
+4. The source output must carry the full CashScript contract object.
+5. The transaction must be serialized to hex before the sign request.
+6. The app must show a wallet rejection or abort as a user-facing failure, not as a broadcast.
+7. A Chipnet test with Selene or Paytaca is still required before Mainnet.

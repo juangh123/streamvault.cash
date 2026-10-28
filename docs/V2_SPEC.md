@@ -231,6 +231,7 @@ Mainnet transaction instead of a fake success.
 - Judge reaches a Mainnet txid within 60 seconds.
 - Sandbox completes without a wallet.
 - No private key or `AGENT_WIF` in the client bundle.
+- `npm run verify:client-secrets` passes after the production build.
 
 ## Acceptance criteria
 

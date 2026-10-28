@@ -55,7 +55,8 @@ accepts 0-conf; evidence should wait for at least one confirmation.
 - Budget exhausted: the covenant rejects a new tranche until the relative period elapses; the API
   returns `BUDGET_EXHAUSTED` with `nextClaimBlock`.
 - Rate limit and hot-wallet controls: `AGENT_RATE_LIMIT`, `AGENT_MAX_BALANCE`, `AGENT_ENABLED`.
-- Request-id de-duplication: process-local Set plus on-chain OP_RETURN check. A durable KV is future work.
+- Request-id de-duplication and rate limiting: optional Redis REST store; process-local fallback for
+  local development, plus the on-chain OP_RETURN check.
 
 ## Deliverables
 
@@ -64,12 +65,11 @@ accepts 0-conf; evidence should wait for at least one confirmation.
 - Payroll sandbox: `/` → Payroll → Launch Demo Stream
 - Final editable deck: `docs/deck/StreamVault-BCH-Blaze-2026-Submission.pptx`
 - Public deck PDF: `docs/deck/StreamVault-BCH-Blaze-2026-Submission.pdf` and `/StreamVault-BCH-Blaze-2026.pdf`
-- Google Slides: https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present
 - In-app deck: `src/components/SlideDeck.tsx`
 - Media draft: `docs/media/streamvault-explainer.mp4` (sandbox only; do not submit as final)
 - CashTokens receiving address: `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
 - Official Widget Factory template port: DONE (7 slides, local structure/layout validation passed)
-- Google Slides publish link: DONE (link view, 7 pages)
+- Public deck link: self-hosted PDF (Google Slides copy blocked by Google on 2026-10-28)
 - Telegram organizer response: DONE (pre-existing-work rules confirmed)
 - Preparation-stream roll call: DONE (2026-10-17 22:56 Beijing)
 

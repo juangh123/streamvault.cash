@@ -55,6 +55,8 @@ export interface LogEntry {
 
 export interface WalletState {
   connected: boolean;
+  payerConnected: boolean;
+  payeeConnected: boolean;
   name: string | null;
   icon: string | null;
   address: string | null;

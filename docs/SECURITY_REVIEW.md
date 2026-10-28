@@ -26,8 +26,8 @@ path and the automated suites.
 | Agent budget exhaustion | sandbox agent test AGENT-02 |
 | Real networks reachable | `npm run verify:network` (Chipnet + Mainnet) |
 
-50 automated checks: `npm test` (21), `npm run test:engine` (12), `npm run test:agent` (5),
-`npm run test:chain` (9), `npm run test:api` (3), plus the derive, network and Playwright probes.
+55 automated checks: `npm test` (21), `npm run test:engine` (12), `npm run test:agent` (5),
+`npm run test:chain` (10), `npm run test:api` (7), plus the derive, network and Playwright probes.
 
 ## Residual risks
 
@@ -40,16 +40,16 @@ path and the automated suites.
 4. **Fee/sequence semantics.** `this.age` is OP_CHECKSEQUENCEVERIFY; the spending transaction must be
    version-2 with `nSequence >= periodBlocks`. Full nodes enforce the age; the mock provider validates
    the script branch only.
-5. **One wallet in the demo.** Payer is receive/0 and payee is change/0. The contract supports separate
-   keys, but the UI does not yet connect two wallets.
+5. **Two wallets are required for the production flow.** The UI now connects separate payer and payee
+   WizardConnect sessions, both using receive/0. A real two-device acceptance test remains pending.
 6. **Multiple vault UTXOs.** A direct PUSD transfer can create another UTXO under the same covenant.
    v1.2 has `topUp` but no multi-UTXO cancel; the UI warns and cancels one UTXO at a time.
 7. **Agent server custody.** `AGENT_WIF` is a server-side key controlling the agent payee/hot wallet.
    Use a dedicated low-balance key, never reuse a personal wallet, and keep the hot-wallet PUSD ceiling
    and BCH pre-funding small.
-8. **Agent request controls are process-local.** Rate limiting and request-id de-duplication use
-   in-memory state and are not durable across Vercel instances. A production deployment needs a shared
-   KV/queue.
+8. **Agent request controls depend on shared storage.** Redis REST provides cross-instance limits and
+   request-id reservations when configured. The local fallback is process-local and is not sufficient
+   for multi-instance production.
 9. **0-conf service verification.** The interactive demo accepts a mempool payment and labels it
    `confirmed:false`; final evidence must wait for confirmation.
 10. **Dependency surface.** Production dependencies are clean under `npm audit --omit=dev`; the dev

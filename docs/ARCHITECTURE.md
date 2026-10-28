@@ -41,8 +41,8 @@ per-period ceiling, recursive change and a 2000-sat BCH buffer bound. See
 - `src/lib/agent-server.ts` - server-only Agent status/run/verify logic.
 - `src/lib/chain.ts` - live layer: Electrum provider, UTXO/token queries, fee estimation, fund/claim/
   cancel transaction and WalletConnect object building.
-- `src/wallet/WalletProvider.tsx` - persistent WizardConnect manager, receive/0 and change/0 keys,
-  sign-and-broadcast helper.
+- `src/wallet/WalletProvider.tsx` - separate persistent payer and payee WizardConnect managers,
+  role-specific receive/0 keys, sign-and-broadcast helper.
 - `src/components/*` - Agent-first cockpit and payroll fallback.
 - `api/agent/*`, `api/service/insight.ts` - Vercel Functions for the live Agent path.
 
@@ -51,10 +51,11 @@ per-period ceiling, recursive change and a 2000-sat BCH buffer bound. See
 1. The app builds a fund, top-up, claim or cancel transaction with `TransactionBuilder` and placeholders.
 2. `generateWcTransactionObject()` carries the source outputs and covenant redeem script.
 3. `serializeWcTransaction()` converts the object to the hex string expected by WizardConnect wallets.
-4. `WalletProvider` calls `manager.signTransaction({ transaction, inputPaths })`. Input paths are
-   receive/0 for the payer and change/0 for the payee.
+4. `WalletProvider` selects the payer or payee manager and calls
+   `manager.signTransaction({ transaction, inputPaths })`. Both roles use receive/0.
 5. The signed hex is broadcast through Electrum. The real txid is written to the ledger with an
-   explorer link; the app never broadcasts twice.
+   explorer link; the app never broadcasts twice. If broadcast or lookup times out, the app derives
+   the txid from the signed bytes and checks the chain before allowing a rebuild.
 
 No private key is persisted in the browser; the WizardConnect session persists the public xpub only.
 
@@ -67,7 +68,8 @@ No private key is persisted in the browser; the WizardConnect session persists t
 
 The agent hot wallet needs BCH for miner fees in addition to PUSD. The demo pre-funds it with
 20,000 sats. `AGENT_WIF` is server-only and must never appear in the client bundle. Rate limiting and
-request-id de-duplication are process-local hackathon controls.
+request-id de-duplication use a shared Redis REST store when `AGENT_STORE_URL` and `AGENT_STORE_TOKEN`
+are configured; local development falls back to process-local memory.
 
 ## Deployment
 

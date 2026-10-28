@@ -18,7 +18,7 @@ demo links). The full disclosure is in
 | 1 | Real BCH Mainnet transaction | TODO | fund a v1.2 vault and record real `claim`/`cancel` txids |
 | 2 | Live, clickable demo (no local build) | DONE | https://streamvault-cash.vercel.app |
 | 3 | WizardConnect wallet integration | IMPLEMENTED, pending device test | `WalletProvider.tsx` + fund/claim/cancel signing |
-| 4 | Official 7-page Widget Factory slides | DONE | [Google Slides](https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present) + final PPTX/PDF in `docs/deck` |
+| 4 | Official 7-page Widget Factory slides | DONE | [Self-hosted PDF](https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf) + source PPTX/PDF in `docs/deck` |
 | 5 | Attend a livestream + roll call | DONE (2026-10-17 22:56 Beijing) | Information Session #1, Vdo.ninja room `bchblaze`, project name posted in room chat |
 | 6 | Telegram verification | DONE (organizer replied) | joined `t.me/bchblaze`, posted the disclosure on 2026-10-17 at 20:18, and received the pre-existing-work rules |
 | 7 | CashTokens-receiving BCH address | DONE | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` in README + submission sheet |
@@ -34,9 +34,10 @@ demo links). The full disclosure is in
 3. **WizardConnect** - the persistent manager now signs fund, top-up, claim and cancel WalletConnect objects
    and broadcasts the signed response through Electrum. A real Selene/Paytaca device test is still
    required before claiming this complete.
-4. **Slides** - the 7-page deck follows the official Widget Factory template and is published at
-   https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present.
-   Public unauthenticated PDF export was verified at 7 pages.
+4. **Slides** - the 7-page deck follows the official Widget Factory template and is served at
+   https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf.
+   On 2026-10-28 the Google Slides copy returned a Google Terms of Service block to signed-out
+   viewers, so the banner, README and submission sheet now link to the self-hosted PDF.
 5. **Livestream** - completed on 2026-10-17 during the first Information Session. A representative
    joined the Vdo.ninja room `bchblaze` (camera and mic off, project poster used as the placeholder
    tile) and posted `Jason - StreamVault.cash` plus
@@ -68,7 +69,7 @@ attendance or Telegram verification.
 - Published the Mainnet CashTokens receiving address in the README and submission sheet. Requirement 7
   is closed.
 - Re-ran the full local verification stack: 21 covenant tests, 12 engine tests, 5 agent tests,
-  3 API guard tests, 9 chain tests, typecheck, production build and the Playwright judge path all pass.
+  7 API guard tests, 10 chain tests, typecheck, production build and the Playwright judge path all pass.
 - Ported all 7 slides into the official Widget Factory template, exported a public PDF, and added the
   submission banner required by the DoraHacks page.
 - Published the native Google Slides deck with link-view access and switched the site banner to the

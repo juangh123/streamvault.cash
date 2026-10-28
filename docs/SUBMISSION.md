@@ -16,7 +16,7 @@ Use this file as the single source of truth when filling the BCH BLAZE 2026 subm
 | Pre-hackathon code | https://github.com/juangh123/streamvault.cash/tree/v0-prehackathon-baseline |
 | Pre-hackathon demo | https://streamvault-baseline.vercel.app |
 | Current demo | https://streamvault-cash.vercel.app |
-| Deck | [Google Slides](https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present); final PPTX/PDF in `docs/deck` |
+| Deck | [7-page Widget Factory deck (PDF)](https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf); source PPTX/PDF in `docs/deck` |
 | Video | `docs/media/streamvault-explainer.mp4` is a sandbox draft; do not submit it as final |
 | CashTokens receiving address | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` |
 
@@ -32,6 +32,11 @@ Use this file as the single source of truth when filling the BCH BLAZE 2026 subm
 
 Do not replace `PENDING` with a testnet, simulator or fabricated txid. Label Chipnet evidence as
 Chipnet everywhere.
+
+After each Mainnet txid has at least one confirmation, also add it to `MAINNET_EVIDENCE` in
+`src/lib/evidence.ts`. The app then shows a "Verified on BCH Mainnet" strip with 3xpl links under
+the header, and `npm run test:agent` rejects malformed or duplicate txids. Keep the public demo vault
+funded through judging (2026-11-23 to 2026-11-27); record the `cancel` evidence on a separate vault.
 
 ## Agent API configuration
 
@@ -67,7 +72,7 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 - [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md`
 - [ ] Real wallet device test on Selene or Paytaca
 - [x] Official Widget Factory template port rendered as PPTX + PDF
-- [x] Template-based deck published in Google Slides
+- [x] Template-based deck published as a self-hosted PDF (Google Slides link blocked by Google on 2026-10-28)
 - [x] CashTokens receiving address added
 - [x] Telegram disclosure posted 2026-10-17; organizer replied with pre-existing-work rules
 - [x] DoraHacks registration completed

@@ -1,6 +1,7 @@
 import {
   Contract,
   ElectrumNetworkProvider,
+  NetworkProviderTransactionAlreadySubmittedError,
   SignatureTemplate,
   TransactionBuilder,
   placeholderP2PKHUnlocker,
@@ -11,6 +12,7 @@ import {
 } from 'cashscript';
 import {
   hexToBin,
+  hashTransaction,
   lockingBytecodeToCashAddress,
   publicKeyToP2pkhLockingBytecode,
 } from '@bitauth/libauth';
@@ -429,10 +431,53 @@ export function withTimeout<T>(promise: Promise<T>, ms: number, message: string)
   });
 }
 
+export class BroadcastPendingError extends Error {
+  readonly txid: string;
+  readonly signedTransaction: string;
+
+  constructor(message: string, txid: string, signedTransaction: string) {
+    super(message);
+    this.name = 'BroadcastPendingError';
+    this.txid = txid;
+    this.signedTransaction = signedTransaction;
+  }
+}
+
+export function transactionIdFromHex(signedHex: string): string {
+  if (!/^[0-9a-fA-F]+$/.test(signedHex) || signedHex.length % 2 !== 0) {
+    throw new Error('The wallet returned invalid signed transaction hex.');
+  }
+  return hashTransaction(hexToBin(signedHex));
+}
+
 export async function broadcastSigned(provider: NetworkProvider, signedHex: string): Promise<string> {
-  return withTimeout(
-    provider.sendRawTransaction(signedHex),
-    20_000,
-    'Electrum broadcast timed out after 20 seconds. The wallet signature is safe; retry the broadcast.',
-  );
+  const expectedTxid = transactionIdFromHex(signedHex);
+  try {
+    const broadcastTxid = await withTimeout(
+      provider.sendRawTransaction(signedHex),
+      20_000,
+      'Electrum broadcast timed out after 20 seconds.',
+    );
+    return broadcastTxid || expectedTxid;
+  } catch (e) {
+    if (e instanceof NetworkProviderTransactionAlreadySubmittedError) return expectedTxid;
+
+    try {
+      const raw = await withTimeout(
+        provider.getRawTransaction(expectedTxid),
+        8_000,
+        'Electrum transaction lookup timed out.',
+      );
+      if (raw) return expectedTxid;
+    } catch {
+      // The transaction may still be propagating; preserve the signed payload for a later retry.
+    }
+
+    const message = e instanceof Error ? e.message : String(e);
+    throw new BroadcastPendingError(
+      `${message} Transaction ${expectedTxid} was not confirmed by the broadcast node. Check the explorer before rebuilding the transaction.`,
+      expectedTxid,
+      signedHex,
+    );
+  }
 }

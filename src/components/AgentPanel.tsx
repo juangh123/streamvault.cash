@@ -52,6 +52,8 @@ interface AgentPanelProps {
   mode: AppMode;
   network: NetworkType;
   setNetwork: (network: NetworkType) => void;
+  /** Switches the app to the Live Mainnet agent vault. */
+  onOpenLive?: () => void;
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -71,7 +73,7 @@ function liveEntry(
   return makeLiveLedgerEntry({ type, amount, remaining, txid, network, blockHeight, source, confirmed });
 }
 
-export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwork }) => {
+export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwork, onOpenLive }) => {
   const walletCtx = useWallet();
   const wallet = walletCtx.wallet;
   const payerPubkey = wallet.payerPubkey ?? LIVE_DEMO_PAYER_PUBKEY;
@@ -79,12 +81,20 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
   const [agent, setAgent] = useState<AgentSimState | null>(null);
   const [liveStatus, setLiveStatus] = useState<AgentStatus | null>(null);
   const [liveLedger, setLiveLedger] = useState<LedgerEntry[]>([]);
-  const [messages, setMessages] = useState<string[]>([]);
+  // Sandbox and Live keep separate logs and errors so simulated events never appear in the Live view.
+  const [sandboxMessages, setSandboxMessages] = useState<string[]>([]);
+  const [liveMessages, setLiveMessages] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [sandboxError, setSandboxError] = useState<string | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const setError = setLiveError;
 
+  const stamp = (message: string) => `${new Date().toLocaleTimeString()}  ${message}`;
+  const noteSandbox = useCallback((message: string) => {
+    setSandboxMessages((prev) => [stamp(message), ...prev].slice(0, 12));
+  }, []);
   const note = useCallback((message: string) => {
-    setMessages((prev) => [`${new Date().toLocaleTimeString()}  ${message}`, ...prev].slice(0, 12));
+    setLiveMessages((prev) => [stamp(message), ...prev].slice(0, 12));
   }, []);
 
   const refreshLive = useCallback(async () => {
@@ -114,11 +124,30 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
     if (mode === 'LIVE') refreshLive();
   }, [mode, refreshLive]);
 
+  // In Sandbox, look up the pre-funded public demo vault so judges can jump to the real Mainnet path.
+  const [demoVault, setDemoVault] = useState<AgentStatus | null>(null);
+  useEffect(() => {
+    if (mode !== 'SANDBOX' || !LIVE_DEMO_PAYER_PUBKEY) return;
+    let cancelled = false;
+    fetch(`/api/agent/status?payerPubkey=${encodeURIComponent(LIVE_DEMO_PAYER_PUBKEY)}`)
+      .then((res) => (res.ok ? (res.json() as Promise<AgentStatus>) : null))
+      .then((body) => {
+        if (cancelled) return;
+        setDemoVault(body && body.enabled && body.network === 'mainnet' ? body : null);
+      })
+      .catch(() => {
+        if (!cancelled) setDemoVault(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
+  const demoVaultFunded = Boolean(demoVault && demoVault.vault.tokenAmount > 0);
+
   const launchSandbox = () => {
     setAgent(createAgentBudget(network));
-    setLiveLedger([]);
-    setError(null);
-    note('Agent budget launched: 2.00 PUSD vault, 0.10 PUSD per 2 blocks, 0.01 PUSD per service call.');
+    setSandboxError(null);
+    noteSandbox('Agent budget launched: 2.00 PUSD vault, 0.10 PUSD per 2 blocks, 0.01 PUSD per service call.');
   };
 
   const fundLive = async () => {
@@ -153,6 +182,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
         category: liveStatus.category,
       });
       const result = await walletCtx.signAndBroadcast(
+        'payer',
         object,
         fundInputPaths(selected.length),
         'StreamVault: fund agent budget',
@@ -273,7 +303,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
         walletUtxo,
         walletAddress: wallet.payerAddress,
       });
-      const result = await walletCtx.signAndBroadcast(object, TOP_UP_INPUT_PATHS, 'StreamVault: top up agent vault');
+      const result = await walletCtx.signAndBroadcast('payer', object, TOP_UP_INPUT_PATHS, 'StreamVault: top up agent vault');
       note(`Agent vault topped up with ${walletUtxo.token.amount} base units. ${result.txid}`);
       setLiveLedger((prev) => [
         liveEntry(
@@ -300,15 +330,15 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
     if (!agent) return;
     const result = runAgentRequest(agent);
     setAgent(result.state);
-    note(result.message);
+    noteSandbox(result.message);
     if (!result.ok) {
-      setError(
+      setSandboxError(
         result.code === 'BUDGET_EXHAUSTED'
           ? `This period's budget is used up. Next claim block: ${result.nextClaimBlock}.`
           : result.message,
       );
     } else {
-      setError(null);
+      setSandboxError(null);
     }
   };
 
@@ -327,7 +357,8 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
 
   const runUntilExhausted = async () => {
     setBusy(true);
-    setError(null);
+    if (mode === 'SANDBOX') setSandboxError(null);
+    else setLiveError(null);
     try {
       if (mode === 'SANDBOX') {
         if (!agent) return;
@@ -336,9 +367,9 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
           const result = runAgentRequest(current);
           current = result.state;
           setAgent(current);
-          note(result.message);
+          noteSandbox(result.message);
           if (!result.ok) {
-            setError(
+            setSandboxError(
               result.code === 'BUDGET_EXHAUSTED'
                 ? `This period's budget is used up. Next claim block: ${result.nextClaimBlock}.`
                 : result.message,
@@ -397,7 +428,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
         payerLockingBytecode: publicKeyToP2pkhLockingBytecode({ publicKey: hexToBin(wallet.payerPubkey) }),
         sequence: liveStatus.vault.periodBlocks,
       });
-      const result = await walletCtx.signAndBroadcast(object, [[0, 'receive', 0]], 'StreamVault: cancel agent budget');
+      const result = await walletCtx.signAndBroadcast('payer', object, [[0, 'receive', 0]], 'StreamVault: cancel agent budget');
       note(`Payer cancelled the vault. ${result.txid}`);
       setLiveLedger((prev) => [
         liveEntry(
@@ -425,8 +456,8 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
       if (!agent) return;
       const result = cancelAgentBudget(agent);
       setAgent(result.state);
-      note(result.message);
-      setError(null);
+      noteSandbox(result.message);
+      setSandboxError(null);
       return;
     }
     await cancelLive();
@@ -435,7 +466,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
   const fastForward = () => {
     if (!agent) return;
     setAgent({ ...agent, block: agent.block + agent.periodBlocks });
-    note(`Sandbox clock advanced to block ${agent.block + agent.periodBlocks}.`);
+    noteSandbox(`Sandbox clock advanced to block ${agent.block + agent.periodBlocks}.`);
   };
 
   const ledger = mode === 'SANDBOX' ? agent?.ledger ?? [] : liveLedger;
@@ -452,6 +483,8 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
         : 0;
   const nextClaim = mode === 'SANDBOX' ? agent?.nextClaimBlock : liveStatus?.vault.nextClaimBlock;
   const isLive = mode === 'LIVE';
+  const messages = isLive ? liveMessages : sandboxMessages;
+  const error = isLive ? liveError : sandboxError;
   const canRun = isLive
     ? Boolean(liveStatus && liveStatus.vault.tokenAmount > 0)
     : Boolean(agent && !agent.cancelled);
@@ -490,6 +523,26 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
       </div>
 
       <div className="p-5 space-y-5">
+        {!isLive && demoVaultFunded && demoVault && onOpenLive && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-emerald-700/60 bg-emerald-950/30 rounded-lg p-3">
+            <div className="text-xs">
+              <div className="font-semibold text-emerald-300">A real agent vault is live on BCH Mainnet</div>
+              <div className="mt-0.5 text-emerald-100/80">
+                It holds ${pusdToDisplay(demoVault.vault.tokenAmount)} PUSD and releases at most $
+                {pusdToDisplay(demoVault.vault.amountPerPeriod)} every {demoVault.vault.periodBlocks} blocks.
+                Run a real paid request without a wallet: the covenant caps what anyone can spend.
+              </div>
+            </div>
+            <button
+              onClick={onOpenLive}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-[#0AC18E] hover:bg-emerald-400 text-black transition"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Open Mainnet vault
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map(([label, value, detail]) => (
             <div key={String(label)} className="border border-slate-800 rounded-lg p-3 bg-slate-950/50">
@@ -512,7 +565,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
           ) : (
             <button
               onClick={fundLive}
-              disabled={busy || !wallet.connected || !liveStatus || liveStatus.vault.tokenAmount > 0}
+              disabled={busy || !wallet.payerConnected || !liveStatus || liveStatus.vault.tokenAmount > 0}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-[#0AC18E] hover:bg-emerald-400 text-black transition disabled:opacity-50"
             >
               <Wallet className="w-3.5 h-3.5" />
@@ -522,7 +575,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
           {isLive && (
             <button
               onClick={topUpLive}
-              disabled={busy || !wallet.connected || !liveStatus || liveStatus.vault.tokenAmount <= 0}
+              disabled={busy || !wallet.payerConnected || !liveStatus || liveStatus.vault.tokenAmount <= 0}
               title="Merges the smallest PUSD UTXO in the connected wallet into the agent vault."
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-500/90 hover:bg-indigo-400 text-white transition disabled:opacity-50"
             >
@@ -584,11 +637,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
           </div>
         )}
 
-        {isLive && !wallet.connected && (
+        {isLive && !wallet.payerConnected && (
           <div className="flex items-center gap-2 border border-slate-800 rounded-lg p-3 text-xs text-slate-300">
             <Wallet className="w-4 h-4 text-emerald-400" />
             {usingDemoPayer
-              ? 'Demo vault payer loaded. Connect a wallet to fund, top up, or cancel.'
+              ? 'Demo vault loaded: Run paid request works without a wallet. Connect the payer wallet only to fund, top up, or cancel.'
               : 'Connect a wallet to read the live agent vault and fund it.'}
           </div>
         )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Wallet, Globe, BookOpen, Presentation, Droplets, LogOut, Bot, Landmark } from 'lucide-react';
 import { AppMode, AppView, NetworkType, WalletState } from '../types';
+import type { WalletRole } from '../wallet/WalletProvider';
 import { shortAddress } from '../lib/format';
 
 interface HeaderProps {
@@ -12,10 +13,41 @@ interface HeaderProps {
   setNetwork: (net: NetworkType) => void;
   onOpenDocs: () => void;
   onOpenSlides: () => void;
-  onConnectWallet: () => void;
-  onDisconnect: () => void;
+  onConnectWallet: (role: WalletRole) => void;
+  onDisconnect: (role: WalletRole) => void;
   wallet: WalletState;
 }
+
+const WalletControl: React.FC<{
+  role: WalletRole;
+  connected: boolean;
+  address: string | null;
+  onConnect: () => void;
+  onDisconnect: () => void;
+}> = ({ role, connected, address, onConnect, onDisconnect }) => (
+  <div
+    className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] border ${
+      connected
+        ? 'bg-emerald-950/70 text-emerald-300 border-emerald-600/50'
+        : 'bg-slate-900 text-slate-300 border-slate-700'
+    }`}
+  >
+    <Wallet className="w-3 h-3" />
+    <span className="capitalize">{role}</span>
+    {connected ? (
+      <>
+        <span className="text-emerald-500/70 font-mono">{address ? shortAddress(address, 4, 3) : ''}</span>
+        <button onClick={onDisconnect} title={`Disconnect ${role}`} className="text-emerald-400 hover:text-white">
+          <LogOut className="w-3 h-3" />
+        </button>
+      </>
+    ) : (
+      <button onClick={onConnect} className="font-semibold text-[#0AC18E] hover:text-emerald-300">
+        Connect
+      </button>
+    )}
+  </div>
+);
 
 export const Header: React.FC<HeaderProps> = ({
   mode,
@@ -108,29 +140,27 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => setNetwork(e.target.value as NetworkType)}
               className="bg-transparent text-xs text-slate-200 outline-none cursor-pointer"
             >
-              <option value="chipnet" className="bg-slate-900">Chipnet</option>
               <option value="mainnet" className="bg-slate-900">Mainnet</option>
+              <option value="chipnet" className="bg-slate-900">Chipnet</option>
             </select>
           </div>
 
-          {wallet.connected ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-950/70 text-emerald-300 border border-emerald-600/50">
-              <Wallet className="w-3.5 h-3.5" />
-              <span>{wallet.name ?? 'Wallet'}</span>
-              <span className="text-emerald-500/70 font-mono">{wallet.address ? shortAddress(wallet.address, 6, 4) : ''}</span>
-              <button onClick={onDisconnect} title="Disconnect" className="text-emerald-400 hover:text-white">
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={onConnectWallet}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0AC18E] hover:bg-emerald-400 text-black transition"
-            >
-              <Wallet className="w-3.5 h-3.5" />
-              <span>Connect Wallet</span>
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            <WalletControl
+              role="payer"
+              connected={wallet.payerConnected}
+              address={wallet.payerAddress}
+              onConnect={() => onConnectWallet('payer')}
+              onDisconnect={() => onDisconnect('payer')}
+            />
+            <WalletControl
+              role="payee"
+              connected={wallet.payeeConnected}
+              address={wallet.payeeAddress}
+              onConnect={() => onConnectWallet('payee')}
+              onDisconnect={() => onDisconnect('payee')}
+            />
+          </div>
         </div>
       </div>
     </header>

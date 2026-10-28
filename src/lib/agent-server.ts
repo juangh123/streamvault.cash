@@ -6,7 +6,9 @@ import {
 import {
   binToHex,
   cashAddressToLockingBytecode,
+  decodeCashAddress,
   decodeTransaction,
+  decodePrivateKeyWif,
   hexToBin,
   publicKeyToP2pkhCashAddress,
   publicKeyToP2pkhLockingBytecode,
@@ -22,6 +24,7 @@ import type {
   ServiceVerification,
 } from '../types';
 import { PUSD_CATEGORY } from './constants.js';
+import { getAgentRequestStore, type AgentRequestStore } from './agent-store.js';
 import {
   MIN_TOKEN_SATOSHIS,
   buildClaimHex,
@@ -60,9 +63,6 @@ interface PaymentVerification {
   blockHeight: number;
 }
 
-const usedRequestIds = new Set<string>();
-const requestTimes = new Map<string, number[]>();
-
 export function readAgentConfig(): AgentConfig {
   const network = (process.env.AGENT_NETWORK ?? 'mainnet') as NetworkType;
   if (network !== 'mainnet' && network !== 'chipnet') {
@@ -99,10 +99,41 @@ function assertConfig(config: AgentConfig, requireAgent = true): void {
     throw new Error('AGENT_MAX_BALANCE must be at least the service price.');
   }
   if (requireAgent && !config.agentWif) throw new Error('AGENT_WIF is not configured.');
+  assertNetworkConfig(config, requireAgent);
 }
 
 function prefixOf(network: NetworkType): 'bitcoincash' | 'bchtest' {
   return network === 'mainnet' ? 'bitcoincash' : 'bchtest';
+}
+
+function assertNetworkConfig(config: AgentConfig, requireAgent: boolean): void {
+  let service;
+  try {
+    service = decodeCashAddress(config.serviceAddress);
+  } catch {
+    throw new Error('SERVICE_ADDRESS is not a valid CashAddress.');
+  }
+  if (typeof service === 'string') throw new Error(`SERVICE_ADDRESS is invalid: ${service}`);
+  if (service.prefix !== prefixOf(config.network)) {
+    throw new Error(
+      `SERVICE_ADDRESS network (${service.prefix}) does not match AGENT_NETWORK=${config.network}.`,
+    );
+  }
+
+  if (!requireAgent) return;
+  let decodedWif;
+  try {
+    decodedWif = decodePrivateKeyWif(config.agentWif);
+  } catch {
+    throw new Error('AGENT_WIF is not a valid WIF private key.');
+  }
+  if (typeof decodedWif === 'string') throw new Error(`AGENT_WIF is invalid: ${decodedWif}`);
+  const expectedWifType = config.network === 'mainnet' ? 'mainnet' : 'testnet';
+  if (decodedWif.type !== expectedWifType) {
+    throw new Error(
+      `AGENT_WIF network (${decodedWif.type}) does not match AGENT_NETWORK=${config.network}.`,
+    );
+  }
 }
 
 function agentSigner(config: AgentConfig): SignatureTemplate {
@@ -125,9 +156,25 @@ function agentTokenAddress(config: AgentConfig): string {
   return tokenAddressForPublicKey(agentPubkey(config), prefixOf(config.network));
 }
 
+/** A malformed client request. Maps to HTTP 400 / INVALID_REQUEST, unlike configuration or network errors. */
+export class InvalidRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidRequestError';
+  }
+}
+
+/** HTTP status and body for a failed status request: 503 when disabled, 400 for bad input, 500 otherwise. */
+export function statusErrorResponse(e: unknown): { status: number; body: { code: AgentErrorCode; message: string } } {
+  const message = e instanceof Error ? e.message : String(e);
+  if (message === 'AGENT_DISABLED') return { status: 503, body: { code: 'AGENT_DISABLED', message } };
+  if (e instanceof InvalidRequestError) return { status: 400, body: { code: 'INVALID_REQUEST', message } };
+  return { status: 500, body: { code: 'SERVER_ERROR', message } };
+}
+
 function validatePayerPubkey(value: unknown): string {
   if (typeof value !== 'string' || !/^(02|03)[0-9a-fA-F]{64}$/.test(value)) {
-    throw new Error('payerPubkey must be a 33-byte compressed public key in hex.');
+    throw new InvalidRequestError('payerPubkey must be a 33-byte compressed public key in hex.');
   }
   return value;
 }
@@ -337,22 +384,10 @@ function clientIp(req: any): string {
   return req?.socket?.remoteAddress ?? 'unknown';
 }
 
-function rateLimit(ip: string, limit: number): boolean {
-  const now = Date.now();
-  const times = (requestTimes.get(ip) ?? []).filter((time) => now - time < 60_000);
-  if (times.length >= limit) {
-    requestTimes.set(ip, times);
-    return false;
-  }
-  times.push(now);
-  requestTimes.set(ip, times);
-  return true;
-}
-
 function validateRequestId(value: unknown): string {
   if (value === undefined) return crypto.randomUUID();
   if (typeof value !== 'string' || !/^[A-Za-z0-9-]{8,64}$/.test(value)) {
-    throw new Error('requestId must be 8-64 letters, digits or hyphens.');
+    throw new InvalidRequestError('requestId must be 8-64 letters, digits or hyphens.');
   }
   return value;
 }
@@ -369,9 +404,6 @@ export async function runAgent(
     const message = (e as Error).message;
     return fail(message === 'AGENT_DISABLED' ? 'AGENT_DISABLED' : 'SERVER_ERROR', message);
   }
-  if (!rateLimit(ip, config.rateLimitPerMinute)) {
-    return fail('RATE_LIMITED', 'Too many agent requests. Wait a minute and retry.');
-  }
   let payerPubkey: string;
   let requestId: string;
   try {
@@ -380,8 +412,18 @@ export async function runAgent(
   } catch (e) {
     return fail('INVALID_REQUEST', (e as Error).message);
   }
-  if (usedRequestIds.has(requestId)) {
-    return fail('DUPLICATE_REQUEST', 'This request id has already been used.');
+
+  let store: AgentRequestStore;
+  try {
+    store = getAgentRequestStore();
+    if (!(await store.checkRateLimit(ip, config.rateLimitPerMinute))) {
+      return fail('RATE_LIMITED', 'Too many agent requests. Wait a minute and retry.');
+    }
+    if (!(await store.claimRequestId(requestId))) {
+      return fail('DUPLICATE_REQUEST', 'This request id has already been used.');
+    }
+  } catch (e) {
+    return fail('SERVER_ERROR', (e as Error).message);
   }
 
   const provider = makeProvider(config.network);
@@ -489,8 +531,6 @@ export async function runAgent(
     serviceTxid = await provider.sendRawTransaction(paymentHex);
 
     const verified = await verifyServicePayment(serviceTxid, requestId, config);
-    usedRequestIds.add(requestId);
-
     const afterVault = await getVaultState(params, config.network);
     const afterAgent = await provider.getUtxos(agentAddr);
     const afterToken = filterTokenUtxos(afterAgent, config.category);
@@ -544,7 +584,7 @@ export async function getServiceInsight(
   const config = readAgentConfig();
   try {
     assertConfig(config, false);
-    if (typeof requestId !== 'string') throw new Error('requestId is required.');
+    if (typeof requestId !== 'string') throw new InvalidRequestError('requestId is required.');
     const rid = validateRequestId(requestId);
     if (typeof txid !== 'string' || !/^[0-9a-fA-F]{64}$/.test(txid)) {
       throw new Error('PAYMENT_NOT_FOUND');
@@ -566,6 +606,8 @@ export async function getServiceInsight(
     const code: AgentErrorCode =
       message === 'AGENT_DISABLED'
         ? 'AGENT_DISABLED'
+        : e instanceof InvalidRequestError
+        ? 'INVALID_REQUEST'
         : message === 'PAYMENT_NOT_FOUND' || message.startsWith('PAYMENT_NOT_FOUND')
         ? 'PAYMENT_NOT_FOUND'
         : message === 'WRONG_AMOUNT'

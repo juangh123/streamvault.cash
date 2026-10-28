@@ -1,4 +1,4 @@
-import { getAgentStatus } from '../../src/lib/agent-server.js';
+import { getAgentStatus, statusErrorResponse } from '../../src/lib/agent-server.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
@@ -12,10 +12,8 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).json(status);
   } catch (e) {
-    const message = (e as Error).message;
-    res.status(message === 'AGENT_DISABLED' ? 503 : 400).json({
-      code: message === 'AGENT_DISABLED' ? 'AGENT_DISABLED' : 'SERVER_ERROR',
-      message,
-    });
+    const { status, body } = statusErrorResponse(e);
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(status).json(body);
   }
 }

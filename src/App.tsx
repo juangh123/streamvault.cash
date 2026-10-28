@@ -7,7 +7,8 @@ import { ClaimPanel } from './components/ClaimPanel';
 import { CovenantVisualizer } from './components/CovenantVisualizer';
 import { TxLedger } from './components/TxLedger';
 import { AgentPanel } from './components/AgentPanel';
-import { WalletProvider, useWallet } from './wallet/WalletProvider';
+import { MainnetEvidence } from './components/MainnetEvidence';
+import { WalletProvider, useWallet, type WalletRole } from './wallet/WalletProvider';
 import {
   AppMode,
   AppView,
@@ -34,27 +35,33 @@ const LiveVaultPanel = lazy(() =>
   import('./components/LiveVaultPanel').then((m) => ({ default: m.LiveVaultPanel })),
 );
 
-const DEMO_PAYER = 'bchtest:zq0payer9k4x7m2p8s5v1n3d6t9r4w7y2u5c8b';
-const DEMO_PAYEE = 'bchtest:zz0payee4d8f2g6h1j5k9l3m7n2p6q1r5s9t4v';
+// Sandbox-only display addresses. They are not spendable and only follow the selected network prefix.
+const prefixFor = (network: NetworkType) => (network === 'mainnet' ? 'bitcoincash' : 'bchtest');
+const demoPayer = (network: NetworkType) => `${prefixFor(network)}:zq0payer9k4x7m2p8s5v1n3d6t9r4w7y2u5c8b`;
+const demoPayee = (network: NetworkType) => `${prefixFor(network)}:zz0payee4d8f2g6h1j5k9l3m7n2p6q1r5s9t4v`;
 const DEMO_DEPOSIT = 100000; // $1,000.00
 const DEMO_PER_PERIOD = 2500; // $25.00
 
 const B32 = 'abcdefghijklmnopqrstuvwxyz234567';
-function demoVaultAddress(): string {
+function demoVaultAddress(network: NetworkType): string {
   let out = '';
   for (let i = 0; i < 50; i += 1) out += B32[Math.floor(Math.random() * B32.length)];
-  return 'bchtest:p' + out;
+  return `${prefixFor(network)}:p${out}`;
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkType) => void }> = ({
-  network,
-  setNetwork,
-}) => {
-  const { wallet, connect, disconnect } = useWallet();
-  const [view, setView] = useState<AppView>('AGENT');
-  const [mode, setMode] = useState<AppMode>('SANDBOX');
+interface AppShellProps {
+  network: NetworkType;
+  setNetwork: (network: NetworkType) => void;
+  view: AppView;
+  setView: (view: AppView) => void;
+  mode: AppMode;
+  setMode: (mode: AppMode) => void;
+}
+
+const AppShell: React.FC<AppShellProps> = ({ network, setNetwork, view, setView, mode, setMode }) => {
+  const { wallet, disconnect } = useWallet();
   const [stream, setStream] = useState<StreamConfig | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -63,6 +70,7 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
   const [showDocs, setShowDocs] = useState(false);
   const [showDeck, setShowDeck] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
+  const [walletRole, setWalletRole] = useState<WalletRole>('payer');
 
   const addLog = (level: LogEntry['level'], message: string) => {
     const entry: LogEntry = {
@@ -91,7 +99,7 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
     const next = createStream({
       ...input,
       category: PUSD_CATEGORY,
-      vaultAddress: demoVaultAddress(),
+      vaultAddress: demoVaultAddress(network),
       contractBytecode: CONTRACT_BYTECODE_HEX,
       block,
       network,
@@ -124,8 +132,8 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
   const handleLaunchDemo = () => {
     handleCreate({
       label: 'Design retainer - Q4',
-      payerAddress: DEMO_PAYER,
-      payeeAddress: DEMO_PAYEE,
+      payerAddress: demoPayer(network),
+      payeeAddress: demoPayee(network),
       amountPerPeriod: DEMO_PER_PERIOD,
       periodBlocks: DEFAULT_PERIOD_BLOCKS,
       deposit: DEMO_DEPOSIT,
@@ -210,15 +218,15 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
     addLog('info', 'Sandbox reset to baseline state.');
   };
 
-  const connectWallet = () => {
-    connect();
+  const connectWallet = (role: WalletRole) => {
+    setWalletRole(role);
     setShowWallet(true);
   };
 
-  const disconnectWallet = async () => {
-    await disconnect();
+  const disconnectWallet = async (role: WalletRole) => {
+    await disconnect(role);
     if (mode === 'LIVE') setMode('SANDBOX');
-    addLog('info', 'Wallet disconnected.');
+    addLog('info', `${role} wallet disconnected.`);
   };
 
   return (
@@ -238,9 +246,19 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
         wallet={wallet}
       />
 
+      <MainnetEvidence />
+
       {view === 'AGENT' ? (
         <main className="max-w-7xl mx-auto w-full px-4 lg:px-8 py-6 flex-1 space-y-6">
-          <AgentPanel mode={mode} network={network} setNetwork={setNetwork} />
+          <AgentPanel
+            mode={mode}
+            network={network}
+            setNetwork={setNetwork}
+            onOpenLive={() => {
+              setNetwork('mainnet');
+              setMode('LIVE');
+            }}
+          />
         </main>
       ) : mode === 'LIVE' ? (
         <main className="max-w-7xl mx-auto w-full px-4 lg:px-8 py-6 flex-1">
@@ -264,7 +282,8 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
               <StreamControls
                 stream={stream}
                 mode={mode}
-                connectedAddress={wallet.address}
+                network={network}
+                connectedAddress={wallet.payerAddress}
                 onCreate={handleCreate}
                 onTopUp={handleTopUp}
                 onCancel={handleCancel}
@@ -343,17 +362,35 @@ const AppShell: React.FC<{ network: NetworkType; setNetwork: (network: NetworkTy
             }}
           />
         )}
-        {showWallet && <WalletConnectDialog open onClose={() => setShowWallet(false)} />}
+        {showWallet && (
+          <WalletConnectDialog
+            open
+            role={walletRole}
+            onClose={() => setShowWallet(false)}
+          />
+        )}
       </Suspense>
     </div>
   );
 };
 
 export const App: React.FC = () => {
-  const [network, setNetwork] = useState<NetworkType>('chipnet');
+  // Mainnet is the default: BCH BLAZE judges the Mainnet track. Chipnet stays available in the selector.
+  const [network, setNetwork] = useState<NetworkType>('mainnet');
+  // View and mode live above the keyed WalletProvider so a network switch (which remounts the wallet
+  // sessions) does not bounce the user back to the Sandbox or the Agent tab.
+  const [view, setView] = useState<AppView>('AGENT');
+  const [mode, setMode] = useState<AppMode>('SANDBOX');
   return (
-    <WalletProvider network={network}>
-      <AppShell network={network} setNetwork={setNetwork} />
+    <WalletProvider key={network} network={network}>
+      <AppShell
+        network={network}
+        setNetwork={setNetwork}
+        view={view}
+        setView={setView}
+        mode={mode}
+        setMode={setMode}
+      />
     </WalletProvider>
   );
 };

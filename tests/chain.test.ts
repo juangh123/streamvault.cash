@@ -16,11 +16,13 @@ import {
   buildFundWcObject,
   buildTopUpHex,
   buildTopUpWcObject,
+  broadcastSigned,
   fundInputPaths,
   makeContract,
   serializeWcTransaction,
   TOP_UP_INPUT_PATHS,
   tokenAddressForPublicKey,
+  transactionIdFromHex,
 } from '../src/lib/chain';
 
 const CATEGORY = 'a'.repeat(64);
@@ -249,6 +251,31 @@ function setup() {
     check(merged && txid.length === 64, 'CHAIN-08', 'Signed top-up merges the vault UTXO', `txid=${txid.slice(0, 16)}...`);
   } catch (e) {
     check(false, 'CHAIN-08', 'Signed top-up merges the vault UTXO', (e as Error).message.split('\n')[0]);
+  }
+}
+
+// CHAIN-09: broadcast layer derives the same txid as the provider
+{
+  try {
+    const { provider, contract, utxo, payeeTokenAddress } = setup();
+    const hex = buildClaimHex({
+      contract,
+      utxo,
+      payeeTokenAddress,
+      amount: 800,
+      sequence: PERIOD_BLOCKS,
+      payeeSigner: payee,
+    });
+    const expected = transactionIdFromHex(hex);
+    const actual = await broadcastSigned(provider, hex);
+    check(
+      expected === actual,
+      'CHAIN-09',
+      'broadcastSigned uses the signed transaction txid',
+      `txid=${actual.slice(0, 16)}...`,
+    );
+  } catch (e) {
+    check(false, 'CHAIN-09', 'broadcastSigned uses the signed transaction txid', (e as Error).message.split('\n')[0]);
   }
 }
 

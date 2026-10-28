@@ -26,7 +26,7 @@ input = tranche + change, output 0 = tranche, output 1 = change.
 ## Key files
 
 - Covenant: `contracts/StreamVault.cash`
-- Real VM tests: `contracts/test-streamvault.mjs` (`npm test`, 16 cases)
+- Real VM tests: `contracts/test-streamvault.mjs` (`npm test`, 21 cases)
 - Chain layer: `src/lib/chain.ts`
 - Wallet manager: `src/wallet/WalletProvider.tsx`
 - Agent API: `src/lib/agent-server.ts`, `api/agent/*`, `api/service/insight.ts`
@@ -34,6 +34,6 @@ input = tranche + change, output 0 = tranche, output 1 = change.
 
 ## Live mode
 
-The live payroll demo uses `receive/0` as payer and `change/0` as payee from one connected wallet.
+The live payroll demo connects separate payer and payee wallets, both using `receive/0`.
 The live Agent demo additionally uses the server-side `AGENT_WIF` as the payee/hot wallet. Mainnet
 txids must be confirmed and linked in the README before they are presented as evidence.

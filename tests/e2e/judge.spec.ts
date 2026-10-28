@@ -9,13 +9,14 @@ test('agent and payroll judge paths work without a wallet', async ({ page }) => 
   await page.goto('/');
   await expect(page.getByRole('link', { name: /Slides/ })).toHaveAttribute(
     'href',
-    'https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present',
+    '/StreamVault-BCH-Blaze-2026.pdf',
   );
   await expect(page.getByRole('link', { name: /GitHub/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Before \/ after/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Before demo/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Pre-hackathon code/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Pre-hackathon demo/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Copy CashTokens address' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Agent allowance' })).toBeVisible();
+  await expect(page.getByRole('combobox').first()).toHaveValue('mainnet');
 
   await page.getByRole('button', { name: 'Launch agent budget' }).click();
   await expect(page.getByText('$2.00').first()).toBeVisible();
@@ -26,6 +27,12 @@ test('agent and payroll judge paths work without a wallet', async ({ page }) => 
   await expect(page.getByText(/This period's budget is used up/).first()).toBeVisible();
   await page.getByRole('button', { name: 'Cancel & reclaim' }).click();
   await expect(page.getByText(/reclaimed/i).first()).toBeVisible();
+
+  // Sandbox events must never appear in the Live view.
+  await page.getByRole('button', { name: 'Live', exact: true }).click();
+  await expect(page.getByText('Service verified. Insight returned.')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Sandbox', exact: true }).click();
+  await expect(page.getByText('Service verified. Insight returned.').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'Payroll' }).click();
   await page.getByRole('button', { name: /Launch Demo Stream/ }).click();

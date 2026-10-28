@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Landmark, Plus, AlertOctagon, Copy, Check } from 'lucide-react';
-import { AppMode, StreamConfig } from '../types';
+import { AppMode, NetworkType, StreamConfig } from '../types';
 import { blocksToHuman, pusdToDisplay, shortAddress } from '../lib/format';
 
 interface StreamControlsProps {
   stream: StreamConfig | null;
   mode: AppMode;
+  network: NetworkType;
   connectedAddress: string | null;
   onCreate: (input: {
     label: string;
@@ -22,14 +23,16 @@ interface StreamControlsProps {
 export const StreamControls: React.FC<StreamControlsProps> = ({
   stream,
   mode,
+  network,
   connectedAddress,
   onCreate,
   onTopUp,
   onCancel,
 }) => {
   const [label, setLabel] = useState('Design retainer - Q4');
-  const [payerAddress, setPayerAddress] = useState('bchtest:zq0payer9k4x7m2p8s5v1n3d6t9r4w7y2u5c8b');
-  const [payeeAddress, setPayeeAddress] = useState('bchtest:zz0payee4d8f2g6h1j5k9l3m7n2p6q1r5s9t4v');
+  const prefix = network === 'mainnet' ? 'bitcoincash' : 'bchtest';
+  const [payerAddress, setPayerAddress] = useState(`${prefix}:zq0payer9k4x7m2p8s5v1n3d6t9r4w7y2u5c8b`);
+  const [payeeAddress, setPayeeAddress] = useState(`${prefix}:zz0payee4d8f2g6h1j5k9l3m7n2p6q1r5s9t4v`);
   const [perPeriodUsd, setPerPeriodUsd] = useState('25');
   const [periodBlocks, setPeriodBlocks] = useState('144');
   const [depositUsd, setDepositUsd] = useState('1000');

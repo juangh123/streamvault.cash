@@ -1,7 +1,7 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 import { useWizardConnect } from '@wizardconnect/react';
+import type { WizardConnectState } from '@wizardconnect/react';
 import { binToHex, publicKeyToP2pkhCashAddress } from '@bitauth/libauth';
-import type { DappConnectionManager } from '@wizardconnect/dapp';
 import type { WcTransactionObject } from 'cashscript';
 import type { NetworkType, WalletState } from '../types';
 import { broadcastSigned, makeProvider, serializeWcTransaction, type InputPath } from '../lib/chain';
@@ -10,6 +10,20 @@ const PREFIX: Record<NetworkType, 'bitcoincash' | 'bchtest'> = {
   mainnet: 'bitcoincash',
   chipnet: 'bchtest',
 };
+
+export type WalletRole = 'payer' | 'payee';
+
+export interface WalletAccount {
+  state: WizardConnectState;
+  connected: boolean;
+  name: string | null;
+  icon: string | null;
+  address: string | null;
+  pubkey: string | null;
+  uri: string | null;
+  qrUri: string | null;
+  error: string | null;
+}
 
 function pubkeyAddress(publicKey: Uint8Array, network: NetworkType): string | null {
   try {
@@ -22,17 +36,23 @@ function pubkeyAddress(publicKey: Uint8Array, network: NetworkType): string | nu
   }
 }
 
-function initialWallet(network: NetworkType): WalletState {
+function accountFromSession(
+  session: ReturnType<typeof useWizardConnect>,
+  network: NetworkType,
+): WalletAccount {
+  const pubkey =
+    session.state === 'connected' && session.manager ? session.manager.getPubkey(0, 0n) : null;
+  const address = pubkey ? pubkeyAddress(pubkey, network) : null;
   return {
-    connected: false,
-    name: null,
-    icon: null,
-    address: null,
-    payerAddress: null,
-    payeeAddress: null,
-    payerPubkey: null,
-    payeePubkey: null,
-    network,
+    state: session.state,
+    connected: Boolean(pubkey && address),
+    name: session.walletName,
+    icon: session.walletIcon,
+    address,
+    pubkey: pubkey ? binToHex(pubkey) : null,
+    uri: session.uri,
+    qrUri: session.qrUri,
+    error: session.error,
   };
 }
 
@@ -42,15 +62,12 @@ export interface SignedTransactionResult {
 }
 
 export interface WalletContextValue {
-  state: ReturnType<typeof useWizardConnect>['state'];
-  uri: string | null;
-  qrUri: string | null;
-  error: string | null;
+  accounts: Record<WalletRole, WalletAccount>;
   wallet: WalletState;
-  manager: DappConnectionManager | null;
-  connect: () => boolean;
-  disconnect: () => Promise<void>;
+  connect: (role?: WalletRole) => boolean;
+  disconnect: (role?: WalletRole) => Promise<void>;
   signAndBroadcast: (
+    role: WalletRole,
     object: WcTransactionObject,
     inputPaths: InputPath[],
     userPrompt?: string,
@@ -63,52 +80,98 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
   network,
   children,
 }) => {
-  const wc = useWizardConnect({
-    dappName: 'StreamVault.cash',
+  const payerSession = useWizardConnect({
+    dappName: 'StreamVault.cash payer',
     persistSession: true,
+    sessionKey: `wizardconnect-payer-${network}`,
   });
-  const [wallet, setWallet] = useState<WalletState>(() => initialWallet(network));
-  const signingRef = useRef(false);
+  const payeeSession = useWizardConnect({
+    dappName: 'StreamVault.cash payee',
+    persistSession: true,
+    sessionKey: `wizardconnect-payee-${network}`,
+  });
+  const signingRef = useRef<Record<WalletRole, boolean>>({ payer: false, payee: false });
 
-  useEffect(() => {
-    if (wc.state !== 'connected' || !wc.manager) {
-      setWallet(initialWallet(network));
-      return;
-    }
-    const payerPk = wc.manager.getPubkey(0, 0n);
-    const payeePk = wc.manager.getPubkey(1, 0n);
-    const payerAddress = payerPk ? pubkeyAddress(payerPk, network) : null;
-    const payeeAddress = payeePk ? pubkeyAddress(payeePk, network) : null;
-    setWallet({
-      connected: Boolean(payerPk && payerAddress),
-      name: wc.walletName ?? 'BCH Wallet',
-      icon: wc.walletIcon,
-      address: payerAddress,
-      payerAddress,
-      payeeAddress,
-      payerPubkey: payerPk ? binToHex(payerPk) : null,
-      payeePubkey: payeePk ? binToHex(payeePk) : null,
+  const payer = useMemo(
+    () => accountFromSession(payerSession, network),
+    [
+      payerSession.state,
+      payerSession.manager,
+      payerSession.walletName,
+      payerSession.walletIcon,
+      payerSession.uri,
+      payerSession.qrUri,
+      payerSession.error,
       network,
-    });
-  }, [wc.state, wc.manager, wc.walletName, wc.walletIcon, network]);
+    ],
+  );
+  const payee = useMemo(
+    () => accountFromSession(payeeSession, network),
+    [
+      payeeSession.state,
+      payeeSession.manager,
+      payeeSession.walletName,
+      payeeSession.walletIcon,
+      payeeSession.uri,
+      payeeSession.qrUri,
+      payeeSession.error,
+      network,
+    ],
+  );
+  const accounts = useMemo<Record<WalletRole, WalletAccount>>(
+    () => ({ payer, payee }),
+    [payer, payee],
+  );
+  const wallet = useMemo<WalletState>(
+    () => ({
+      connected: payer.connected || payee.connected,
+      payerConnected: payer.connected,
+      payeeConnected: payee.connected,
+      name: payer.name ?? payee.name,
+      icon: payer.icon ?? payee.icon,
+      address: payer.address ?? payee.address,
+      payerAddress: payer.address,
+      payeeAddress: payee.address,
+      payerPubkey: payer.pubkey,
+      payeePubkey: payee.pubkey,
+      network,
+    }),
+    [payer, payee, network],
+  );
 
-  const connect = useCallback(() => {
-    if (wc.state === 'connected') return true;
-    return wc.connect();
-  }, [wc]);
+  const connect = useCallback(
+    (role: WalletRole = 'payer') => {
+      const session = role === 'payer' ? payerSession : payeeSession;
+      if (session.state === 'connected') return true;
+      return session.connect();
+    },
+    [payerSession.state, payerSession.connect, payeeSession.state, payeeSession.connect],
+  );
 
-  const disconnect = useCallback(async () => {
-    await wc.disconnect();
-    setWallet(initialWallet(network));
-  }, [wc, network]);
+  const disconnect = useCallback(
+    async (role: WalletRole = 'payer') => {
+      await (role === 'payer' ? payerSession.disconnect() : payeeSession.disconnect());
+    },
+    [payerSession.disconnect, payeeSession.disconnect],
+  );
 
   const signAndBroadcast = useCallback(
-    async (object: WcTransactionObject, inputPaths: InputPath[], userPrompt?: string) => {
-      if (!wc.manager || wc.state !== 'connected') {
-        throw new Error('Connect a BCH wallet before signing.');
+    async (
+      role: WalletRole,
+      object: WcTransactionObject,
+      inputPaths: InputPath[],
+      userPrompt?: string,
+    ) => {
+      const session = role === 'payer' ? payerSession : payeeSession;
+      const account = role === 'payer' ? payer : payee;
+      const manager = session.manager;
+      if (!manager || session.state !== 'connected' || !account.connected) {
+        throw new Error(`Connect the ${role} wallet before signing.`);
       }
-      if (signingRef.current) throw new Error('A wallet signature request is already pending.');
-      signingRef.current = true;
+      if (signingRef.current[role]) {
+        throw new Error(`A ${role} wallet signature request is already pending.`);
+      }
+      signingRef.current[role] = true;
       try {
         const txHex = serializeWcTransaction(object);
         const request = {
@@ -116,43 +179,47 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
             transaction: txHex,
             sourceOutputs: object.sourceOutputs,
             broadcast: false,
-            userPrompt: userPrompt ?? 'StreamVault transaction',
+            userPrompt: userPrompt ?? `StreamVault ${role} transaction`,
           },
           inputPaths,
-        } as Parameters<DappConnectionManager['signTransaction']>[0];
+        } as Parameters<typeof manager.signTransaction>[0];
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 120_000);
         let response;
         try {
-          response = await wc.manager.signTransaction(request, { signal: controller.signal });
+          response = await manager.signTransaction(request, { signal: controller.signal });
         } finally {
           clearTimeout(timer);
         }
         if (response.error || !response.signedTransaction) {
-          throw new Error(response.error || 'The wallet did not return a signed transaction.');
+          throw new Error(response.error || `The ${role} wallet did not return a signed transaction.`);
         }
         const txid = await broadcastSigned(makeProvider(network), response.signedTransaction);
         return { txid, signedTransaction: response.signedTransaction };
       } finally {
-        signingRef.current = false;
+        signingRef.current[role] = false;
       }
     },
-    [wc.manager, wc.state, network],
+    [
+      network,
+      payer,
+      payee,
+      payerSession.manager,
+      payerSession.state,
+      payeeSession.manager,
+      payeeSession.state,
+    ],
   );
 
   const value = useMemo<WalletContextValue>(
     () => ({
-      state: wc.state,
-      uri: wc.uri,
-      qrUri: wc.qrUri,
-      error: wc.error,
+      accounts,
       wallet,
-      manager: wc.manager ?? null,
       connect,
       disconnect,
       signAndBroadcast,
     }),
-    [wc.state, wc.uri, wc.qrUri, wc.error, wc.manager, wallet, connect, disconnect, signAndBroadcast],
+    [accounts, wallet, connect, disconnect, signAndBroadcast],
   );
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;

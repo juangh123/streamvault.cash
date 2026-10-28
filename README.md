@@ -14,7 +14,7 @@
 > **Agent demo:** open the app, keep **Agent** selected, and use the Sandbox Fast-Track. No wallet or funds are required.
 >
 > **CashTokens receiving address (Mainnet):** `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
-> **Submission deck:** [Google Slides](https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present)
+> **Submission deck:** [7-page Widget Factory deck (PDF)](https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf)
 >
 > Formerly **AgentPay.cash**. The original agent-allowance thesis is now the Agent tab; payroll is the second use case.
 >
@@ -35,6 +35,7 @@
 | WizardConnect signing code + CashTokens address | Sandbox ledger | Final deck/media links |
 | Live top-up (merge one PUSD UTXO) |  | DoraHacks project form |
 | Vercel Functions: status/run/verify |  |  |
+| Mainnet evidence strip (`src/lib/evidence.ts`, hidden until txids are recorded) |  |  |
 
 The deployed Agent API only runs when `AGENT_ENABLED=true` and the server-side
 `AGENT_WIF` / `SERVICE_ADDRESS` are configured. The Sandbox agent demo works without those values.
@@ -188,10 +189,11 @@ StreamVault.cash/
 
 ## Live settlement and agent API
 
-`src/wallet/WalletProvider.tsx` keeps the WizardConnect manager alive after the QR dialog closes. The
-payer uses `receive/0` and the payee uses `change/0` in the single-wallet demo. `src/lib/chain.ts`
-builds fund/top-up/claim/cancel WalletConnect objects, serializes them to hex and broadcasts the signed
-response through Electrum. The live payroll panel never shows sandbox data.
+`src/wallet/WalletProvider.tsx` keeps separate payer and payee WizardConnect managers alive after the
+QR dialogs close. Both roles sign with their own `receive/0` key. Funding, top-up and cancel use the
+payer wallet; claims use the payee wallet. `src/lib/chain.ts` builds the WalletConnect objects,
+serializes them to hex and broadcasts the signed response through Electrum. The live payroll panel
+never shows sandbox data.
 
 The Agent demo has three Vercel Functions:
 
@@ -212,6 +214,18 @@ Server-side variables:
 | `AGENT_SERVICE_PRICE` | Base units per service call (default `1` = 0.01 PUSD) |
 | `AGENT_MAX_BALANCE` | Hot-wallet PUSD ceiling (default `10`) |
 | `AGENT_RATE_LIMIT` | Requests per IP per minute (default `30`) |
+| `AGENT_STORE_URL` | Optional Redis REST endpoint for shared rate limits and request ids |
+| `AGENT_STORE_TOKEN` | Redis REST bearer token; never expose it to the browser |
+| `AGENT_REQUEST_TTL_SECONDS` | Request-id reservation lifetime (default `86400`) |
+
+Run `npm run verify:wallet-config` to validate the local Agent network, WIF, service address and
+limits without printing the WIF. The command reads `.env.agent-wallet.local` by default.
+
+Without `AGENT_STORE_URL` and `AGENT_STORE_TOKEN`, the API uses a process-local memory fallback. Configure
+both variables before relying on rate limits or request-id de-duplication across multiple instances.
+
+Run `npm run verify:release` before release to execute every non-browser test, typecheck, production
+build and client secret scan in one command.
 
 `VITE_AGENT_DEMO_PAYER_PUBKEY` is an optional public build-time payer key for a pre-funded
 Live demo vault. It lets the Agent view load real Mainnet status and run paid requests without

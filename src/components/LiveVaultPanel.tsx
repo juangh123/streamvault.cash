@@ -63,8 +63,14 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
     return { amountPerPeriod, periodBlocks: blocks, deposit };
   }, [perPeriodUsd, periodBlocks, depositUsd]);
 
+  const rolesDistinct = Boolean(
+    !wallet.payerPubkey ||
+      !wallet.payeePubkey ||
+      wallet.payerPubkey !== wallet.payeePubkey,
+  );
+
   const contractParams = useMemo(() => {
-    if (!wallet.payerPubkey || !wallet.payeePubkey) return null;
+    if (!wallet.payerPubkey || !wallet.payeePubkey || !rolesDistinct) return null;
     return {
       payerPk: hexToBin(wallet.payerPubkey),
       payeePk: hexToBin(wallet.payeePubkey),
@@ -72,7 +78,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
       periodBlocks: params.periodBlocks,
       category: PUSD_CATEGORY,
     };
-  }, [wallet.payerPubkey, wallet.payeePubkey, params]);
+  }, [wallet.payerPubkey, wallet.payeePubkey, params, rolesDistinct]);
 
   const contract = useMemo(() => {
     if (!contractParams) return null;
@@ -132,9 +138,21 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
 
   const prefix = network === 'mainnet' ? 'bitcoincash' : 'bchtest';
 
-  const requireWallet = () => {
-    if (!wallet.connected || !wallet.payerPubkey || !wallet.payeePubkey) {
-      throw new Error('Connect a wallet that exposes receive/0 and change/0 keys.');
+  const requirePayer = () => {
+    if (!wallet.payerConnected || !wallet.payerPubkey || !wallet.payerAddress) {
+      throw new Error('Connect the payer wallet before funding, topping up, or cancelling.');
+    }
+  };
+
+  const requirePayee = () => {
+    if (!wallet.payeeConnected || !wallet.payeePubkey) {
+      throw new Error('Connect the payee wallet before claiming.');
+    }
+  };
+
+  const requireDistinctRoles = () => {
+    if (wallet.payerPubkey && wallet.payeePubkey && wallet.payerPubkey === wallet.payeePubkey) {
+      throw new Error('Payer and payee must be different wallets. Reconnect one role with another wallet.');
     }
   };
 
@@ -142,7 +160,8 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
     setBusy(true);
     setError(null);
     try {
-      requireWallet();
+      requirePayer();
+      requireDistinctRoles();
       if (!contract || !contractParams || !wallet.payerAddress || !wallet.payerPubkey) {
         throw new Error('The vault contract is not ready.');
       }
@@ -161,6 +180,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
         category: PUSD_CATEGORY,
       });
       const result = await walletCtx.signAndBroadcast(
+        'payer',
         object,
         fundInputPaths(selected.length),
         'StreamVault: fund payroll vault',
@@ -189,7 +209,8 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
     setBusy(true);
     setError(null);
     try {
-      requireWallet();
+      requirePayee();
+      requireDistinctRoles();
       if (!contract || !contractParams || !wallet.payeePubkey) throw new Error('The vault contract is not ready.');
       if (!vault || vault.tokenUtxos.length !== 1) {
         throw new Error('Expected exactly one PUSD vault UTXO. Consolidate or cancel extra UTXOs first.');
@@ -206,7 +227,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
         amount,
         sequence: params.periodBlocks,
       });
-      const result = await walletCtx.signAndBroadcast(object, [[0, 'change', 0]], 'StreamVault: claim tranche');
+      const result = await walletCtx.signAndBroadcast('payee', object, [[0, 'receive', 0]], 'StreamVault: claim tranche');
       setLedger((prev) => [
         makeLiveLedgerEntry({
           type: 'CLAIM',
@@ -231,7 +252,8 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
     setBusy(true);
     setError(null);
     try {
-      requireWallet();
+      requirePayer();
+      requireDistinctRoles();
       if (!contract || !contractParams || !wallet.payerPubkey) throw new Error('The vault contract is not ready.');
       if (!vault || vault.tokenUtxos.length !== 1) {
         throw new Error('Expected exactly one PUSD vault UTXO. This build cancels one UTXO at a time.');
@@ -242,7 +264,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
         payerLockingBytecode: publicKeyToP2pkhLockingBytecode({ publicKey: hexToBin(wallet.payerPubkey) }),
         sequence: params.periodBlocks,
       });
-      const result = await walletCtx.signAndBroadcast(object, [[0, 'receive', 0]], 'StreamVault: cancel stream');
+      const result = await walletCtx.signAndBroadcast('payer', object, [[0, 'receive', 0]], 'StreamVault: cancel stream');
       setLedger((prev) => [
         makeLiveLedgerEntry({
           type: 'CANCEL',
@@ -267,7 +289,8 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
     setBusy(true);
     setError(null);
     try {
-      requireWallet();
+      requirePayer();
+      requireDistinctRoles();
       if (!contract || !wallet.payerPubkey || !wallet.payerAddress) throw new Error('The vault contract is not ready.');
       if (!vault || vault.tokenUtxos.length !== 1) {
         throw new Error('Expected exactly one PUSD vault UTXO before topping up.');
@@ -285,7 +308,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
         walletUtxo,
         walletAddress: wallet.payerAddress,
       });
-      const result = await walletCtx.signAndBroadcast(object, TOP_UP_INPUT_PATHS, 'StreamVault: top up vault');
+      const result = await walletCtx.signAndBroadcast('payer', object, TOP_UP_INPUT_PATHS, 'StreamVault: top up vault');
       setLedger((prev) => [
         makeLiveLedgerEntry({
           type: 'FUND',
@@ -320,10 +343,15 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
             <span className="text-[10px] font-mono text-slate-400">{network}</span>
           </div>
 
-          {!wallet.connected ? (
+          {wallet.payerConnected && wallet.payeeConnected && !rolesDistinct ? (
+            <div className="flex items-start gap-2 border border-rose-800/60 bg-rose-950/30 rounded-lg p-3 text-xs text-rose-200">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              Payer and payee resolve to the same wallet. Reconnect one role with a different wallet before using Live mode.
+            </div>
+          ) : !(wallet.payerConnected && wallet.payeeConnected) ? (
             <div className="flex items-start gap-2 border border-slate-800 rounded-lg p-3 text-xs text-slate-300">
               <Wallet className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-              Connect a wallet from the header. The demo uses receive/0 as payer and change/0 as payee.
+              Connect separate payer and payee wallets from the header. Each wallet signs with its own receive/0 key.
             </div>
           ) : (
             <>
@@ -427,7 +455,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
               <h2 className="text-sm font-bold text-white">Payee claim</h2>
             </div>
             <div className="text-xs text-slate-500 mb-2">
-              Payee key: {wallet.payeeAddress ? shortAddress(wallet.payeeAddress) : 'change/0 not available'}
+              Payee key: {wallet.payeeAddress ? shortAddress(wallet.payeeAddress) : 'receive/0 not connected'}
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 flex-1">
@@ -448,7 +476,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
               </button>
             </div>
             <div className="text-[10px] text-slate-500 mt-2">
-              Signed with change/0. The vault change returns to the same covenant and restarts the clock.
+              Signed by the payee receive/0 key. The vault change returns to the same covenant and restarts the clock.
             </div>
           </div>
 

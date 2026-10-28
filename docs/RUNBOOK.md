@@ -29,7 +29,7 @@ node scripts/settle.mjs --action=cancel
    (`docs/PUSD_VERIFICATION.md`). Re-check the official Token ID before sending funds.
 2. Fund the vault from the app's **Payroll → Live** panel, or send PUSD (and at least 50,000 sats BCH
    for the fee buffer) to the covenant token address. The app derives the address from the connected
-   wallet's receive/0 and change/0 keys.
+   payer and payee wallets' receive/0 keys.
 3. Run a real `claim`, capture the txid:
 
 ```bash
@@ -45,6 +45,8 @@ node scripts/settle.mjs --action=claim --amount=2500
 5. For the Agent demo, set `AGENT_ENABLED=true`, `AGENT_WIF` (dedicated low-balance key),
    `SERVICE_ADDRESS` (PUSD token address), and keep `AGENT_MAX_BALANCE=10`. Pre-fund the agent hot
    wallet with 20,000 sats BCH and fund the agent vault with 2.00 PUSD + 50,000 sats BCH.
+   Validate the local configuration with `npm run verify:wallet-config`; the checker never prints the
+   WIF.
    Use `GET /api/agent/status?payerPubkey=...` before the first run.
 
 > `--dry-run` executes the whole lifecycle against the local BCH VM with no keys or funds:
@@ -54,11 +56,11 @@ node scripts/settle.mjs --action=claim --amount=2500
 
 1. The final 7-page content has been ported and visually optimized in the official Widget Factory
    template: `docs/deck/StreamVault-BCH-Blaze-2026-Submission.pptx`.
-2. The native deck is published at
-   https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present.
-   The public PDF is also served at
+2. The public PDF is served at
    `https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf`.
-3. Use the Google Slides link in the DoraHacks submission. Requirement #4 is complete.
+   The earlier Google Slides copy is blocked by Google for signed-out viewers; do not link it.
+3. Use the self-hosted PDF link in the banner and the DoraHacks submission. After replacing the deck,
+   copy the new PDF to `public/StreamVault-BCH-Blaze-2026.pdf` and redeploy.
 
 ## 5. Livestream roll call (#5)
 

@@ -2,8 +2,8 @@
 
 > The in-app deck and the local PPTX now use the Agent + payroll story. The official-template version
 > is `docs/deck/StreamVault-BCH-Blaze-2026-Submission.pptx`, with a rendered public PDF at
-> `/StreamVault-BCH-Blaze-2026.pdf`. The published Google Slides link is
-> https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present.
+> `/StreamVault-BCH-Blaze-2026.pdf` (https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf). The earlier
+> Google Slides copy is blocked by Google for signed-out viewers and is no longer linked.
 
 **Slide 1 - Cover**
 - StreamVault.cash

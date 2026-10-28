@@ -3,8 +3,9 @@ import { Check, Copy, ExternalLink, Github, Presentation } from 'lucide-react';
 import { REPO_URL } from '../lib/constants';
 
 const CASH_TOKENS_ADDRESS = 'bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv';
-const GOOGLE_SLIDES_URL =
-  'https://docs.google.com/presentation/d/1RpdiRw3CkPYTgZ3ooK1w6S0N7-IfBGCqrqsMHMgK08Q/present';
+// Self-hosted copy of the 7-page Widget Factory deck. Google Slides blocked public access to the
+// published deck, so the banner links to the PDF served from this deployment.
+const DECK_URL = '/StreamVault-BCH-Blaze-2026.pdf';
 
 const linkClass =
   'inline-flex items-center gap-1 text-slate-300 hover:text-white transition-colors';
@@ -33,14 +34,14 @@ export const SubmissionBanner: React.FC = () => {
             BCH BLAZE 2026
           </span>
           <a
-            href={GOOGLE_SLIDES_URL}
+            href={DECK_URL}
             target="_blank"
             rel="noreferrer"
             className={linkClass}
-            title="Open the project presentation"
+            title="Open the 7-page Widget Factory presentation (PDF)"
           >
             <Presentation className="h-3.5 w-3.5 text-indigo-300" />
-            Slides
+            Slides (PDF)
             <ExternalLink className="h-3 w-3 text-slate-500" />
           </a>
           <a href={REPO_URL} target="_blank" rel="noreferrer" className={linkClass}>
@@ -54,7 +55,7 @@ export const SubmissionBanner: React.FC = () => {
             rel="noreferrer"
             className={linkClass}
           >
-            Before / after
+            Pre-hackathon code
             <ExternalLink className="h-3 w-3 text-slate-500" />
           </a>
           <a
@@ -63,7 +64,7 @@ export const SubmissionBanner: React.FC = () => {
             rel="noreferrer"
             className={linkClass}
           >
-            Before demo
+            Pre-hackathon demo
             <ExternalLink className="h-3 w-3 text-slate-500" />
           </a>
         </div>

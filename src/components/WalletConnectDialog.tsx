@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { WizardConnectQRDialog } from '@wizardconnect/react';
-import { useWallet } from '../wallet/WalletProvider';
+import { useWallet, type WalletRole } from '../wallet/WalletProvider';
 
 interface WalletConnectDialogProps {
   open: boolean;
+  role: WalletRole;
   onClose: () => void;
 }
 
@@ -11,12 +12,13 @@ interface WalletConnectDialogProps {
  * Presentational WizardConnect pairing dialog. The connection manager lives in WalletProvider,
  * so closing this dialog does not destroy the signing session.
  */
-export const WalletConnectDialog: React.FC<WalletConnectDialogProps> = ({ open, onClose }) => {
-  const { state, uri, qrUri, connect, error } = useWallet();
+export const WalletConnectDialog: React.FC<WalletConnectDialogProps> = ({ open, role, onClose }) => {
+  const { accounts, connect } = useWallet();
+  const account = accounts[role];
 
   useEffect(() => {
-    if (open && state === 'idle') connect();
-  }, [open, state, connect]);
+    if (open && (account.state === 'idle' || account.state === 'disconnected')) connect(role);
+  }, [open, account.state, connect, role]);
 
   if (!open) return null;
 
@@ -24,15 +26,15 @@ export const WalletConnectDialog: React.FC<WalletConnectDialogProps> = ({ open, 
     <WizardConnectQRDialog
       show={open}
       onClose={onClose}
-      uri={uri ?? ''}
-      qrUri={qrUri ?? ''}
-      title="Connect a BCH wallet"
+      uri={account.uri ?? ''}
+      qrUri={account.qrUri ?? ''}
+      title={`Connect ${role} wallet`}
       subtitle={
-        error
-          ? error
-          : state === 'connecting'
+        account.error
+          ? account.error
+          : account.state === 'connecting'
             ? 'Waiting for wallet approval...'
-            : 'Scan with Selene, Paytaca or Cashonize'
+            : `Scan with Selene, Paytaca or Cashonize for ${role}`
       }
     />
   );

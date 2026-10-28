@@ -6,6 +6,7 @@ import {
   createAgentBudget,
   runAgentRequest,
 } from '../src/lib/agent-sim';
+import { MAINNET_EVIDENCE, isValidTxid, validEvidence } from '../src/lib/evidence';
 
 let passed = 0;
 let failed = 0;
@@ -80,6 +81,16 @@ check(
   'AGENT-04',
   'Cancelled vault rejects further agent requests',
   cancelledRun.code ?? 'accepted',
+);
+
+const evidenceTxids = MAINNET_EVIDENCE.map((item) => item.txid);
+check(
+  validEvidence().length === MAINNET_EVIDENCE.length &&
+    new Set(evidenceTxids).size === evidenceTxids.length &&
+    evidenceTxids.every(isValidTxid),
+  'AGENT-05',
+  'Recorded Mainnet evidence uses unique lowercase 64-hex txids',
+  `${MAINNET_EVIDENCE.length} entr${MAINNET_EVIDENCE.length === 1 ? 'y' : 'ies'}`,
 );
 
 console.log('==================================================================');

@@ -17,22 +17,14 @@ jobs:
       - run: npm ci
       - name: Compile covenant
         run: npm run compile
-      - name: Covenant VM tests
-        run: npm test
-      - name: Sandbox engine tests
-        run: npm run test:engine
-      - name: Agent sandbox tests
-        run: npm run test:agent
-      - name: Agent API guard tests
-        run: npm run test:api
-      - name: Covenant address derivation
-        run: npm run test:derive
-      - name: Live layer tests
-        run: npm run test:chain
+      - name: Unit and integration suites
+        run: npm run test:all
       - name: Typecheck
         run: npm run typecheck
       - name: Build
         run: npm run build
+      - name: Client secret scan
+        run: npm run verify:client-secrets
 
   e2e:
     runs-on: ubuntu-latest
