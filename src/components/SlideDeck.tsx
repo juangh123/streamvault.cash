@@ -41,6 +41,14 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({ onClose, onLaunchDemo }) =
           <span className="text-xs text-slate-500">7-page deck</span>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href="/StreamVault-BCH-Blaze-2026.pdf"
+            target="_blank"
+            rel="noreferrer"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 inline-flex items-center gap-1"
+          >
+            Official deck (PDF) <ExternalLink className="w-3 h-3" />
+          </a>
           <button onClick={onLaunchDemo} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0AC18E] text-black hover:bg-emerald-400">
             Open agent demo
           </button>
@@ -194,10 +202,10 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({ onClose, onLaunchDemo }) =
                 <div className="border border-slate-800 rounded-lg p-4">
                   <div className="font-semibold text-indigo-300 mb-2">Who pays</div>
                   <ul className="text-xs text-slate-400 space-y-2 list-disc pl-4">
-                    <li>Teams buying agent budgets and service access.</li>
-                    <li>Service providers paying for a verified request gateway.</li>
-                    <li>Employers and studios running PUSD payroll streams.</li>
-                    <li>Revenue: hosted budget console, SDK and service-provider billing gateway.</li>
+                    <li>Agent builders: hosted budget console for agent fleets (subscription).</li>
+                    <li>API and MCP tool providers: SDK and verifier to sell 0.01 PUSD calls.</li>
+                    <li>Hosted gateway: small fee per verified call; self-hosting stays free.</li>
+                    <li>First market: paid MCP tools and data APIs; payroll streams follow.</li>
                   </ul>
                 </div>
               </div>
@@ -221,6 +229,9 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({ onClose, onLaunchDemo }) =
                 </a>
                 <a href={REPO_URL} className="text-slate-300 inline-flex items-center gap-1">
                   GitHub repo <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <a href="/StreamVault-BCH-Blaze-2026.pdf" target="_blank" rel="noreferrer" className="text-slate-300 inline-flex items-center gap-1">
+                  Deck PDF <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
               <div className="border border-slate-800 rounded-lg p-4 text-xs text-slate-400 max-w-2xl mx-auto">

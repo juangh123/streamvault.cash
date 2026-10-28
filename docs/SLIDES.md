@@ -5,6 +5,10 @@
 > `/StreamVault-BCH-Blaze-2026.pdf` (https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf). The earlier
 > Google Slides copy is blocked by Google for signed-out viewers and is no longer linked.
 
+Final PDF page order (2026-10-28): 1 cover, 2 promise ("Prompts set intent. The transaction enforces
+the limit."), 3 trust gap, 4 one covenant / three users, 5 VM checks, 6 why BCH + who pays, 7 demo and
+links. The content blocks below are the source copy; the PDF is the version judges see.
+
 **Slide 1 - Cover**
 - StreamVault.cash
 - Give an AI an allowance, not your bank account.
@@ -22,6 +26,7 @@
 - Worker claims one tranche per period.
 - AI Agent claims a small budget and pays a service per request.
 - Same contract primitive: `amountPerPeriod`, `periodBlocks`, `claim`, `cancel`.
+- Left column stats: 3 spend paths (`claim`, `topUp`, `cancel`) and 21 VM tests against the real BCH VM.
 
 **Slide 4 - How the limit is enforced**
 - PUSD is a CashTokens fungible asset; the VM enforces conservation.
@@ -41,11 +46,15 @@
 - Near-zero settlement makes 0.01 PUSD service calls practical.
 - Relative timelocks + introspection + native CashTokens are the enforcement layer.
 - WizardConnect keeps keys in the user's wallet.
-- Revenue: hosted budget console, service-provider SDK and agent billing gateway.
+- Who pays: agent builders (hosted budget console for agent fleets, subscription); API and MCP tool
+  providers (SDK and verifier to sell $0.01 PUSD calls); hosted gateway (small fee per verified call,
+  self-hosting is free).
+- First market: paid MCP tools and data APIs.
 - No protocol fee in the covenant.
 
 **Slide 7 - Demo and ask**
 - Live demo: https://streamvault-cash.vercel.app
+- Deck PDF: https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf
 - 60-second judge path: Agent → Launch budget → Run paid request → Run until exhausted → Cancel.
 - "Give an AI an allowance, not your bank account."
 
