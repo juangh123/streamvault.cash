@@ -126,6 +126,48 @@ export function selectTokenUtxos(
   return { selected, total };
 }
 
+/** Fee headroom for a 2 sat/byte funding transaction: fixed part plus one P2PKH input. */
+const FUND_FEE_BASE = 1000n;
+const FUND_FEE_PER_INPUT = 400n;
+
+/**
+ * Select wallet inputs for a vault funding transaction.
+ *
+ * PUSD UTXOs cover the deposit. Real wallet token UTXOs usually carry only ~800-1000 sats, so
+ * BCH-only UTXOs from the same receive/0 address are added until the inputs also cover the vault's
+ * BCH buffer, the token-change dust and the fee. UTXOs carrying another token category are never
+ * selected.
+ */
+export function selectFundingUtxos(
+  utxos: SpendableUtxo[],
+  deposit: bigint,
+  category = PUSD_CATEGORY,
+  vaultBch = DEFAULT_VAULT_BCH,
+): { selected: SpendableUtxo[]; tokenTotal: bigint; satoshis: bigint; required: bigint } {
+  const { selected: tokenInputs, total: tokenTotal } = selectTokenUtxos(utxos, deposit, category);
+  const tokenChange = tokenTotal > deposit ? MIN_TOKEN_SATOSHIS : 0n;
+  const required = (inputCount: number) =>
+    vaultBch + tokenChange + FUND_FEE_BASE + FUND_FEE_PER_INPUT * BigInt(inputCount);
+
+  const selected = [...tokenInputs];
+  let satoshis = sumSatoshis(tokenInputs);
+  const bchOnly = utxos
+    .filter((utxo) => !utxo.token)
+    .sort((a, b) => (a.satoshis === b.satoshis ? 0 : a.satoshis > b.satoshis ? -1 : 1));
+  for (const utxo of bchOnly) {
+    if (satoshis >= required(selected.length)) break;
+    selected.push(utxo);
+    satoshis += utxo.satoshis;
+  }
+  if (satoshis < required(selected.length)) {
+    throw new Error(
+      `Insufficient BCH: funding needs about ${required(selected.length)} sats (vault buffer ${vaultBch} + fee), ` +
+        `but the wallet's receive/0 address has ${satoshis} sats available. Send BCH to that address and retry.`,
+    );
+  }
+  return { selected, tokenTotal, satoshis, required: required(selected.length) };
+}
+
 export interface VaultState {
   contract: Contract;
   utxos: SpendableUtxo[];
@@ -303,7 +345,8 @@ export interface TopUpArgs {
 
 /**
  * Build a plain P2PKH funding transaction into the covenant token address.
- * The caller is responsible for selecting PUSD UTXOs; token and BCH change are added automatically.
+ * The caller selects the inputs (see `selectFundingUtxos`): PUSD UTXOs for the deposit plus plain BCH
+ * UTXOs for the vault buffer and fee. Token and BCH change are added automatically.
  */
 function assembleFund(
   {
@@ -318,9 +361,11 @@ function assembleFund(
   }: FundArgs,
   unlocker: TransactionBuilder['inputs'][number]['unlocker'],
 ): TransactionBuilder {
-  if (walletUtxos.length === 0) throw new Error('No PUSD UTXOs selected for funding.');
-  if (walletUtxos.some((utxo) => utxo.token?.category !== category)) {
-    throw new Error('Selected wallet UTXOs do not all carry the configured PUSD category.');
+  if (!walletUtxos.some((utxo) => utxo.token?.category === category)) {
+    throw new Error('No PUSD UTXOs selected for funding.');
+  }
+  if (walletUtxos.some((utxo) => utxo.token && utxo.token.category !== category)) {
+    throw new Error('Selected wallet UTXOs may only carry the configured PUSD category or plain BCH.');
   }
   const builder = new TransactionBuilder({ provider: contract.provider, maximumFeeSatsPerByte: feeRate + 3 });
   builder.addInputs(walletUtxos, unlocker);

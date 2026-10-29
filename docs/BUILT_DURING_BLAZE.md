@@ -33,7 +33,9 @@ Mainnet txids and the official deck link after those external steps are complete
 - `topUp`: merges one payer-owned PUSD UTXO and restarts the relative period.
 - Multi-UTXO cancel: not in v1.2; cancel one vault UTXO at a time.
 - VM test result: 21 passed, 0 failed (`npm test`).
-- Chain test result: 10 passed (`npm run test:chain`).
+- Chain test result: 12 passed (`npm run test:chain`), including CHAIN-10/11 for funding from
+  dust-level PUSD UTXOs plus plain BCH (fixed 2026-10-29; earlier builds could not fund a vault from a
+  real wallet whose PUSD UTXOs carry only ~800-1000 sats).
 - Other suites on 2026-10-28 (clean `npm ci`): engine 12, agent 6, API 10, derive 2 - all passed;
   typecheck, production build and the client secret scan passed; the Playwright judge path passed
   locally and against https://streamvault-cash.vercel.app.

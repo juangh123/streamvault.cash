@@ -62,6 +62,9 @@ export interface WalletState {
   address: string | null;
   payerAddress: string | null;
   payeeAddress: string | null;
+  /** Token-aware receive/0 address: send PUSD and BCH for Live mode here. */
+  payerTokenAddress: string | null;
+  payeeTokenAddress: string | null;
   payerPubkey: string | null;
   payeePubkey: string | null;
   network: NetworkType;

@@ -3,54 +3,64 @@
 Status of the seven mandatory requirements: see `docs/COMPLIANCE.md`.
 This is the step-by-step to close the ones that need your wallet, funds or accounts.
 
-## 1. Mainnet real transaction (hard requirement #1)
+## 1. Mainnet real transaction (hard requirement #1) and wallet device test
 
-The browser wallet flow is implemented in `src/wallet/WalletProvider.tsx` and
-`src/components/LiveVaultPanel.tsx`. The settlement CLI remains useful for local dry runs and
-claim/cancel fallbacks; it does not implement a live `fund` action.
+Two phone wallets with WizardConnect: **Wallet A** (payer, e.g. Selene 2026.10.01+, which has a
+built-in Cauldron swap for PUSD) and **Wallet B** (payee, e.g. Paytaca). They must hold different keys.
+Open https://streamvault-cash.vercel.app on a computer and scan the QR codes with the phones.
 
-**Rehearse on Chipnet first** (free coins from `https://chipnet.chaingraph.cash/faucet`):
+### Budget
 
-```bash
-# derive the covenant address for your two keys
-set NETWORK=chipnet
-set PAYER_WIF=<chipnet payer wif>
-set PAYEE_WIF=<chipnet payee wif>
-set CATEGORY=<a token category you hold on chipnet>
-node scripts/settle.mjs --action=claim --amount=2500
-node scripts/settle.mjs --action=cancel
-```
+| Item | PUSD | BCH |
+| :--- | :--- | :--- |
+| Agent vault (stays funded for judges) | 2.00 | 50,000 sats buffer + fee |
+| Payroll vault (fund, claim, cancel) | 0.50 | 50,000 sats buffer + fee (returned on cancel) |
+| Agent hot wallet `bitcoincash:qzq6xa805mht8vuq7ea6ac9vg925lalvdscrggd85a` | - | 100,000 sats (about 1,900 sats per paid request) |
 
-**Then settle on Mainnet** with real PUSD:
+Put about 3 PUSD and 250,000 sats in Wallet A. Wallet B needs no funds; claim fees come from the vault
+buffer. PUSD category `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`.
 
-1. Obtain a small amount of **PUSD + BCH** in the payer wallet (ParyonUSD app: https://paryonusd.com).
-   Verified metadata: category
-   `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`
-   (`docs/PUSD_VERIFICATION.md`). Re-check the official Token ID before sending funds.
-2. Fund the vault from the app's **Payroll → Live** panel, or send PUSD (and at least 50,000 sats BCH
-   for the fee buffer) to the covenant token address. The app derives the address from the connected
-   payer and payee wallets' receive/0 keys.
-3. Run a real `claim`, capture the txid:
+The app only spends UTXOs on the wallet's **receive/0** address. After connecting, click the short
+address next to **Payer** in the header: it copies the token-aware receive/0 address. If funding reports
+`Insufficient PUSD` or `Insufficient BCH`, send PUSD and BCH from the wallet to that copied address.
+Funding adds plain BCH UTXOs automatically, so the 50,000-sat buffer does not need to sit on a PUSD UTXO.
 
-```bash
-set NETWORK=mainnet
-set PAYER_WIF=<mainnet payer wif>
-set PAYEE_WIF=<mainnet payee wif>
-set CATEGORY=<real ParyonUSD category>
-node scripts/settle.mjs --action=claim --amount=2500
-```
+### Phase A - Agent vault (fund, claim, service payment)
 
-4. Record the txid in `README.md` and mark requirement #1 in `docs/COMPLIANCE.md`.
+1. From Wallet A send 100,000 sats to the agent hot wallet address above.
+2. Header: **Agent**, **Live**, network **Mainnet**. **Payer → Connect**, scan with Wallet A.
+3. **Refresh live status**, then **Fund agent vault**. Approve "StreamVault: fund agent budget" in
+   Wallet A. Record the txid from the log (Fund).
+4. Wait for one confirmation plus 2 blocks (about 20-30 minutes). The covenant blocks the first claim
+   until the period has elapsed. **Refresh live status**.
+5. **Run paid request**. The log shows the agent claim txid (Claim) and the 0.01 PUSD service payment
+   txid (Agent service payment). Optional: **Run until budget exhausted** for the video.
+6. Do not cancel this vault; it becomes the public demo vault for judges after
+   `VITE_AGENT_DEMO_PAYER_PUBKEY` is set to Wallet A's receive/0 public key and the site is redeployed.
 
-5. For the Agent demo, set `AGENT_ENABLED=true`, `AGENT_WIF` (dedicated low-balance key),
-   `SERVICE_ADDRESS` (PUSD token address), and keep `AGENT_MAX_BALANCE=10`. Pre-fund the agent hot
-   wallet with 20,000 sats BCH and fund the agent vault with 2.00 PUSD + 50,000 sats BCH.
-   Validate the local configuration with `npm run verify:wallet-config`; the checker never prints the
-   WIF.
-   Use `GET /api/agent/status?payerPubkey=...` before the first run.
+### Phase B - Payroll vault (wallet-signed claim, rejection, cancel)
 
-> `--dry-run` executes the whole lifecycle against the local BCH VM with no keys or funds:
-> `node scripts/settle.mjs --dry-run`
+1. **Payee → Connect**, scan with Wallet B. The app refuses Live mode if both roles are the same key.
+2. Header: **Payroll**, **Live**. Per period `0.10`, Period `2`, Initial deposit `0.50`. **Fund vault**,
+   approve in Wallet A. Record the txid.
+3. Wait until **Next claim** shows "available now". Click **Claim**, then **reject** the request in
+   Wallet B: the app must show an error and broadcast nothing. Click **Claim** again and approve: record
+   the txid (wallet-signed Claim).
+4. **Cancel & reclaim**, approve in Wallet A. Record the txid (Cancel). The remaining PUSD and the BCH
+   buffer return to Wallet A.
+
+### Record the evidence
+
+Wait for at least one confirmation on every txid, then add them to `src/lib/evidence.ts`
+(`MAINNET_EVIDENCE`), the README, `docs/BUILT_DURING_BLAZE.md`, `docs/SUBMISSION.md` and
+`docs/DORAHACKS_BUIDL.md`, run `npm run verify:release`, push, and confirm the "Verified on BCH Mainnet"
+strip on the production site. Note which wallet app and version signed each step for the device-test
+record.
+
+### CLI fallback
+
+`scripts/settle.mjs` signs `claim` and `cancel` with WIF keys for dry runs and recovery; it does not fund.
+`node scripts/settle.mjs --dry-run` runs the whole lifecycle against the local BCH VM with no keys or funds.
 
 ## 4. Official 7-page Widget Factory slides (hard requirement #4)
 

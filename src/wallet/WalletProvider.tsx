@@ -1,7 +1,12 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 import { useWizardConnect } from '@wizardconnect/react';
 import type { WizardConnectState } from '@wizardconnect/react';
-import { binToHex, publicKeyToP2pkhCashAddress } from '@bitauth/libauth';
+import {
+  binToHex,
+  lockingBytecodeToCashAddress,
+  publicKeyToP2pkhCashAddress,
+  publicKeyToP2pkhLockingBytecode,
+} from '@bitauth/libauth';
 import type { WcTransactionObject } from 'cashscript';
 import type { NetworkType, WalletState } from '../types';
 import { broadcastSigned, makeProvider, serializeWcTransaction, type InputPath } from '../lib/chain';
@@ -19,6 +24,7 @@ export interface WalletAccount {
   name: string | null;
   icon: string | null;
   address: string | null;
+  tokenAddress: string | null;
   pubkey: string | null;
   uri: string | null;
   qrUri: string | null;
@@ -28,6 +34,21 @@ export interface WalletAccount {
 function pubkeyAddress(publicKey: Uint8Array, network: NetworkType): string | null {
   try {
     const encoded = publicKeyToP2pkhCashAddress({ publicKey, prefix: PREFIX[network] }) as unknown;
+    return typeof encoded === 'string'
+      ? encoded
+      : ((encoded as { address?: string }).address ?? null);
+  } catch {
+    return null;
+  }
+}
+
+function pubkeyTokenAddress(publicKey: Uint8Array, network: NetworkType): string | null {
+  try {
+    const encoded = lockingBytecodeToCashAddress({
+      bytecode: publicKeyToP2pkhLockingBytecode({ publicKey }),
+      prefix: PREFIX[network],
+      tokenSupport: true,
+    }) as unknown;
     return typeof encoded === 'string'
       ? encoded
       : ((encoded as { address?: string }).address ?? null);
@@ -49,6 +70,7 @@ function accountFromSession(
     name: session.walletName,
     icon: session.walletIcon,
     address,
+    tokenAddress: pubkey ? pubkeyTokenAddress(pubkey, network) : null,
     pubkey: pubkey ? binToHex(pubkey) : null,
     uri: session.uri,
     qrUri: session.qrUri,
@@ -132,6 +154,8 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
       address: payer.address ?? payee.address,
       payerAddress: payer.address,
       payeeAddress: payee.address,
+      payerTokenAddress: payer.tokenAddress,
+      payeeTokenAddress: payee.tokenAddress,
       payerPubkey: payer.pubkey,
       payeePubkey: payee.pubkey,
       network,

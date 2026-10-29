@@ -39,7 +39,7 @@ import {
   getVaultState,
   makeContract,
   makeProvider,
-  selectTokenUtxos,
+  selectFundingUtxos,
   TOP_UP_INPUT_PATHS,
   tokenAddressForPublicKey,
 } from '../lib/chain';
@@ -172,7 +172,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
       const prefix = network === 'mainnet' ? 'bitcoincash' : 'bchtest';
       const walletTokenAddress = tokenAddressForPublicKey(hexToBin(wallet.payerPubkey), prefix);
       const walletUtxos = await contract.provider.getUtxos(walletTokenAddress);
-      const { selected } = selectTokenUtxos(walletUtxos, deposit, liveStatus.category);
+      const { selected } = selectFundingUtxos(walletUtxos, deposit, liveStatus.category);
       const object = buildFundWcObject({
         contract,
         walletAddress: wallet.payerAddress,

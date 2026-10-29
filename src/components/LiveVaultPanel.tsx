@@ -21,7 +21,7 @@ import {
   getVaultState,
   makeContract,
   makeProvider,
-  selectTokenUtxos,
+  selectFundingUtxos,
   TOP_UP_INPUT_PATHS,
   tokenAddressForPublicKey,
   withTimeout,
@@ -170,7 +170,7 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
       }
       const walletTokenAddress = tokenAddressForPublicKey(hexToBin(wallet.payerPubkey), prefix);
       const walletUtxos = await contract.provider.getUtxos(walletTokenAddress);
-      const { selected } = selectTokenUtxos(walletUtxos, BigInt(params.deposit), PUSD_CATEGORY);
+      const { selected } = selectFundingUtxos(walletUtxos, BigInt(params.deposit), PUSD_CATEGORY);
       const object = buildFundWcObject({
         contract,
         walletAddress: wallet.payerAddress,

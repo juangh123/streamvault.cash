@@ -19,6 +19,7 @@ import {
   broadcastSigned,
   fundInputPaths,
   makeContract,
+  selectFundingUtxos,
   serializeWcTransaction,
   TOP_UP_INPUT_PATHS,
   tokenAddressForPublicKey,
@@ -276,6 +277,88 @@ function setup() {
     );
   } catch (e) {
     check(false, 'CHAIN-09', 'broadcastSigned uses the signed transaction txid', (e as Error).message.split('\n')[0]);
+  }
+}
+
+// Realistic wallet: PUSD UTXOs carry dust-level BCH, so the vault buffer must come from plain BCH UTXOs.
+function realisticWallet(bchSatoshis: bigint) {
+  const provider = new MockNetworkProvider();
+  const contract = makeContract(
+    { payerPk: payer.publicKey, payeePk: payee.publicKey, amountPerPeriod: 10, periodBlocks: 2, category: CATEGORY },
+    provider,
+  );
+  const prefix = contract.address.startsWith('bitcoincash:') ? 'bitcoincash' : 'bchtest';
+  const payerAddress = (lockingBytecodeToCashAddress({
+    bytecode: publicKeyToP2pkhLockingBytecode({ publicKey: payer.publicKey }),
+    prefix,
+  }) as { address: string }).address;
+  const payerTokenAddress = tokenAddressForPublicKey(payer.publicKey, prefix);
+  provider.addUtxo(payerTokenAddress, { txid: '51'.repeat(32), vout: 0, satoshis: 800n, token: { amount: 150n, category: CATEGORY } });
+  provider.addUtxo(payerTokenAddress, { txid: '52'.repeat(32), vout: 0, satoshis: 800n, token: { amount: 120n, category: CATEGORY } });
+  provider.addUtxo(payerTokenAddress, { txid: '53'.repeat(32), vout: 0, satoshis: 1000n, token: { amount: 999n, category: 'b'.repeat(64) } });
+  if (bchSatoshis > 0n) provider.addUtxo(payerAddress, { txid: '54'.repeat(32), vout: 0, satoshis: bchSatoshis });
+  return { provider, contract, payerAddress, payerTokenAddress };
+}
+
+// CHAIN-10: funding a 2.00 PUSD agent vault from dust-level PUSD UTXOs pulls in plain BCH for the buffer
+{
+  try {
+    const { provider, contract, payerAddress, payerTokenAddress } = realisticWallet(120000n);
+    const walletUtxos = await provider.getUtxos(payerTokenAddress);
+    const { selected } = selectFundingUtxos(walletUtxos, 200n, CATEGORY);
+    const foreign = selected.some((utxo) => utxo.token && utxo.token.category !== CATEGORY);
+    const plain = selected.filter((utxo) => !utxo.token).length;
+    const hex = buildFundHex({
+      contract,
+      walletAddress: payerAddress,
+      walletTokenAddress: payerTokenAddress,
+      walletUtxos: selected,
+      deposit: 200n,
+      category: CATEGORY,
+      walletSigner: payer,
+    });
+    const txid = await provider.sendRawTransaction(hex);
+    const vault = (await contract.getUtxos()).find((utxo) => utxo.token?.category === CATEGORY);
+    const wc = buildFundWcObject({
+      contract,
+      walletAddress: payerAddress,
+      walletTokenAddress: payerTokenAddress,
+      walletUtxos: selected,
+      deposit: 200n,
+      category: CATEGORY,
+    });
+    check(
+      !foreign && plain === 1 && vault?.token?.amount === 200n && vault.satoshis === 50000n &&
+        txid.length === 64 && wc.transaction.inputs.length === selected.length &&
+        fundInputPaths(selected.length).length === selected.length,
+      'CHAIN-10',
+      'Fund selection adds plain BCH so dust-level PUSD UTXOs can fund the 50,000-sat vault buffer',
+      `inputs=${selected.length} (plain BCH ${plain}), vault=${vault?.token?.amount} PUSD / ${vault?.satoshis} sats`,
+    );
+  } catch (e) {
+    check(false, 'CHAIN-10', 'Fund selection adds plain BCH so dust-level PUSD UTXOs can fund the 50,000-sat vault buffer', (e as Error).message.split('\n')[0]);
+  }
+}
+
+// CHAIN-11: a wallet without enough plain BCH gets a clear error before any signing request
+{
+  try {
+    const { provider, payerTokenAddress } = realisticWallet(10000n);
+    const walletUtxos = await provider.getUtxos(payerTokenAddress);
+    let message = '';
+    try {
+      selectFundingUtxos(walletUtxos, 200n, CATEGORY);
+    } catch (e) {
+      message = (e as Error).message;
+    }
+    check(
+      message.startsWith('Insufficient BCH'),
+      'CHAIN-11',
+      'Fund selection rejects a wallet without enough BCH for the vault buffer',
+      message.slice(0, 90),
+    );
+  } catch (e) {
+    check(false, 'CHAIN-11', 'Fund selection rejects a wallet without enough BCH for the vault buffer', (e as Error).message.split('\n')[0]);
   }
 }
 

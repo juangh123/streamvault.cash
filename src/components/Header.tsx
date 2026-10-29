@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Wallet, Globe, BookOpen, Presentation, Droplets, LogOut, Bot, Landmark } from 'lucide-react';
 import { AppMode, AppView, NetworkType, WalletState } from '../types';
 import type { WalletRole } from '../wallet/WalletProvider';
@@ -22,9 +22,22 @@ const WalletControl: React.FC<{
   role: WalletRole;
   connected: boolean;
   address: string | null;
+  copyAddress: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
-}> = ({ role, connected, address, onConnect, onDisconnect }) => (
+}> = ({ role, connected, address, copyAddress, onConnect, onDisconnect }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    if (!copyAddress) return;
+    try {
+      await navigator.clipboard.writeText(copyAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+  return (
   <div
     className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] border ${
       connected
@@ -36,7 +49,14 @@ const WalletControl: React.FC<{
     <span className="capitalize">{role}</span>
     {connected ? (
       <>
-        <span className="text-emerald-500/70 font-mono">{address ? shortAddress(address, 4, 3) : ''}</span>
+        <button
+          onClick={copy}
+          title={copyAddress ? `${copyAddress} - click to copy (send PUSD and BCH for Live mode here)` : undefined}
+          aria-label={`Copy ${role} address`}
+          className="text-emerald-500/70 font-mono hover:text-emerald-300"
+        >
+          {copied ? 'copied' : address ? shortAddress(address, 4, 3) : ''}
+        </button>
         <button onClick={onDisconnect} title={`Disconnect ${role}`} className="text-emerald-400 hover:text-white">
           <LogOut className="w-3 h-3" />
         </button>
@@ -47,7 +67,8 @@ const WalletControl: React.FC<{
       </button>
     )}
   </div>
-);
+  );
+};
 
 export const Header: React.FC<HeaderProps> = ({
   mode,
@@ -150,6 +171,7 @@ export const Header: React.FC<HeaderProps> = ({
               role="payer"
               connected={wallet.payerConnected}
               address={wallet.payerAddress}
+              copyAddress={wallet.payerTokenAddress}
               onConnect={() => onConnectWallet('payer')}
               onDisconnect={() => onDisconnect('payer')}
             />
@@ -157,6 +179,7 @@ export const Header: React.FC<HeaderProps> = ({
               role="payee"
               connected={wallet.payeeConnected}
               address={wallet.payeeAddress}
+              copyAddress={wallet.payeeTokenAddress}
               onConnect={() => onConnectWallet('payee')}
               onDisconnect={() => onDisconnect('payee')}
             />
