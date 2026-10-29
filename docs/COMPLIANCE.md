@@ -86,6 +86,20 @@ attendance or Telegram verification.
 - Confirmed the production deployment includes the latest payer fallback. The funded Mainnet evidence
   remains blocked on adding BCH + verified PUSD to the demo wallets.
 
+## 2026-10-28 progress
+
+- Shipped `7d363af` (mainnet-first Agent cockpit, separate payer/payee WizardConnect sessions) and
+  `6766177` (business-model slide, deck PDF links). Both are on origin/master and Vercel production
+  serves `6766177`.
+- Google Slides blocked signed-out viewers, so every deck link now points to the self-hosted PDF.
+- Clean-install verification: 21 covenant, 12 engine, 6 agent, 10 API, 2 derive and 10 chain tests
+  pass; typecheck and production build pass; the Playwright judge path passes locally and against the
+  live site; none of the demo wallet WIFs appear in the live JavaScript bundle.
+- Electrum balance check: the payer, agent, service and vault addresses hold 0 sats and 0 PUSD.
+  Requirement 1 stays blocked until the wallets are funded.
+- DoraHacks timeline confirmed on the hackathon page: submission opens 2026-11-13 06:00 and closes
+  2026-11-22 07:00 (UTC-6). The paste-ready BUIDL text is in [DORAHACKS_BUIDL.md](DORAHACKS_BUIDL.md).
+
 PUSD mainnet metadata was verified on 2026-10-17: category
 `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The application now
 uses this verified category by default and blocks Mainnet if a demo category is configured. See

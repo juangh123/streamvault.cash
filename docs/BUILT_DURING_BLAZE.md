@@ -17,8 +17,10 @@ This file separates the disclosed pre-hackathon baseline from the current sprint
 | :--- | :--- |
 | Start commit | `4c9c083` (last baseline disclosure commit) |
 | Sprint code | v1.2 contract, WalletProvider signing, Agent API, Agent-first cockpit |
-| Final code commit | `810f177aaf8552d68da3ee8641c1ba99f900197f` |
-| Baseline-to-final diff | `git diff --stat v0-prehackathon-baseline..810f177` (74 files, +5216/-611) |
+| Final code commit | `7d363aface18b6188120000a6ab38096e2f5c7c6` (mainnet-first agent cockpit, dual wallets) |
+| Final deck commit | `67661775ff5b4255939570baddbc1f5bb732cd18` (business-model slide, deck PDF links) |
+| Baseline-to-final diff | `git diff --stat v0-prehackathon-baseline..6766177` (79 files, +6146/-644, 22 commits) |
+| Pushed and deployed | origin/master and the Vercel production deployment both on `6766177` (checked 2026-10-28) |
 
 The code commit above is the current build-period candidate. The final evidence commit may add
 Mainnet txids and the official deck link after those external steps are complete.
@@ -31,7 +33,10 @@ Mainnet txids and the official deck link after those external steps are complete
 - `topUp`: merges one payer-owned PUSD UTXO and restarts the relative period.
 - Multi-UTXO cancel: not in v1.2; cancel one vault UTXO at a time.
 - VM test result: 21 passed, 0 failed (`npm test`).
-- Chain test result: 9 passed (`npm run test:chain`).
+- Chain test result: 10 passed (`npm run test:chain`).
+- Other suites on 2026-10-28 (clean `npm ci`): engine 12, agent 6, API 10, derive 2 - all passed;
+  typecheck, production build and the client secret scan passed; the Playwright judge path passed
+  locally and against https://streamvault-cash.vercel.app.
 
 ## Wallet transactions
 

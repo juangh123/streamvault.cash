@@ -32,7 +32,7 @@
 | Agent allowance Sandbox Fast-Track | Sandbox ledger and demo addresses | Real Mainnet fund/claim/cancel txids |
 | PUSD streaming payroll Sandbox | Agent service response and request id | Real Selene/Paytaca device test |
 | v1.2 covenant: 21 real VM tests | 0-conf interactive verification | Final media / DoraHacks form |
-| WizardConnect signing code + CashTokens address | Sandbox ledger | Final deck/media links |
+| WizardConnect signing code + CashTokens address | Sandbox ledger | Final media link |
 | Live top-up (merge one PUSD UTXO) |  | DoraHacks project form |
 | Vercel Functions: status/run/verify |  |  |
 | Mainnet evidence strip (`src/lib/evidence.ts`, hidden until txids are recorded) |  |  |
@@ -246,7 +246,9 @@ disclosure and the competition-period change scope.
 See [docs/V2_SPEC.md](docs/V2_SPEC.md) for the contract, wallet and Agent design.
 
 **Still pending before submission:** real Mainnet fund/claim/cancel and agent-service txids,
-a real Selene/Paytaca device test, final media, and the DoraHacks project form.
+a real Selene/Paytaca device test, final media, and the DoraHacks project form. The form opens on
+2026-11-13 06:00 and closes on 2026-11-22 07:00 (UTC-6); the paste-ready text is in
+[docs/DORAHACKS_BUIDL.md](docs/DORAHACKS_BUIDL.md).
 
 ## Roadmap
 

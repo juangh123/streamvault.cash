@@ -1,6 +1,18 @@
 # DoraHacks submission sheet
 
 Use this file as the single source of truth when filling the BCH BLAZE 2026 submission form.
+The paste-ready form text is in [DORAHACKS_BUIDL.md](DORAHACKS_BUIDL.md).
+
+## Official timeline (DoraHacks page, UTC-6)
+
+| Milestone | Time |
+| :--- | :--- |
+| Submission opens | 2026-11-13 06:00 |
+| Submission deadline | 2026-11-22 07:00 |
+| Judging | 2026-11-23 to 2026-11-27 |
+| Winners livestream | 2026-11-28 |
+
+The DoraHacks form cannot be submitted before the window opens.
 
 ## Project
 
@@ -69,14 +81,18 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 
 ## Submission checklist
 
-- [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md`
-- [ ] Real wallet device test on Selene or Paytaca
+- [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md` - blocked on funding: on
+      2026-10-28 the payer, agent, service and vault addresses all held 0 sats and 0 PUSD
+- [ ] Real wallet device test on Selene or Paytaca - do it together with the Live fund step
 - [x] Official Widget Factory template port rendered as PPTX + PDF
 - [x] Template-based deck published as a self-hosted PDF (Google Slides link blocked by Google on 2026-10-28)
 - [x] CashTokens receiving address added
 - [x] Telegram disclosure posted 2026-10-17; organizer replied with pre-existing-work rules
 - [x] DoraHacks registration completed
 - [x] At least one preparation-stream roll call
-- [ ] DoraHacks project submission completed
-- [ ] Commit and push the build-period product diff
-- [ ] Old/new repository and pre-hackathon demo links added to the submission
+- [ ] DoraHacks project submission completed - form opens 2026-11-13 06:00 (UTC-6); draft ready in
+      [DORAHACKS_BUIDL.md](DORAHACKS_BUIDL.md)
+- [x] Commit and push the build-period product diff (`7d363af` code, `6766177` deck; origin/master and
+      Vercel production both on `6766177`, verified 2026-10-28)
+- [ ] Old/new repository and pre-hackathon demo links added to the submission - links are live in the
+      site banner and prefilled in the BUIDL draft; tick after the form is submitted
