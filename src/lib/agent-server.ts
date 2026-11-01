@@ -30,6 +30,7 @@ import {
   buildClaimHex,
   filterTokenUtxos,
   getVaultState,
+  getVaultAge,
   makeContract,
   makeProvider,
   sumSatoshis,
@@ -200,18 +201,7 @@ async function vaultAge(
   utxo: SpendableUtxo,
   periodBlocks: number,
 ): Promise<VaultAge> {
-  const tip = await provider.getBlockHeight();
-  const verbose = (await provider.performRequest('blockchain.transaction.get', utxo.txid, true)) as {
-    blockheight?: number;
-  };
-  const created = Number(verbose.blockheight ?? 0);
-  const confirmed = created > 0;
-  const nextClaimBlock = (confirmed ? created : tip) + periodBlocks;
-  return {
-    confirmed,
-    nextClaimBlock,
-    blocksRemaining: Math.max(0, nextClaimBlock - tip),
-  };
+  return getVaultAge(provider, utxo, periodBlocks);
 }
 
 function vaultState(

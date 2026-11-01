@@ -9,7 +9,7 @@ import {
 } from '@bitauth/libauth';
 import type { WcTransactionObject } from 'cashscript';
 import type { NetworkType, WalletState } from '../types';
-import { broadcastSigned, makeProvider, serializeWcTransaction, type InputPath } from '../lib/chain';
+import { broadcastSigned, makeProvider, serializeWcTransaction, relaySourceOutputs, type InputPath } from '../lib/chain';
 
 const PREFIX: Record<NetworkType, 'bitcoincash' | 'bchtest'> = {
   mainnet: 'bitcoincash',
@@ -201,7 +201,7 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
         const request = {
           transaction: {
             transaction: txHex,
-            sourceOutputs: object.sourceOutputs,
+            sourceOutputs: relaySourceOutputs(object),
             broadcast: false,
             userPrompt: userPrompt ?? `StreamVault ${role} transaction`,
           },

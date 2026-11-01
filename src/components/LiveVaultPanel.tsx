@@ -19,6 +19,7 @@ import {
   filterTokenUtxos,
   fundInputPaths,
   getVaultState,
+  getVaultAge,
   makeContract,
   makeProvider,
   selectFundingUtxos,
@@ -119,14 +120,8 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
       }
       try {
         const provider = makeProvider(network);
-        const tip = await provider.getBlockHeight();
-        const tx = (await provider.performRequest('blockchain.transaction.get', utxo.txid, true)) as {
-          blockheight?: number;
-        };
-        const created = Number(tx.blockheight ?? 0);
-        const confirmed = created > 0;
-        const next = (confirmed ? created : tip) + params.periodBlocks;
-        setNextClaim({ block: next, blocksRemaining: Math.max(0, next - tip), confirmed });
+        const age = await getVaultAge(provider, utxo, params.periodBlocks);
+        setNextClaim({ block: age.nextClaimBlock, blocksRemaining: age.blocksRemaining, confirmed: age.confirmed });
       } catch {
         setNextClaim(null);
       }

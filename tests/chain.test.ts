@@ -6,6 +6,8 @@
  * sendRawTransaction evaluates the real BCH VM.
  */
 import { MockNetworkProvider, SignatureTemplate } from 'cashscript';
+import assert from 'node:assert/strict';
+import { parseExtendedJson } from '@wizardconnect/core';
 import { lockingBytecodeToCashAddress, publicKeyToP2pkhLockingBytecode } from '@bitauth/libauth';
 import {
   buildCancelHex,
@@ -24,6 +26,8 @@ import {
   TOP_UP_INPUT_PATHS,
   tokenAddressForPublicKey,
   transactionIdFromHex,
+  relaySourceOutputs,
+  getVaultAge,
 } from '../src/lib/chain';
 
 const CATEGORY = 'a'.repeat(64);
@@ -360,6 +364,51 @@ function realisticWallet(bchSatoshis: bigint) {
   } catch (e) {
     check(false, 'CHAIN-11', 'Fund selection rejects a wallet without enough BCH for the vault buffer', (e as Error).message.split('\n')[0]);
   }
+}
+
+// Actual WizardConnect relay uses JSON.stringify, not native libauth BigInt/Uint8Array objects.
+{
+  try {
+    const { contract, utxo, payeeTokenAddress } = setup();
+    const object = buildClaimWcObject({ contract, utxo, payeeTokenAddress, amount: 800, sequence: PERIOD_BLOCKS });
+    const encoded = JSON.stringify(relaySourceOutputs(object));
+    const decoded = parseExtendedJson(encoded);
+    assert.equal(decoded[0].valueSatoshis, object.sourceOutputs[0].valueSatoshis);
+    assert.equal(decoded[0].token.amount, object.sourceOutputs[0].token!.amount);
+    assert.deepEqual(decoded[0].token.category, object.sourceOutputs[0].token!.category);
+    assert.deepEqual(decoded[0].contract.redeemScript, object.sourceOutputs[0].contract!.redeemScript);
+    assert.equal(decoded[0].contract.abiFunction.name, 'claim');
+    check(true, 'CHAIN-12', 'Relay JSON round-trip preserves token amounts, byte arrays and covenant metadata', 'No BigInt serialization failure or precision loss.');
+  } catch (e) { check(false, 'CHAIN-12', 'Relay JSON serialization', (e as Error).message); }
+}
+
+// Real Fulcrum verbose transactions omit blockheight: use the UTXO's exact listunspent height.
+{
+  try {
+    const { utxo } = setup();
+    let height = 100;
+    let tip = 102;
+    let present = true;
+    const provider = {
+      getBlockHeight: async () => tip,
+      performRequest: async (method: string, hash: string, filter: string) => {
+        assert.equal(method, 'blockchain.scripthash.listunspent');
+        assert.match(hash, /^[a-f0-9]{64}$/);
+        assert.equal(filter, 'include_tokens');
+        return present ? [{ tx_hash: utxo.txid, tx_pos: utxo.vout, height }] : [];
+      },
+    };
+    const mature = await getVaultAge(provider, utxo, 2);
+    assert.deepEqual(mature, { confirmed: true, nextClaimBlock: 102, blocksRemaining: 0 });
+    tip = 101;
+    assert.equal((await getVaultAge(provider, utxo, 2)).blocksRemaining, 1);
+    height = 0;
+    assert.equal((await getVaultAge(provider, utxo, 2)).confirmed, false);
+    assert.equal((await getVaultAge(provider, utxo, 2)).blocksRemaining, 2);
+    present = false;
+    await assert.rejects(() => getVaultAge(provider, utxo, 2), /UTXO/);
+    check(true, 'CHAIN-13', 'UTXO height governs first and subsequent claim periods', 'Confirmed, immature, mempool and spent cases checked.');
+  } catch (e) { check(false, 'CHAIN-13', 'UTXO age on real Electrum response shape', (e as Error).message); }
 }
 
 console.log('==================================================================');

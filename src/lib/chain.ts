@@ -15,6 +15,9 @@ import {
   hashTransaction,
   lockingBytecodeToCashAddress,
   publicKeyToP2pkhLockingBytecode,
+  binToHex,
+  sha256,
+  stringify,
 } from '@bitauth/libauth';
 import { transactionToHex } from '@wizardconnect/core/hdwalletv1-serialize';
 import { STREAMVAULT_ARTIFACT, PUSD_CATEGORY, assertMainnetCategory } from './covenant.js';
@@ -189,6 +192,23 @@ export async function getVaultState(params: StreamParams, network: NetworkType):
     bchSatoshis: sumSatoshis(tokenUtxos),
     extraUtxos: utxos.filter((utxo) => !utxo.token || utxo.token.category !== category),
   };
+}
+
+/** listunspent provides the exact UTXO height; verbose transaction blockheight is not portable. */
+export async function getVaultAge(
+  provider: Pick<ElectrumNetworkProvider, 'getBlockHeight' | 'performRequest'>,
+  utxo: SpendableUtxo,
+  periodBlocks: number,
+): Promise<{ confirmed: boolean; nextClaimBlock: number; blocksRemaining: number }> {
+  const scriptHash = binToHex(sha256.hash(hexToBin(utxo.lockingBytecode)).slice().reverse());
+  const records = await provider.performRequest('blockchain.scripthash.listunspent', scriptHash, 'include_tokens') as
+    { tx_hash: string; tx_pos: number; height: number }[];
+  const record = records.find(item => item.tx_hash === utxo.txid && item.tx_pos === utxo.vout);
+  if (!record || !Number.isInteger(record.height)) throw new Error('Vault UTXO is spent or its height is unavailable. Refresh the vault.');
+  const tip = await provider.getBlockHeight();
+  const confirmed = record.height > 0;
+  const nextClaimBlock = (confirmed ? record.height : tip) + periodBlocks;
+  return { confirmed, nextClaimBlock, blocksRemaining: Math.max(0, nextClaimBlock - tip) };
 }
 
 function prefixOf(contract: Contract): 'bitcoincash' | 'bchtest' {
@@ -454,6 +474,11 @@ export const TOP_UP_INPUT_PATHS: InputPath[] = [
 export function serializeWcTransaction(object: WcTransactionObject): string {
   const tx = object.transaction;
   return transactionToHex(tx.inputs, tx.outputs, tx.version, tx.locktime);
+}
+
+/** WC2-BCH extended JSON preserves BigInt, Uint8Array and covenant metadata over WizardConnect. */
+export function relaySourceOutputs(object: WcTransactionObject): unknown[] {
+  return JSON.parse(stringify(object.sourceOutputs));
 }
 
 export function fundInputPaths(inputCount: number): InputPath[] {
