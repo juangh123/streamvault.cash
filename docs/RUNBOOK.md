@@ -3,10 +3,14 @@
 Status of the seven mandatory requirements: see `docs/COMPLIANCE.md`.
 This is the step-by-step to close the ones that need your wallet, funds or accounts.
 
+Chinese wallet checklist, exact UI labels, retry rules and evidence worksheet:
+[`WALLET_TEST_ZH.md`](WALLET_TEST_ZH.md).
+
 ## 1. Mainnet real transaction (hard requirement #1) and wallet device test
 
-Two phone wallets with WizardConnect: **Wallet A** (payer, e.g. Selene 2026.10.01+, which has a
-built-in Cauldron swap for PUSD) and **Wallet B** (payee, e.g. Paytaca). They must hold different keys.
+Two phone wallets with WizardConnect: **Wallet A** (payer) and **Wallet B** (payee).
+The connection dialog lists Selene, Paytaca and Cashonize; verify support in the installed versions
+and record the actual device results. They must hold different keys.
 Open https://streamvault-cash.vercel.app on a computer and scan the QR codes with the phones.
 
 ### Budget
@@ -17,7 +21,7 @@ Open https://streamvault-cash.vercel.app on a computer and scan the QR codes wit
 | Payroll vault (fund, claim, cancel) | 0.50 | 50,000 sats buffer + fee (returned on cancel) |
 | Agent hot wallet `bitcoincash:qzq6xa805mht8vuq7ea6ac9vg925lalvdscrggd85a` | - | 100,000 sats (about 1,900 sats per paid request) |
 
-Put about 3 PUSD and 250,000 sats in Wallet A. Wallet B needs no funds; claim fees come from the vault
+Put about 3 PUSD and 250,000 sats (**0.0025 BCH**) in Wallet A. Wallet B needs no funds; claim fees come from the vault
 buffer. PUSD category `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`.
 
 The app only spends UTXOs on the wallet's **receive/0** address. After connecting, click the short
@@ -33,8 +37,10 @@ Funding adds plain BCH UTXOs automatically, so the 50,000-sat buffer does not ne
    Wallet A. Record the txid from the log (Fund).
 4. Wait for one confirmation plus 2 blocks (about 20-30 minutes). The covenant blocks the first claim
    until the period has elapsed. **Refresh live status**.
-5. **Run paid request**. The log shows the agent claim txid (Claim) and the 0.01 PUSD service payment
-   txid (Agent service payment). Optional: **Run until budget exhausted** for the video.
+5. **Run paid request**. Save the **Claim** and **Agent pay** rows' **on-chain** explorer links in the
+   Transaction Ledger (the displayed txids are truncated). If the agent already holds enough PUSD,
+   the request may only pay the service, without a new claim. Save records before switching views or
+   reloading. **Run until budget exhausted** makes repeated paid requests; omit it for the first test.
 6. Do not cancel this vault; it becomes the public demo vault for judges after
    `VITE_AGENT_DEMO_PAYER_PUBKEY` is set to Wallet A's receive/0 public key and the site is redeployed.
 
@@ -46,8 +52,10 @@ Funding adds plain BCH UTXOs automatically, so the 50,000-sat buffer does not ne
 3. Wait until **Next claim** shows "available now". Click **Claim**, then **reject** the request in
    Wallet B: the app must show an error and broadcast nothing. Click **Claim** again and approve: record
    the txid (wallet-signed Claim).
-4. **Cancel & reclaim**, approve in Wallet A. Record the txid (Cancel). The remaining PUSD and the BCH
-   buffer return to Wallet A.
+4. Wait for the new vault UTXO after Claim to confirm and mature for the period; click **Refresh**.
+   The current client also sets `sequence = periodBlocks` on cancel transactions, even though the
+   cancel covenant itself has no age requirement. **Cancel & reclaim**, approve in Wallet A.
+   Record the txid (Cancel). Remaining PUSD and BCH, less claim costs and cancel fees, return to Wallet A.
 
 ### Record the evidence
 
