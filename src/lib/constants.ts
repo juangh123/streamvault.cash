@@ -22,6 +22,22 @@ export const PUSD_CATEGORY = '2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d0
 /** Never use this category for a Mainnet settlement. Kept for defensive checks and old fixtures. */
 export const DEMO_PUSD_CATEGORY = 'a'.repeat(64);
 
+/** A Chipnet test token is independent of the real PUSD asset and has no monetary value. */
+export function liveTokenCategory(network: NetworkType, chipnetCategory = ''): string {
+  if (network === 'mainnet') return PUSD_CATEGORY;
+  const category = chipnetCategory.trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(category) || category === PUSD_CATEGORY || isDemoCategory(category)) {
+    throw new Error('Chipnet requires an issued test token category (64 hex characters), not Mainnet PUSD or a placeholder.');
+  }
+  return category;
+}
+
+export function assertAgentNetwork(selected: NetworkType, server: unknown): void {
+  if (server !== selected) {
+    throw new Error(`Agent network mismatch: selected ${selected}, server ${String(server)}. Use a matching Agent deployment.`);
+  }
+}
+
 export const SITE_URL = 'https://streamvault-cash.vercel.app';
 export const REPO_URL = 'https://github.com/juangh123/streamvault.cash';
 

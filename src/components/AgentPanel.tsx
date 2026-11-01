@@ -43,7 +43,7 @@ import {
   TOP_UP_INPUT_PATHS,
   tokenAddressForPublicKey,
 } from '../lib/chain';
-import { PUSD_CATEGORY } from '../lib/constants';
+import { PUSD_CATEGORY, assertAgentNetwork } from '../lib/constants';
 import { pusdToDisplay, shortAddress } from '../lib/format';
 import { makeLiveLedgerEntry } from '../lib/ledger';
 import { TxLedger } from './TxLedger';
@@ -109,13 +109,13 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ mode, network, setNetwor
             : body.message || 'Agent status unavailable.',
         );
       }
+      assertAgentNetwork(network, body.network);
       setLiveStatus(body);
       setError(null);
-      if (body.network && body.network !== network) setNetwork(body.network);
     } catch (e) {
       setLiveStatus(null);
       setError(
-        `${(e as Error).message} The live Agent API is served by the Vercel deployment; use Sandbox for the local-only demo.`,
+        `${(e as Error).message} Check this deployment's Agent API configuration and network.`,
       );
     }
   }, [payerPubkey, network, setNetwork]);

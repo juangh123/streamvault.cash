@@ -27,7 +27,7 @@ import {
   withTimeout,
   type VaultState,
 } from '../lib/chain';
-import { PUSD_CATEGORY } from '../lib/constants';
+import { liveTokenCategory } from '../lib/constants';
 import { blocksToHuman, pusdToDisplay, shortAddress } from '../lib/format';
 import { makeLiveLedgerEntry } from '../lib/ledger';
 import { TxLedger } from './TxLedger';
@@ -45,6 +45,11 @@ interface NextClaim {
 export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
   const walletCtx = useWallet();
   const wallet = walletCtx.wallet;
+  const [chipnetCategory, setChipnetCategory] = useState('');
+  const tokenConfig = useMemo(() => {
+    try { return { category: liveTokenCategory(network, chipnetCategory), error: null }; }
+    catch (e) { return { category: null, error: (e as Error).message }; }
+  }, [network, chipnetCategory]);
   const [perPeriodUsd, setPerPeriodUsd] = useState('0.10');
   const [periodBlocks, setPeriodBlocks] = useState('2');
   const [depositUsd, setDepositUsd] = useState('2.00');
@@ -70,15 +75,15 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
   );
 
   const contractParams = useMemo(() => {
-    if (!wallet.payerPubkey || !wallet.payeePubkey || !rolesDistinct) return null;
+    if (!wallet.payerPubkey || !wallet.payeePubkey || !rolesDistinct || !tokenConfig.category) return null;
     return {
       payerPk: hexToBin(wallet.payerPubkey),
       payeePk: hexToBin(wallet.payeePubkey),
       amountPerPeriod: params.amountPerPeriod,
       periodBlocks: params.periodBlocks,
-      category: PUSD_CATEGORY,
+      category: tokenConfig.category,
     };
-  }, [wallet.payerPubkey, wallet.payeePubkey, params, rolesDistinct]);
+  }, [wallet.payerPubkey, wallet.payeePubkey, params, rolesDistinct, tokenConfig.category]);
 
   const contract = useMemo(() => {
     if (!contractParams) return null;
@@ -170,14 +175,14 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
       }
       const walletTokenAddress = tokenAddressForPublicKey(hexToBin(wallet.payerPubkey), prefix);
       const walletUtxos = await contract.provider.getUtxos(walletTokenAddress);
-      const { selected } = selectFundingUtxos(walletUtxos, BigInt(params.deposit), PUSD_CATEGORY);
+      const { selected } = selectFundingUtxos(walletUtxos, BigInt(params.deposit), contractParams.category);
       const object = buildFundWcObject({
         contract,
         walletAddress: wallet.payerAddress,
         walletTokenAddress,
         walletUtxos: selected,
         deposit: BigInt(params.deposit),
-        category: PUSD_CATEGORY,
+        category: contractParams.category,
       });
       const result = await walletCtx.signAndBroadcast(
         'payer',
@@ -291,13 +296,13 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
     try {
       requirePayer();
       requireDistinctRoles();
-      if (!contract || !wallet.payerPubkey || !wallet.payerAddress) throw new Error('The vault contract is not ready.');
+      if (!contract || !contractParams || !wallet.payerPubkey || !wallet.payerAddress) throw new Error('The vault contract is not ready.');
       if (!vault || vault.tokenUtxos.length !== 1) {
         throw new Error('Expected exactly one PUSD vault UTXO before topping up.');
       }
       const walletTokenAddress = tokenAddressForPublicKey(hexToBin(wallet.payerPubkey), prefix);
       const walletUtxos = await contract.provider.getUtxos(walletTokenAddress);
-      const tokenUtxos = filterTokenUtxos(walletUtxos, PUSD_CATEGORY).sort((a, b) =>
+      const tokenUtxos = filterTokenUtxos(walletUtxos, contractParams.category).sort((a, b) =>
         a.token!.amount === b.token!.amount ? 0 : a.token!.amount > b.token!.amount ? 1 : -1,
       );
       const walletUtxo = tokenUtxos[0];
@@ -343,6 +348,20 @@ export const LiveVaultPanel: React.FC<LiveVaultPanelProps> = ({ network }) => {
             <span className="text-[10px] font-mono text-slate-400">{network}</span>
           </div>
 
+          {network === 'chipnet' && (
+            <div className="mb-3 border border-amber-800/60 bg-amber-950/20 rounded-lg p-3 text-xs text-amber-200">
+              <p>Chipnet test only. These tokens have no monetary value and are not Mainnet PUSD. Amounts use 2 decimals.</p>
+              <label className="block mt-2">
+                <span>Chipnet test token category</span>
+                <input aria-label="Chipnet test token category" value={chipnetCategory}
+                  onChange={(e) => setChipnetCategory(e.target.value)}
+                  placeholder="64-character category from your token genesis transaction"
+                  className={field} spellCheck={false} autoComplete="off" />
+              </label>
+              {tokenConfig.error && <p role="status" className="mt-2">{tokenConfig.error}</p>}
+              <p className="mt-2">Keep this category and both policy values unchanged after funding. Save transaction links before switching views.</p>
+            </div>
+          )}
           {wallet.payerConnected && wallet.payeeConnected && !rolesDistinct ? (
             <div className="flex items-start gap-2 border border-rose-800/60 bg-rose-950/30 rounded-lg p-3 text-xs text-rose-200">
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />

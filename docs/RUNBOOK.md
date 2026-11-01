@@ -6,6 +6,9 @@ This is the step-by-step to close the ones that need your wallet, funds or accou
 Chinese wallet checklist, exact UI labels, retry rules and evidence worksheet:
 [`WALLET_TEST_ZH.md`](WALLET_TEST_ZH.md).
 
+For real-wallet testing without real funds, use the isolated local Chipnet setup in
+[`CHIPNET_TEST_ZH.md`](CHIPNET_TEST_ZH.md). Chipnet results are not Mainnet evidence.
+
 ## 1. Mainnet real transaction (hard requirement #1) and wallet device test
 
 Two phone wallets with WizardConnect: **Wallet A** (payer) and **Wallet B** (payee).

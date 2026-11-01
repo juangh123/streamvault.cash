@@ -161,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => setNetwork(e.target.value as NetworkType)}
               className="bg-transparent text-xs text-slate-200 outline-none cursor-pointer"
             >
-              <option value="mainnet" className="bg-slate-900">Mainnet</option>
+              {import.meta.env.VITE_CHIPNET_ONLY !== 'true' && <option value="mainnet" className="bg-slate-900">Mainnet</option>}
               <option value="chipnet" className="bg-slate-900">Chipnet</option>
             </select>
           </div>

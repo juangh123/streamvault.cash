@@ -375,12 +375,16 @@ const AppShell: React.FC<AppShellProps> = ({ network, setNetwork, view, setView,
 };
 
 export const App: React.FC = () => {
-  // Mainnet is the default: BCH BLAZE judges the Mainnet track. Chipnet stays available in the selector.
-  const [network, setNetwork] = useState<NetworkType>('mainnet');
+  // The local test server pins Chipnet; the public build retains its Mainnet default.
+  const chipnetOnly = import.meta.env.VITE_CHIPNET_ONLY === 'true';
+  const [network, updateNetwork] = useState<NetworkType>(chipnetOnly ? 'chipnet' : 'mainnet');
+  const setNetwork = (next: NetworkType) => {
+    if (!chipnetOnly || next === 'chipnet') updateNetwork(next);
+  };
   // View and mode live above the keyed WalletProvider so a network switch (which remounts the wallet
   // sessions) does not bounce the user back to the Sandbox or the Agent tab.
-  const [view, setView] = useState<AppView>('AGENT');
-  const [mode, setMode] = useState<AppMode>('SANDBOX');
+  const [view, setView] = useState<AppView>(chipnetOnly ? 'PAYROLL' : 'AGENT');
+  const [mode, setMode] = useState<AppMode>(chipnetOnly ? 'LIVE' : 'SANDBOX');
   return (
     <WalletProvider key={network} network={network}>
       <AppShell
