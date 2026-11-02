@@ -12,6 +12,7 @@
 > **Live demo:** https://streamvault-cash.vercel.app  ·  built for BCH BLAZE 2026
 >
 > **Agent demo:** open the app, keep **Agent** selected, and use the Sandbox Fast-Track. No wallet or funds are required.
+> Sandbox is simulated: see the [60-second judge guide](docs/JUDGE_GUIDE.md) and the [48-second Sandbox video](https://streamvault-cash.vercel.app/judge/streamvault-sandbox-demo.mp4).
 >
 > **CashTokens receiving address (Mainnet):** `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv`
 > **Submission deck:** [7-page Widget Factory deck (PDF)](https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf)

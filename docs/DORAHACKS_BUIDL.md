@@ -21,7 +21,7 @@ real Mainnet operation exists (see [MEDIA_SCRIPT_V2.md](MEDIA_SCRIPT_V2.md)).
 | Pre-hackathon demo | https://streamvault-baseline.vercel.app |
 | Widget Factory deck (PDF) | https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf |
 | CashTokens address (EMBER2026) | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` |
-| Demo video | Leave empty until the final Mainnet video exists; do not link the sandbox draft |
+| Demo video | https://streamvault-cash.vercel.app/judge/streamvault-sandbox-demo.mp4 (Sandbox walkthrough, labelled simulated). Add the Mainnet run video once recorded |
 | Team | Autonomous Cash (Jason) |
 | Tags | Bitcoin Cash, CashTokens, AI agents, Stablecoins, Payments, CashScript |
 
@@ -37,6 +37,7 @@ PUSD budgets for AI agents and people, enforced by a CashScript covenant on Bitc
 | :--- | :--- |
 | Live demo | https://streamvault-cash.vercel.app |
 | Widget Factory deck | https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf |
+| Sandbox video (simulated, 48 s) | https://streamvault-cash.vercel.app/judge/streamvault-sandbox-demo.mp4 |
 | Current repo | https://github.com/juangh123/streamvault.cash |
 | Pre-hackathon code | https://github.com/juangh123/streamvault.cash/tree/v0-prehackathon-baseline |
 | Pre-hackathon demo | https://streamvault-baseline.vercel.app |

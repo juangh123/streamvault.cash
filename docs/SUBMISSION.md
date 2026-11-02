@@ -29,7 +29,7 @@ The DoraHacks form cannot be submitted before the window opens.
 | Pre-hackathon demo | https://streamvault-baseline.vercel.app |
 | Current demo | https://streamvault-cash.vercel.app |
 | Deck | [7-page Widget Factory deck (PDF)](https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf); source PPTX/PDF in `docs/deck` |
-| Video | `docs/media/streamvault-explainer.mp4` is a sandbox draft; do not submit it as final |
+| Video | Sandbox walkthrough, labelled simulated (48 s): https://streamvault-cash.vercel.app/judge/streamvault-sandbox-demo.mp4. A Mainnet run video is still to be recorded; `docs/media/streamvault-explainer.mp4` is the older pre-hackathon draft |
 | CashTokens receiving address | `bitcoincash:zzlgvjs8fvqdf43nz9yklcd0eh780x2xd5d9dxrnkv` |
 
 ## Required mainnet evidence
