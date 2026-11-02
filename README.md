@@ -27,6 +27,15 @@
 
 ## Status
 
+Local Chipnet wallet testing on 2026-11-02 completed funding, rejection, Payroll claim/refund
+and Agent claim/service payment with two independent Cashonize HD wallets. At height 330590,
+claims/payment had 16 confirmations and refund had 14. See [transaction evidence](docs/CHIPNET_EVIDENCE.md)
+and the [Chinese Chipnet guide](docs/CHIPNET_TEST_ZH.md). This does not verify Mainnet or mobile wallets.
+
+**Deployment safety:** these local tests found and fixed category byte order, wallet relay/maturity
+and Agent payment construction defects. The public deployment has not received these fixes;
+use its Sandbox only and do not fund Mainnet vaults until the corrected release is approved and deployed.
+
 | Works today | Simulated | Pending before submission |
 | :--- | :--- | :--- |
 | Agent allowance Sandbox Fast-Track | Sandbox ledger and demo addresses | Real Mainnet fund/claim/cancel txids |

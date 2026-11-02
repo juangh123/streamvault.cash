@@ -3,6 +3,11 @@
 Status of the seven mandatory requirements: see `docs/COMPLIANCE.md`.
 This is the step-by-step to close the ones that need your wallet, funds or accounts.
 
+**Mainnet funding is on hold (2026-11-02).** Chipnet wallet testing exposed category byte-order,
+relay/maturity and Agent payment construction defects, now fixed locally but not deployed.
+Do not execute the Mainnet funding steps below until the corrected release is approved and deployed.
+The confirmed Chipnet lifecycle evidence is recorded in [`CHIPNET_EVIDENCE.md`](CHIPNET_EVIDENCE.md).
+
 Chinese wallet checklist, exact UI labels, retry rules and evidence worksheet:
 [`WALLET_TEST_ZH.md`](WALLET_TEST_ZH.md).
 

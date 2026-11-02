@@ -1,8 +1,8 @@
 # SV-CHIPNET-001 — live wallet evidence (2026-11-01)
 
-Status (2026-11-02): core dual-wallet lifecycle passed at network acceptance: funding, rejection,
-Payroll Claim/Cancel and Agent Claim/service payment. Claims/payment have 2 confirmations at tip
-330576; the new cancellation is initially 0-conf. This is not Mainnet or phone-wallet verification.
+Status (2026-11-02): core dual-wallet lifecycle passed with confirmed transactions: funding,
+rejection, Payroll Claim/Cancel and Agent Claim/service payment. At tip 330590, both claims and
+service payment have 16 confirmations; cancellation has 14. This is not Mainnet or phone-wallet verification.
 This is Chipnet only: no real PUSD, monetary value or Mainnet verification is claimed.
 Owner: Sol (implementation and evidence), user (wallet authority).
 
@@ -145,7 +145,7 @@ The earlier Agent Claim was independently retrieved too, at 0 confirmations; it 
 corrected Agent Fund and returns 190 units to its vault. Failed construction attempts did not
 create duplicate claims or service payments.
 
-Next: verify the Payroll cancellation confirmation. Keep the Agent vault active.
+Next: review the local fixes for an explicitly approved push/deployment. Keep the Agent vault active.
 Payment fix checks: 12 API tests, typecheck and build passed; client secret scanning passed.
 No Mainnet action, GitHub push or deployment took place.
 
@@ -170,8 +170,28 @@ Core acceptance checklist:
 - Payee rejection without broadcast: passed.
 - Corrected Payroll claim and payer refund: passed at network acceptance.
 - Agent tranche and request-bound service payment: passed; both have 2 confirmations.
-- Refund block confirmation: pending at this snapshot.
+- Refund block confirmation: passed on the final check below.
 - Selene/Paytaca mobile compatibility and exact wallet release versions: not verified.
 - Mainnet evidence: none. Legacy malformed test vaults remain unrecovered.
 
 No code changed in this cancellation step. Record is local; no production publication occurred.
+
+## Final confirmation check (2026-11-02)
+
+At tip 330590, direct Electrum transaction lookups reported:
+
+| Transaction | Confirmations | Block height |
+| :--- | ---: | ---: |
+| Payroll Claim `640cef8f6b03e8eca39e78af749f25c146b52c88cdb6a27a22798f49351d317b` | 16 | 330575 |
+| Agent Claim `510ab414954f3462f166c2e5ced4b22442ce5a454573035ee8b51c0cda51d747` | 16 | 330575 |
+| Service payment `5907cc8aedc19f6c2a4a8014516c70dde5f1e35dcc40e7d354b86574209a18f6` | 16 | 330575 |
+| Payroll Cancel `2dca01999f66b71774e2b290a4230c485a8447d655845c255ba71a2895ea0f9d` | 14 | 330577 |
+
+Both claims and payment share block hash
+`00000000630979f0f974d5eac93aefc34ffb3198316a648d42b2e1f0e80c98dd`.
+Cancellation block hash is `00000000000006ae0fbcd28889b1c7b80369ce670144a3580abe44a9408e5313`.
+Block heights above follow from the observed tip and confirmation counts.
+Core Chipnet wallet acceptance is complete. Separate mobile-wallet/Mainnet testing, recovery
+of legacy malformed test vaults, and any production publication remain outside this result.
+Final `npm run verify:release` passed after all fixes, including API/VM regressions, typecheck,
+production build and client secret scan. The separate `.env.chipnet.local` secret scan passed too.
