@@ -57,6 +57,9 @@ export interface WalletState {
   connected: boolean;
   payerConnected: boolean;
   payeeConnected: boolean;
+  /** Paired wallet temporarily offline; requests are delivered when it reconnects. */
+  payerReconnecting: boolean;
+  payeeReconnecting: boolean;
   name: string | null;
   icon: string | null;
   address: string | null;

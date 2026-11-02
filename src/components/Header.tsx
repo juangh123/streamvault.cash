@@ -21,11 +21,12 @@ interface HeaderProps {
 const WalletControl: React.FC<{
   role: WalletRole;
   connected: boolean;
+  reconnecting: boolean;
   address: string | null;
   copyAddress: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
-}> = ({ role, connected, address, copyAddress, onConnect, onDisconnect }) => {
+}> = ({ role, connected, reconnecting, address, copyAddress, onConnect, onDisconnect }) => {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     if (!copyAddress) return;
@@ -47,7 +48,15 @@ const WalletControl: React.FC<{
   >
     <Wallet className="w-3 h-3" />
     <span className="capitalize">{role}</span>
-    {connected ? (
+    {reconnecting && (
+      <span
+        className="text-amber-300"
+        title="Paired wallet is offline. Open the wallet app; pending requests are delivered when it reconnects."
+      >
+        reconnecting
+      </span>
+    )}
+    {connected || reconnecting ? (
       <>
         <button
           onClick={copy}
@@ -55,7 +64,7 @@ const WalletControl: React.FC<{
           aria-label={`Copy ${role} address`}
           className="text-emerald-500/70 font-mono hover:text-emerald-300"
         >
-          {copied ? 'copied' : address ? shortAddress(address, 4, 3) : ''}
+          {copied ? 'copied' : address && !reconnecting ? shortAddress(address, 4, 3) : ''}
         </button>
         <button onClick={onDisconnect} title={`Disconnect ${role}`} className="text-emerald-400 hover:text-white">
           <LogOut className="w-3 h-3" />
@@ -170,6 +179,7 @@ export const Header: React.FC<HeaderProps> = ({
             <WalletControl
               role="payer"
               connected={wallet.payerConnected}
+              reconnecting={wallet.payerReconnecting}
               address={wallet.payerAddress}
               copyAddress={wallet.payerTokenAddress}
               onConnect={() => onConnectWallet('payer')}
@@ -178,6 +188,7 @@ export const Header: React.FC<HeaderProps> = ({
             <WalletControl
               role="payee"
               connected={wallet.payeeConnected}
+              reconnecting={wallet.payeeReconnecting}
               address={wallet.payeeAddress}
               copyAddress={wallet.payeeTokenAddress}
               onConnect={() => onConnectWallet('payee')}

@@ -1,82 +1,12 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 import { useWizardConnect } from '@wizardconnect/react';
-import type { WizardConnectState } from '@wizardconnect/react';
-import {
-  binToHex,
-  lockingBytecodeToCashAddress,
-  publicKeyToP2pkhCashAddress,
-  publicKeyToP2pkhLockingBytecode,
-} from '@bitauth/libauth';
 import type { WcTransactionObject } from 'cashscript';
 import type { NetworkType, WalletState } from '../types';
+import { accountFromSession, type WalletAccount } from './session';
 import { broadcastSigned, makeProvider, serializeWcTransaction, relaySourceOutputs, type InputPath } from '../lib/chain';
 
-const PREFIX: Record<NetworkType, 'bitcoincash' | 'bchtest'> = {
-  mainnet: 'bitcoincash',
-  chipnet: 'bchtest',
-};
-
 export type WalletRole = 'payer' | 'payee';
-
-export interface WalletAccount {
-  state: WizardConnectState;
-  connected: boolean;
-  name: string | null;
-  icon: string | null;
-  address: string | null;
-  tokenAddress: string | null;
-  pubkey: string | null;
-  uri: string | null;
-  qrUri: string | null;
-  error: string | null;
-}
-
-function pubkeyAddress(publicKey: Uint8Array, network: NetworkType): string | null {
-  try {
-    const encoded = publicKeyToP2pkhCashAddress({ publicKey, prefix: PREFIX[network] }) as unknown;
-    return typeof encoded === 'string'
-      ? encoded
-      : ((encoded as { address?: string }).address ?? null);
-  } catch {
-    return null;
-  }
-}
-
-function pubkeyTokenAddress(publicKey: Uint8Array, network: NetworkType): string | null {
-  try {
-    const encoded = lockingBytecodeToCashAddress({
-      bytecode: publicKeyToP2pkhLockingBytecode({ publicKey }),
-      prefix: PREFIX[network],
-      tokenSupport: true,
-    }) as unknown;
-    return typeof encoded === 'string'
-      ? encoded
-      : ((encoded as { address?: string }).address ?? null);
-  } catch {
-    return null;
-  }
-}
-
-function accountFromSession(
-  session: ReturnType<typeof useWizardConnect>,
-  network: NetworkType,
-): WalletAccount {
-  const pubkey =
-    session.state === 'connected' && session.manager ? session.manager.getPubkey(0, 0n) : null;
-  const address = pubkey ? pubkeyAddress(pubkey, network) : null;
-  return {
-    state: session.state,
-    connected: Boolean(pubkey && address),
-    name: session.walletName,
-    icon: session.walletIcon,
-    address,
-    tokenAddress: pubkey ? pubkeyTokenAddress(pubkey, network) : null,
-    pubkey: pubkey ? binToHex(pubkey) : null,
-    uri: session.uri,
-    qrUri: session.qrUri,
-    error: session.error,
-  };
-}
+export type { WalletAccount } from './session';
 
 export interface SignedTransactionResult {
   txid: string;
@@ -149,6 +79,8 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
       connected: payer.connected || payee.connected,
       payerConnected: payer.connected,
       payeeConnected: payee.connected,
+      payerReconnecting: payer.reconnecting,
+      payeeReconnecting: payee.reconnecting,
       name: payer.name ?? payee.name,
       icon: payer.icon ?? payee.icon,
       address: payer.address ?? payee.address,
@@ -166,10 +98,12 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
   const connect = useCallback(
     (role: WalletRole = 'payer') => {
       const session = role === 'payer' ? payerSession : payeeSession;
-      if (session.state === 'connected') return true;
+      // Never start a second pairing while the existing one is live or restoring.
+      const account = role === 'payer' ? payer : payee;
+      if (session.state === 'connected' || session.state === 'reconnecting' || account.reconnecting) return true;
       return session.connect();
     },
-    [payerSession.state, payerSession.connect, payeeSession.state, payeeSession.connect],
+    [payer, payee, payerSession.state, payerSession.connect, payeeSession.state, payeeSession.connect],
   );
 
   const disconnect = useCallback(
@@ -189,7 +123,8 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
       const session = role === 'payer' ? payerSession : payeeSession;
       const account = role === 'payer' ? payer : payee;
       const manager = session.manager;
-      if (!manager || session.state !== 'connected' || !account.connected) {
+      const paired = session.state === 'connected' || session.state === 'reconnecting';
+      if (!manager || !paired || !account.connected) {
         throw new Error(`Connect the ${role} wallet before signing.`);
       }
       if (signingRef.current[role]) {
