@@ -89,6 +89,10 @@ signing with its own `receive/0` key) and broadcasts through Electrum.
 | Agent service payment (0.01 PUSD) | PENDING | PENDING |
 | Cancel & reclaim | PENDING | PENDING |
 
+Before Mainnet, the full two-wallet lifecycle (fund, payee rejection, claim, agent service payment
+with OP_RETURN request binding, cancel and refund) was run and confirmed on Chipnet; see
+`docs/CHIPNET_EVIDENCE.md`. Chipnet results are labelled as Chipnet and are not Mainnet evidence.
+
 ## Pre-existing work (disclosure)
 
 The covenant, sandbox cockpit and documentation were seeded on 2026-10-14 and 2026-10-15 and are
@@ -110,7 +114,7 @@ charges no protocol fee; self-hosting is free. First market: paid MCP tools and 
 
 - BCH Mainnet transaction: see the evidence table above
 - Live demo: https://streamvault-cash.vercel.app
-- WizardConnect integration: `src/wallet/WalletProvider.tsx`
+- WizardConnect integration: `src/wallet/WalletProvider.tsx`, tested with two real wallets on Chipnet
 - Widget Factory deck: linked above and in the site banner
 - Roll call: Information Session #1, 2026-10-17
 - Telegram verification: disclosure posted 2026-10-17, organizer replied
