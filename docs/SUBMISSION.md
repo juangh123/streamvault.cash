@@ -85,7 +85,7 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 - [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md` - blocked on funding: on
       2026-11-02 no project Mainnet address (payer, agent, service, Selene receive/0) had any history
 - [ ] Selene or Paytaca phone-wallet test: connect, background recovery, reject and sign; record device,
-      OS and wallet versions. The Chipnet lifecycle with Cashonize web wallets
+      OS and wallet versions in [PHONE_WALLET_TEST_ZH.md](PHONE_WALLET_TEST_ZH.md). The Chipnet lifecycle with Cashonize web wallets
       ([CHIPNET_EVIDENCE.md](CHIPNET_EVIDENCE.md)) does not count as this test
 - [x] Official Widget Factory template port rendered as PPTX + PDF
 - [x] Template-based deck published as a self-hosted PDF (Google Slides link blocked by Google on 2026-10-28)
