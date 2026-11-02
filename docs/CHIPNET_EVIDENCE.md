@@ -1,8 +1,8 @@
 # SV-CHIPNET-001 — live wallet evidence (2026-11-01)
 
-Status (2026-11-02): in progress. Wallet rejection, corrected Payroll/Agent claims and service
-payment passed at network acceptance (initially 0-conf). Payroll cancellation and block confirmations
-remain pending. All evidence is Chipnet only.
+Status (2026-11-02): core dual-wallet lifecycle passed at network acceptance: funding, rejection,
+Payroll Claim/Cancel and Agent Claim/service payment. Claims/payment have 2 confirmations at tip
+330576; the new cancellation is initially 0-conf. This is not Mainnet or phone-wallet verification.
 This is Chipnet only: no real PUSD, monetary value or Mainnet verification is claimed.
 Owner: Sol (implementation and evidence), user (wallet authority).
 
@@ -145,7 +145,33 @@ The earlier Agent Claim was independently retrieved too, at 0 confirmations; it 
 corrected Agent Fund and returns 190 units to its vault. Failed construction attempts did not
 create duplicate claims or service payments.
 
-Next: wait for the new Payroll Claim UTXO to confirm and satisfy the UI's 2-block sequence,
-then use A to Cancel & reclaim its remaining 40 units. Keep the Agent vault active.
+Next: verify the Payroll cancellation confirmation. Keep the Agent vault active.
 Payment fix checks: 12 API tests, typecheck and build passed; client secret scanning passed.
 No Mainnet action, GitHub push or deployment took place.
+
+## Payroll cancellation completed (2026-11-02)
+
+At tip 330576, independent lookups found 2 confirmations each for Payroll Claim, Agent Claim
+and service payment. A approved `StreamVault: cancel stream` in Cashonize, showing +40 test
+token units and +47,485 sats. The UI recorded Cancel and an empty Payroll vault.
+
+Transaction `2dca01999f66b71774e2b290a4230c485a8447d655845c255ba71a2895ea0f9d`
+was independently retrieved at 0 confirmations. It spends Payroll Claim vout 1 and has one
+output to A receive/0: 40 units of the test category and 47,485 sats (974 sats fee).
+A fresh query found no remaining UTXOs at the corrected Payroll vault.
+The existing UI used sequence=2 and the network accepted the cancellation with its input
+at 2 confirmations; no timelock settings were changed for this test.
+Screenshot: `work/chipnet/payroll-cancel-success-2026-11-02.jpg`.
+
+Core acceptance checklist:
+
+- Independent A/B sessions and actual wallet signing: passed with Cashonize web HD.
+- Payer funding including ordinary BCH inputs: passed.
+- Payee rejection without broadcast: passed.
+- Corrected Payroll claim and payer refund: passed at network acceptance.
+- Agent tranche and request-bound service payment: passed; both have 2 confirmations.
+- Refund block confirmation: pending at this snapshot.
+- Selene/Paytaca mobile compatibility and exact wallet release versions: not verified.
+- Mainnet evidence: none. Legacy malformed test vaults remain unrecovered.
+
+No code changed in this cancellation step. Record is local; no production publication occurred.
