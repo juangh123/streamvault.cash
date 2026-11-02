@@ -30,7 +30,7 @@ import {
   getVaultAge,
 } from '../src/lib/chain';
 
-const CATEGORY = 'a'.repeat(64);
+const CATEGORY = '0123456789abcdef'.repeat(4);
 const PERIOD_BLOCKS = 10;
 const VAULT_TOKENS = 100000n;
 const VAULT_BCH = 50000n;
@@ -409,6 +409,42 @@ function realisticWallet(bchSatoshis: bigint) {
     await assert.rejects(() => getVaultAge(provider, utxo, 2), /UTXO/);
     check(true, 'CHAIN-13', 'UTXO height governs first and subsequent claim periods', 'Confirmed, immature, mempool and spent cases checked.');
   } catch (e) { check(false, 'CHAIN-13', 'UTXO age on real Electrum response shape', (e as Error).message); }
+}
+
+// Real txid categories are not byte-order symmetric, unlike the historical aa... fixtures.
+{
+  try {
+    const category = '57af2cea09269e6239ac299ba688e27ecdaace1a850ea46b274919b434b1f155';
+    const provider = new MockNetworkProvider();
+    const contract = makeContract({ payerPk: payer.publicKey, payeePk: payee.publicKey,
+      amountPerPeriod: 10, periodBlocks: 2, category }, provider);
+    const utxo = provider.addUtxo(contract.tokenAddress, { txid: 'cd'.repeat(32), vout: 0,
+      satoshis: 50000n, token: { category, amount: 50n } });
+    const hex = buildClaimHex({ contract, utxo,
+      payeeTokenAddress: tokenAddressForPublicKey(payee.publicKey, 'bchtest'), amount: 10,
+      sequence: 2, payeeSigner: payee });
+    await provider.sendRawTransaction(hex);
+    check(true, 'CHAIN-14', 'Claim works with the actual non-symmetric Chipnet category', category);
+  } catch (e) { check(false, 'CHAIN-14', 'Claim with actual Chipnet category', (e as Error).message); }
+}
+
+for (const action of ['cancel', 'topUp'] as const) {
+  try {
+    const category = '57af2cea09269e6239ac299ba688e27ecdaace1a850ea46b274919b434b1f155';
+    const provider = new MockNetworkProvider();
+    const contract = makeContract({ payerPk: payer.publicKey, payeePk: payee.publicKey,
+      amountPerPeriod: 10, periodBlocks: 2, category }, provider);
+    const utxo = provider.addUtxo(contract.tokenAddress, { txid: 'cd'.repeat(32), vout: 0,
+      satoshis: 50000n, token: { category, amount: 50n } });
+    const payerTokenAddress = tokenAddressForPublicKey(payer.publicKey, 'bchtest');
+    const hex = action === 'cancel'
+      ? buildCancelHex({ contract, utxo, payerLockingBytecode, sequence: 2, payerSigner: payer })
+      : buildTopUpHex({ contract, vaultUtxo: utxo, walletUtxo: provider.addUtxo(payerTokenAddress,
+        { txid: 'ef'.repeat(32), vout: 0, satoshis: 1000n, token: { category, amount: 20n } }),
+        walletAddress: payerTokenAddress, payerSigner: payer });
+    await provider.sendRawTransaction(hex);
+    check(true, action === 'cancel' ? 'CHAIN-15' : 'CHAIN-16', `${action} works with a non-symmetric category`, category);
+  } catch (e) { check(false, action === 'cancel' ? 'CHAIN-15' : 'CHAIN-16', `${action} with actual Chipnet category`, (e as Error).message); }
 }
 
 console.log('==================================================================');

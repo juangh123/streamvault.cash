@@ -18,7 +18,7 @@ const NETWORK_PREFIX = 'bchtest'; // MockNetworkProvider uses the bchtest prefix
 const DUST = 1000n; // BCH satoshis kept on each token output
 const FEE_RATE = 1n; // keep the 1000-sat tranche output plus fee within the 2000-sat bound
 const MAX_FEE_RATE = 5; // sanity cap enforced by the builder
-const CATEGORY = 'a'.repeat(64); // deterministic 32-byte CashTokens category
+const CATEGORY = '0123456789abcdef'.repeat(4); // non-symmetric bytes catch category byte-order errors
 const AMOUNT_PER_PERIOD = 1000n;
 const PERIOD_BLOCKS = 10;
 const VAULT_TOKENS = 100000n;
@@ -46,7 +46,7 @@ function freshSetup() {
   const provider = new MockNetworkProvider();
   const contract = new Contract(
     artifact,
-    [payer.publicKey, payee.publicKey, AMOUNT_PER_PERIOD, BigInt(PERIOD_BLOCKS), hexToBin(CATEGORY)],
+    [payer.publicKey, payee.publicKey, AMOUNT_PER_PERIOD, BigInt(PERIOD_BLOCKS), hexToBin(CATEGORY).reverse()],
     { provider },
   );
   const vaultUtxo = provider.addUtxo(contract.tokenAddress, {
@@ -261,7 +261,7 @@ expectReject('TEST-13', 'Claim with a wrong input token category rejected', () =
   const wrongCategory = 'b'.repeat(64);
   const contract = new Contract(
     artifact,
-    [payer.publicKey, payee.publicKey, AMOUNT_PER_PERIOD, BigInt(PERIOD_BLOCKS), hexToBin(CATEGORY)],
+    [payer.publicKey, payee.publicKey, AMOUNT_PER_PERIOD, BigInt(PERIOD_BLOCKS), hexToBin(CATEGORY).reverse()],
     { provider },
   );
   const vaultUtxo = provider.addUtxo(contract.tokenAddress, {

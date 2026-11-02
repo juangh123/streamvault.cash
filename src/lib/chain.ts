@@ -69,7 +69,8 @@ export function makeContract(params: StreamParams, provider: NetworkProvider): C
       params.payeePk,
       BigInt(params.amountPerPeriod),
       BigInt(params.periodBlocks),
-      hexToBin(category),
+      // Explorer/SDK category IDs are displayed in txid order. Token introspection uses wire order.
+      hexToBin(category).reverse(),
     ],
     { provider },
   );

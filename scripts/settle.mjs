@@ -52,12 +52,12 @@ const cfg = {
 const prefixOf = (address) => (address.startsWith('bitcoincash:') ? 'bitcoincash' : 'bchtest');
 const tokenAddress = (publicKey, prefix) =>
   lockingBytecodeToCashAddress({ bytecode: publicKeyToP2pkhLockingBytecode({ publicKey }), prefix, tokenSupport: true }).address;
-const sizeFee = (builder) => builder.getTransactionSize() * BigInt(FEE_RATE);
+const sizeFee = (builder, feeRate = FEE_RATE) => builder.getTransactionSize() * BigInt(feeRate);
 
 const artifact = JSON.parse(await readFile(new URL('../contracts/artifacts/StreamVault.json', import.meta.url), 'utf8'));
 
 function newContract(payer, payee, provider) {
-  return new Contract(artifact, [payer.publicKey, payee.publicKey, cfg.amountPerPeriod, cfg.periodBlocks, hexToBin(cfg.category)], { provider });
+  return new Contract(artifact, [payer.publicKey, payee.publicKey, cfg.amountPerPeriod, cfg.periodBlocks, hexToBin(cfg.category).reverse()], { provider });
 }
 
 function claimBuilder(contract, utxo, payeeSigner, payeeTokenAddress, sequence) {
@@ -65,7 +65,8 @@ function claimBuilder(contract, utxo, payeeSigner, payeeTokenAddress, sequence) 
   b.addInput(utxo, contract.unlock.claim(payeeSigner, cfg.amount), { sequence });
   b.addOutput({ to: payeeTokenAddress, amount: DUST, token: { amount: cfg.amount, category: utxo.token.category } });
   b.addOutput({ to: contract.tokenAddress, amount: DUST, token: { amount: utxo.token.amount - cfg.amount, category: utxo.token.category } });
-  b.outputs[1].amount = utxo.satoshis - DUST - sizeFee(b);
+  // Match chain.ts: 1 sat/byte leaves the tranche output + fee inside the covenant's 2000-sat cap.
+  b.outputs[1].amount = utxo.satoshis - DUST - sizeFee(b, 1);
   return b;
 }
 

@@ -20,7 +20,7 @@ contract StreamVault(
     pubkey payeePk,          // Payee / contractor key (can claim per-period tranches)
     int amountPerPeriod,     // Max PUSD base units claimable per period (e.g. cents)
     int periodBlocks,        // Relative period in blocks (BIP68 block-based, e.g. 144 == ~1 day)
-    bytes pusdCategory       // CashTokens category id of PUSD (32-byte token category)
+    bytes pusdCategory       // 32-byte category in wire order (reverse the explorer/SDK txid before passing)
 ) {
     /**
      * @notice Payee claims one tranche of the stream.
