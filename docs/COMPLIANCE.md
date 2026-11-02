@@ -15,9 +15,9 @@ demo links). The full disclosure is in
 
 | # | Requirement | Status | Where |
 | :-- | :--- | :--- | :--- |
-| 1 | Real BCH Mainnet transaction | TODO | fund a v1.2 vault and record real `claim`/`cancel` txids |
-| 2 | Live, clickable demo (no local build) | DONE | https://streamvault-cash.vercel.app |
-| 3 | WizardConnect wallet integration | IMPLEMENTED, pending device test | `WalletProvider.tsx` + fund/claim/cancel signing |
+| 1 | Real BCH Mainnet transaction | NOT DONE - no Mainnet transactions yet | fund a v1.2 vault and record real `claim`/`cancel` txids |
+| 2 | Live, clickable demo (no local build) | DONE for Sandbox (simulated, no wallet); Live mode needs a wallet and a funded vault | https://streamvault-cash.vercel.app |
+| 3 | WizardConnect wallet integration | IMPLEMENTED; verified on Chipnet with Cashonize web wallets; Selene/Paytaca not yet tested | `WalletProvider.tsx` + fund/claim/cancel signing |
 | 4 | Official 7-page Widget Factory slides | DONE | [Self-hosted PDF](https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf) + source PPTX/PDF in `docs/deck` |
 | 5 | Attend a livestream + roll call | DONE (2026-10-17 22:56 Beijing) | Information Session #1, Vdo.ninja room `bchblaze`, project name posted in room chat |
 | 6 | Telegram verification | DONE (organizer replied) | joined `t.me/bchblaze`, posted the disclosure on 2026-10-17 at 20:18, and received the pre-existing-work rules |
@@ -31,9 +31,11 @@ demo links). The full disclosure is in
 2. **Live demo** - deployed and live at https://streamvault-cash.vercel.app (Vercel, master).
    The pre-hackathon demo is public at https://streamvault-baseline.vercel.app, with the baseline
    code tagged `v0-prehackathon-baseline`.
-3. **WizardConnect** - the persistent manager now signs fund, top-up, claim and cancel WalletConnect objects
-   and broadcasts the signed response through Electrum. A real Selene/Paytaca device test is still
-   required before claiming this complete.
+3. **WizardConnect** - the persistent manager signs fund, top-up, claim and cancel WalletConnect objects
+   and broadcasts the signed response through Electrum. On 2026-11-02 two Cashonize web wallets ran
+   fund, rejection, claim and cancel on Chipnet ([CHIPNET_EVIDENCE.md](CHIPNET_EVIDENCE.md)). A
+   Selene/Paytaca phone test (connect, background recovery, reject, sign) is still required and is
+   not replaced by the Cashonize result.
 4. **Slides** - the 7-page deck follows the official Widget Factory template and is served at
    https://streamvault-cash.vercel.app/StreamVault-BCH-Blaze-2026.pdf.
    On 2026-10-28 the Google Slides copy returned a Google Terms of Service block to signed-out
@@ -104,6 +106,23 @@ PUSD mainnet metadata was verified on 2026-10-17: category
 `2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544`, decimals `2`. The application now
 uses this verified category by default and blocks Mainnet if a demo category is configured. See
 [PUSD_VERIFICATION.md](PUSD_VERIFICATION.md).
+
+## 2026-11-02 progress
+
+| Flow | Sandbox (simulated, no wallet) | Chipnet (two Cashonize web wallets) | Selene / Paytaca phone wallets | BCH Mainnet |
+| :--- | :--- | :--- | :--- | :--- |
+| Payroll fund → claim → cancel | Works | Confirmed on chain, 2026-11-02 | Not yet tested | Not yet run |
+| Payee rejects a signing request | - | Passed: nothing broadcast | Not yet tested | Not yet run |
+| Agent fund → claim → 0.01 service payment | Works | Confirmed on chain (local Chipnet API server) | Not yet tested | Not yet run |
+| Top-up (merge one PUSD UTXO) | Works | Not run on chain (VM tests only) | Not yet tested | Not yet run |
+| Pairing and reconnect after backgrounding | - | Two simultaneous sessions worked | Selene paired as payer on 2026-10-31 without signing; reconnect fix deployed 2026-11-02, phone retest pending | - |
+
+- Chipnet lifecycle confirmed on chain with two Cashonize web wallets; the run exposed category
+  byte-order, wallet relay, vault-age and Agent payment defects, all fixed and deployed.
+- Paired wallets now stay usable while the relay reconnects (hidden tab, wallet app in background);
+  the header shows `reconnecting` instead of offering a second pairing. Phone retest pending.
+- Mainnet: no project address (payer, agent hot wallet, service, Selene receive/0) has any history.
+  Requirement 1 stays open.
 
 ## Media track (optional second submission)
 

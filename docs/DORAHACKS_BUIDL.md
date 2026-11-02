@@ -114,7 +114,8 @@ charges no protocol fee; self-hosting is free. First market: paid MCP tools and 
 
 - BCH Mainnet transaction: see the evidence table above
 - Live demo: https://streamvault-cash.vercel.app
-- WizardConnect integration: `src/wallet/WalletProvider.tsx`, tested with two real wallets on Chipnet
+- WizardConnect integration: `src/wallet/WalletProvider.tsx`, run end to end on Chipnet with two
+  Cashonize web wallets (update this line after the Selene/Paytaca test)
 - Widget Factory deck: linked above and in the site banner
 - Roll call: Information Session #1, 2026-10-17
 - Telegram verification: disclosure posted 2026-10-17, organizer replied

@@ -27,24 +27,21 @@
 
 ## Status
 
-Local Chipnet wallet testing on 2026-11-02 completed funding, rejection, Payroll claim/refund
-and Agent claim/service payment with two independent Cashonize HD wallets. At height 330590,
-claims/payment had 16 confirmations and refund had 14. See [transaction evidence](docs/CHIPNET_EVIDENCE.md)
-and the [Chinese Chipnet guide](docs/CHIPNET_TEST_ZH.md). This does not verify Mainnet or mobile wallets.
+Verification status on 2026-11-02. Chipnet results use test tokens with no value; they are not
+Mainnet evidence and do not replace the Selene/Paytaca phone-wallet test.
 
-**Deployment:** the Chipnet tests found and fixed category byte order, wallet relay/maturity and
-Agent payment construction defects. The fixes were pushed and deployed on 2026-11-02 (production on
-`1d9cc0f`, judge path re-tested live). Mainnet evidence is still pending; follow [RUNBOOK.md](docs/RUNBOOK.md).
+| Flow | Sandbox (simulated, no wallet) | Chipnet (two Cashonize web wallets) | Selene / Paytaca phone wallets | BCH Mainnet |
+| :--- | :--- | :--- | :--- | :--- |
+| Payroll fund → claim → cancel | Works | Confirmed on chain, 2026-11-02 | Not yet tested | Not yet run |
+| Payee rejects a signing request | - | Passed: nothing broadcast | Not yet tested | Not yet run |
+| Agent fund → claim → 0.01 service payment | Works | Confirmed on chain (local Chipnet API server) | Not yet tested | Not yet run |
+| Top-up (merge one PUSD UTXO) | Works | Not run on chain (VM tests only) | Not yet tested | Not yet run |
+| Pairing and reconnect after backgrounding | - | Two simultaneous sessions worked | Selene paired as payer on 2026-10-31 without signing; reconnect fix deployed 2026-11-02, phone retest pending | - |
 
-| Works today | Simulated | Pending before submission |
-| :--- | :--- | :--- |
-| Agent allowance Sandbox Fast-Track | Sandbox ledger and demo addresses | Real Mainnet fund/claim/cancel txids |
-| PUSD streaming payroll Sandbox | Agent service response and request id | Real Selene/Paytaca device test |
-| v1.2 covenant: 21 real VM tests | 0-conf interactive verification | Final media / DoraHacks form |
-| WizardConnect signing code + CashTokens address | Sandbox ledger | Final media link |
-| Live top-up (merge one PUSD UTXO) |  | DoraHacks project form |
-| Vercel Functions: status/run/verify |  |  |
-| Mainnet evidence strip (`src/lib/evidence.ts`, hidden until txids are recorded) |  |  |
+Chipnet transactions and confirmations: [docs/CHIPNET_EVIDENCE.md](docs/CHIPNET_EVIDENCE.md).
+BCH Mainnet: no project transactions yet; the vaults stay unfunded until the wallets are funded
+([RUNBOOK.md](docs/RUNBOOK.md)). The Chipnet run found and fixed category byte-order, wallet relay,
+vault-age and Agent payment defects; those fixes are deployed.
 
 The deployed Agent API only runs when `AGENT_ENABLED=true` and the server-side
 `AGENT_WIF` / `SERVICE_ADDRESS` are configured. The Sandbox agent demo works without those values.

@@ -83,9 +83,10 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 ## Submission checklist
 
 - [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md` - blocked on funding: on
-      2026-10-28 the payer, agent, service and vault addresses all held 0 sats and 0 PUSD
-- [ ] Real wallet device test on Selene or Paytaca - do it together with the Live fund step. The two-wallet
-      Chipnet lifecycle already passed with Cashonize ([CHIPNET_EVIDENCE.md](CHIPNET_EVIDENCE.md))
+      2026-11-02 no project Mainnet address (payer, agent, service, Selene receive/0) had any history
+- [ ] Selene or Paytaca phone-wallet test: connect, background recovery, reject and sign; record device,
+      OS and wallet versions. The Chipnet lifecycle with Cashonize web wallets
+      ([CHIPNET_EVIDENCE.md](CHIPNET_EVIDENCE.md)) does not count as this test
 - [x] Official Widget Factory template port rendered as PPTX + PDF
 - [x] Template-based deck published as a self-hosted PDF (Google Slides link blocked by Google on 2026-10-28)
 - [x] CashTokens receiving address added
@@ -94,7 +95,7 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 - [x] At least one preparation-stream roll call
 - [ ] DoraHacks project submission completed - form opens 2026-11-13 06:00 (UTC-6); draft ready in
       [DORAHACKS_BUIDL.md](DORAHACKS_BUIDL.md)
-- [x] Commit and push the build-period product diff (`7d363af` code, `6766177` deck; origin/master and
-      Vercel production both on `6766177`, verified 2026-10-28)
+- [x] Commit and push the product diff (latest code commit `cad18b3`; origin/master and Vercel production
+      in sync, checked 2026-11-02)
 - [ ] Old/new repository and pre-hackathon demo links added to the submission - links are live in the
       site banner and prefilled in the BUIDL draft; tick after the form is submitted
