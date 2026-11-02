@@ -17,10 +17,11 @@ This file separates the disclosed pre-hackathon baseline from the current sprint
 | :--- | :--- |
 | Start commit | `4c9c083` (last baseline disclosure commit) |
 | Sprint code | v1.2 contract, WalletProvider signing, Agent API, Agent-first cockpit |
-| Final code commit | `7d363aface18b6188120000a6ab38096e2f5c7c6` (mainnet-first agent cockpit, dual wallets) |
+| Final code commit | `199bd1b` (Agent service payment construction; follows the `8e28688` category byte-order and `b91bc65` relay/maturity fixes) |
 | Final deck commit | `67661775ff5b4255939570baddbc1f5bb732cd18` (business-model slide, deck PDF links) |
-| Baseline-to-final diff | `git diff --stat v0-prehackathon-baseline..6766177` (79 files, +6146/-644, 22 commits) |
-| Pushed and deployed | origin/master and the Vercel production deployment both on `6766177` (checked 2026-10-28) |
+| Baseline-to-final diff | `git diff --stat v0-prehackathon-baseline..1d9cc0f` (91 files, +7364/-684, 33 commits) |
+| Pushed and deployed | origin/master and the Vercel production deployment both on `1d9cc0f` (checked 2026-11-02) |
+| Chipnet wallet acceptance | Confirmed lifecycle with two wallets: [CHIPNET_EVIDENCE.md](CHIPNET_EVIDENCE.md) |
 
 The code commit above is the current build-period candidate. The final evidence commit may add
 Mainnet txids and the official deck link after those external steps are complete.

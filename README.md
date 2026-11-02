@@ -32,9 +32,9 @@ and Agent claim/service payment with two independent Cashonize HD wallets. At he
 claims/payment had 16 confirmations and refund had 14. See [transaction evidence](docs/CHIPNET_EVIDENCE.md)
 and the [Chinese Chipnet guide](docs/CHIPNET_TEST_ZH.md). This does not verify Mainnet or mobile wallets.
 
-**Deployment safety:** these local tests found and fixed category byte order, wallet relay/maturity
-and Agent payment construction defects. The public deployment has not received these fixes;
-use its Sandbox only and do not fund Mainnet vaults until the corrected release is approved and deployed.
+**Deployment:** the Chipnet tests found and fixed category byte order, wallet relay/maturity and
+Agent payment construction defects. The fixes were pushed and deployed on 2026-11-02 (production on
+`1d9cc0f`, judge path re-tested live). Mainnet evidence is still pending; follow [RUNBOOK.md](docs/RUNBOOK.md).
 
 | Works today | Simulated | Pending before submission |
 | :--- | :--- | :--- |

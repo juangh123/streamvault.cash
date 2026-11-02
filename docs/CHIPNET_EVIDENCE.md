@@ -95,8 +95,8 @@ The compiled covenant bytecode is unchanged; constructor values and resulting ad
 The legacy vaults cannot use the normal Claim/Cancel paths and have not been recovered.
 Only free Chipnet assets are affected in this test.
 
-The deployed Mainnet site has NOT received this fix. Do not fund it until corrected code is
-reviewed, tested and explicitly authorized for deployment. No Mainnet success is claimed.
+At the time of this entry the deployed Mainnet site had not received this fix. It was deployed on
+2026-11-02 after review (see the deployment section at the end). No Mainnet success is claimed.
 
 | Corrected test preparation | Chipnet txid | Observation |
 | :--- | :--- | :--- |
@@ -195,3 +195,22 @@ Core Chipnet wallet acceptance is complete. Separate mobile-wallet/Mainnet testi
 of legacy malformed test vaults, and any production publication remain outside this result.
 Final `npm run verify:release` passed after all fixes, including API/VM regressions, typecheck,
 production build and client secret scan. The separate `.env.chipnet.local` secret scan passed too.
+
+## Independent recheck and deployment (2026-11-02)
+
+At Chipnet tip 330596, a separate Electrum lookup re-read every transaction above. Corrected Payroll
+Fund and Agent Fund had 25 confirmations, both claims and the service payment 22, and the Payroll
+Cancel 20. Outputs matched this record: 10 units + 1,000 sats to the payee, 40 / 190 units returned
+to the vaults with 48,459 sats, 1 unit + 1,000 sats to the service with OP_RETURN
+`SV1:1b68192a-c235-470b-b032-e8f18aab72c3`, and 40 units + 47,485 sats refunded to A. The rejected
+Claim `3a476b1b...` is absent from chain and mempool, as expected.
+
+The eight local commits (`25d3939`..`1d9cc0f`) were reviewed and re-tested on a clean install
+(21 covenant, 12 engine, 6 agent, 12 API, 17 chain, derive, network-config and settlement checks,
+typecheck, build, client secret scan and both browser E2E specs), then pushed and deployed with the
+user's approval. The Vercel production deployment on `1d9cc0f` passed both E2E specs live.
+The Mainnet demo vault address derived by the server changed from the malformed
+`bitcoincash:pdgugchq7k6nl79zrsv359efuhzkszfauk7mr5nm6gvzl40a332ggdac5d376` to
+`bitcoincash:pdhydh5hn5kernyvmgapwgc50dxsjc79hw6sy4hzp86lqp8up9qnx7eygrae0`.
+Before deployment, no Mainnet address used by the project (payer, agent hot wallet, service, Selene
+receive/0) had any transaction history, so no real funds reached a malformed vault.

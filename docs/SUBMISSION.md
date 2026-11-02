@@ -84,7 +84,8 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 
 - [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md` - blocked on funding: on
       2026-10-28 the payer, agent, service and vault addresses all held 0 sats and 0 PUSD
-- [ ] Real wallet device test on Selene or Paytaca - do it together with the Live fund step
+- [ ] Real wallet device test on Selene or Paytaca - do it together with the Live fund step. The two-wallet
+      Chipnet lifecycle already passed with Cashonize ([CHIPNET_EVIDENCE.md](CHIPNET_EVIDENCE.md))
 - [x] Official Widget Factory template port rendered as PPTX + PDF
 - [x] Template-based deck published as a self-hosted PDF (Google Slides link blocked by Google on 2026-10-28)
 - [x] CashTokens receiving address added
