@@ -1,7 +1,8 @@
 # SV-CHIPNET-001 — live wallet evidence (2026-11-01)
 
-Status (2026-11-02): in progress. Wallet rejection passed. A signed claim exposed a category byte-order
-defect; corrected vaults are being funded locally. Successful claim, cancellation and paid request remain unverified.
+Status (2026-11-02): in progress. Wallet rejection, corrected Payroll/Agent claims and service
+payment passed at network acceptance (initially 0-conf). Payroll cancellation and block confirmations
+remain pending. All evidence is Chipnet only.
 This is Chipnet only: no real PUSD, monetary value or Mainnet verification is claimed.
 Owner: Sol (implementation and evidence), user (wallet authority).
 
@@ -113,3 +114,38 @@ with the expected category and respectively 50/200 token units plus 50,000 sats 
 The relative period is still pending; the displayed next block can move until funding confirms.
 Fix saved locally in `8e28688`; no push or production deployment was performed.
 Source: <https://cashtokens.org/docs/spec/chip/> (category wire byte order).
+
+## Corrected real claims (2026-11-02)
+
+At tip 330574 the Payroll UI showed `available now`. B approved the Claim in Cashonize Chrome.
+Transaction `640cef8f6b03e8eca39e78af749f25c146b52c88cdb6a27a22798f49351d317b`
+was accepted by the network (0 confirmations at the first independent query): output 0 pays
+10 token units and 1,000 sats to B; output 1 returns 40 units and 48,459 sats to the corrected vault.
+Screenshot: `work/chipnet/payroll-claim-success-2026-11-02.jpg`.
+
+The first Agent request successfully claimed 10 units via
+`510ab414954f3462f166c2e5ced4b22442ce5a454573035ee8b51c0cda51d747`, leaving
+190 units and 48,459 sats in its vault. The subsequent service payment failed during construction,
+before broadcast: SERVICE_ADDRESS was BCH-form, without the token-aware flag. Normalize it to
+a token-aware address with the identical locking bytecode. A second construction error showed
+OP_RETURN was added after automatic BCH change; add request binding before computing change.
+The complete service-payment VM regression reproduced that error, then passed after reordering.
+API tests now cover both defects (12 passing), and type checking passed. Existing hot-wallet
+tokens are used when retrying; no duplicate claim is required.
+
+After both payment construction fixes, a real UI request succeeded:
+`5907cc8aedc19f6c2a4a8014516c70dde5f1e35dcc40e7d354b86574209a18f6`.
+Independent Electrum lookup found it at 0 confirmations, spending the Agent Claim output and
+the existing hot-wallet BCH funding. It pays 1 unit + 1,000 sats to the service, returns 9 units
++ 651 sats and 98,319 plain sats to the Agent, and includes OP_RETURN binding
+`SV1:1b68192a-c235-470b-b032-e8f18aab72c3`.
+The app returned `Service verified` and reported 0.01 paid / 0.09 spendable / 1.90 still locked.
+Screenshot: `work/chipnet/agent-payment-success-2026-11-02.jpg`.
+The earlier Agent Claim was independently retrieved too, at 0 confirmations; it spends the
+corrected Agent Fund and returns 190 units to its vault. Failed construction attempts did not
+create duplicate claims or service payments.
+
+Next: wait for the new Payroll Claim UTXO to confirm and satisfy the UI's 2-block sequence,
+then use A to Cancel & reclaim its remaining 40 units. Keep the Agent vault active.
+Payment fix checks: 12 API tests, typecheck and build passed; client secret scanning passed.
+No Mainnet action, GitHub push or deployment took place.

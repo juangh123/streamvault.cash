@@ -1,5 +1,6 @@
-import { getAgentStatus, getServiceInsight, runAgent, statusErrorResponse } from '../src/lib/agent-server';
-import { encodePrivateKeyWif, secp256k1, publicKeyToP2pkhCashAddress } from '@bitauth/libauth';
+import { getAgentStatus, getServiceInsight, runAgent, statusErrorResponse, serviceTokenAddress, buildAgentServicePaymentHex, type AgentConfig } from '../src/lib/agent-server';
+import { encodePrivateKeyWif, secp256k1, publicKeyToP2pkhCashAddress, cashAddressToLockingBytecode, binToHex, decodeTransaction, hexToBin } from '@bitauth/libauth';
+import { TransactionBuilder, MockNetworkProvider } from 'cashscript';
 import { MemoryAgentRequestStore } from '../src/lib/agent-store';
 
 const PAYER = '02' + '11'.repeat(32);
@@ -55,6 +56,44 @@ const mainnetTestAddress = publicKeyToP2pkhCashAddress({
 }).address;
 const testnetWif = encodePrivateKeyWif(testPrivateKey, 'testnet');
 const mainnetWif = encodePrivateKeyWif(testPrivateKey, 'mainnet');
+
+try {
+  for (const network of ['chipnet', 'mainnet'] as const) {
+    const original = network === 'chipnet' ? testAddress : mainnetTestAddress;
+    const destination = serviceTokenAddress({ serviceAddress: original, network });
+    const before = cashAddressToLockingBytecode(original);
+    const after = cashAddressToLockingBytecode(destination);
+    if (typeof before === 'string' || typeof after === 'string' ||
+        binToHex(before.bytecode) !== binToHex(after.bytecode)) throw new Error('Service destination changed');
+    const provider = new MockNetworkProvider();
+    provider.network = network;
+    new TransactionBuilder({ provider }).addOutput({
+      to: destination, amount: 1000n, token: { category: '0123456789abcdef'.repeat(4), amount: 1n },
+    });
+  }
+  check(true, 'API-10', 'Service payment accepts BCH-form addresses without changing the destination', 'Chipnet and Mainnet token output construction accepted');
+} catch (e) { check(false, 'API-10', 'Token-aware service destination', (e as Error).message); }
+
+try {
+  const provider = new MockNetworkProvider();
+  const category = '0123456789abcdef'.repeat(4);
+  const token = provider.addUtxo(testAddress, { txid: '12'.repeat(32), vout: 0,
+    satoshis: 1000n, token: { category, amount: 10n } });
+  const bch = provider.addUtxo(testAddress, { txid: '34'.repeat(32), vout: 0, satoshis: 100000n });
+  const config: AgentConfig = { enabled: true, network: 'chipnet', category, amountPerPeriod: 10,
+    periodBlocks: 2, servicePrice: 1, maxBalance: 10, rateLimitPerMinute: 30,
+    agentWif: testnetWif, serviceAddress: testAddress };
+  const requestId = 'payment-regression-001';
+  const hex = buildAgentServicePaymentHex(config, provider, [token], [bch], requestId);
+  const tx = decodeTransaction(hexToBin(hex));
+  if (typeof tx === 'string') throw new Error(tx);
+  if (!tx.outputs.some(o => o.token?.amount === 1n) || !tx.outputs.some(o => o.token?.amount === 9n) ||
+      !tx.outputs.some(o => binToHex(o.lockingBytecode).includes(binToHex(new TextEncoder().encode(`SV1:${requestId}`))))) {
+    throw new Error('Missing service payment, token change or request binding');
+  }
+  await provider.sendRawTransaction(hex);
+  check(true, 'API-11', 'Agent service payment is VM-accepted with request binding and both change outputs', 'Pays 1 unit, returns 9 units and BCH change');
+} catch (e) { check(false, 'API-11', 'Complete Agent service payment', (e as Error).message); }
 
 async function expectStatusError(id: string, name: string, expected: string) {
   let message = '';

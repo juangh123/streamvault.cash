@@ -2,6 +2,7 @@ import {
   SignatureTemplate,
   TransactionBuilder,
   type SpendableUtxo,
+  type NetworkProvider,
 } from 'cashscript';
 import {
   binToHex,
@@ -10,6 +11,7 @@ import {
   decodeTransaction,
   decodePrivateKeyWif,
   hexToBin,
+  lockingBytecodeToCashAddress,
   publicKeyToP2pkhCashAddress,
   publicKeyToP2pkhLockingBytecode,
 } from '@bitauth/libauth';
@@ -180,10 +182,34 @@ function validatePayerPubkey(value: unknown): string {
   return value;
 }
 
-function serviceLockingBytecode(config: AgentConfig): Uint8Array {
+function serviceLockingBytecode(config: Pick<AgentConfig, 'serviceAddress'>): Uint8Array {
   const result = cashAddressToLockingBytecode(config.serviceAddress);
   if (typeof result === 'string') throw new Error(`SERVICE_ADDRESS is invalid: ${result}`);
   return result.bytecode;
+}
+
+export function serviceTokenAddress(config: Pick<AgentConfig, 'serviceAddress' | 'network'>): string {
+  const result = lockingBytecodeToCashAddress({
+    bytecode: serviceLockingBytecode(config), prefix: prefixOf(config.network), tokenSupport: true,
+  });
+  if (typeof result === 'string') throw new Error(`SERVICE_ADDRESS cannot receive tokens: ${result}`);
+  return result.address;
+}
+
+export function buildAgentServicePaymentHex(config: AgentConfig, provider: NetworkProvider,
+  tokenUtxos: SpendableUtxo[], bchUtxos: SpendableUtxo[], requestId: string): string {
+  const signer = agentSigner(config);
+  const builder = new TransactionBuilder({ provider, maximumFeeSatsPerByte: 5 });
+  builder.addInputs(tokenUtxos, signer.unlockP2PKH());
+  builder.addInputs(bchUtxos, signer.unlockP2PKH());
+  builder.addOutput({ to: serviceTokenAddress(config), amount: MIN_TOKEN_SATOSHIS,
+    token: { amount: BigInt(config.servicePrice), category: config.category } });
+  if (sumTokenAmount(tokenUtxos) > BigInt(config.servicePrice)) {
+    builder.addTokenChangeOutputIfNeeded({ category: config.category, to: agentTokenAddress(config) });
+  }
+  builder.addOpReturnOutput([`SV1:${requestId}`]);
+  builder.addBchChangeOutputIfNeeded({ to: agentAddress(config), feeRate: 2 });
+  return builder.build();
 }
 
 function contractParams(config: AgentConfig, payerPubkey: string): StreamParams {
@@ -504,20 +530,7 @@ export async function runAgent(
       );
     }
 
-    const builder = new TransactionBuilder({ provider, maximumFeeSatsPerByte: 5 });
-    builder.addInputs(selectedTokens, signer.unlockP2PKH());
-    builder.addInputs(selectedBch, signer.unlockP2PKH());
-    builder.addOutput({
-      to: config.serviceAddress,
-      amount: MIN_TOKEN_SATOSHIS,
-      token: { amount: BigInt(config.servicePrice), category: config.category },
-    });
-    if (agentTokenAmount > BigInt(config.servicePrice)) {
-      builder.addTokenChangeOutputIfNeeded({ category: config.category, to: agentTokenAddr });
-    }
-    builder.addBchChangeOutputIfNeeded({ to: agentAddr, feeRate: 2 });
-    builder.addOpReturnOutput([`SV1:${requestId}`]);
-    const paymentHex = builder.build();
+    const paymentHex = buildAgentServicePaymentHex(config, provider, selectedTokens, selectedBch, requestId);
     serviceTxid = await provider.sendRawTransaction(paymentHex);
 
     const verified = await verifyServicePayment(serviceTxid, requestId, config);
