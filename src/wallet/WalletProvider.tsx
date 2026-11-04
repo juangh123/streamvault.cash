@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { useWizardConnect } from '@wizardconnect/react';
 import type { WcTransactionObject } from 'cashscript';
 import type { NetworkType, WalletState } from '../types';
@@ -43,6 +43,19 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
     sessionKey: `wizardconnect-payee-${network}`,
   });
   const signingRef = useRef<Record<WalletRole, boolean>>({ payer: false, payee: false });
+  const [accountRevision, refreshAccounts] = useReducer((revision: number) => revision + 1, 0);
+
+  useEffect(() => {
+    const managers = [payerSession.manager, payeeSession.manager].filter((manager) => manager !== null);
+    // Selene can send walletready without paths, then send the paths in another
+    // walletready while the hook remains connected. Refresh the derived accounts
+    // for every event, even when state/name/manager identity do not change.
+    for (const manager of managers) manager.on('walletready', refreshAccounts);
+    if (managers.length) refreshAccounts(); // Include updates before subscription.
+    return () => {
+      for (const manager of managers) manager.off('walletready', refreshAccounts);
+    };
+  }, [payerSession.manager, payeeSession.manager]);
 
   const payer = useMemo(
     () => accountFromSession(payerSession, network),
@@ -54,6 +67,7 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
       payerSession.uri,
       payerSession.qrUri,
       payerSession.error,
+      accountRevision,
       network,
     ],
   );
@@ -67,6 +81,7 @@ export const WalletProvider: React.FC<{ network: NetworkType; children: React.Re
       payeeSession.uri,
       payeeSession.qrUri,
       payeeSession.error,
+      accountRevision,
       network,
     ],
   );

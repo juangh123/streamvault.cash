@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { WizardConnectQRDialog } from '@wizardconnect/react';
 import { useWallet, type WalletRole } from '../wallet/WalletProvider';
 
@@ -13,12 +13,8 @@ interface WalletConnectDialogProps {
  * so closing this dialog does not destroy the signing session.
  */
 export const WalletConnectDialog: React.FC<WalletConnectDialogProps> = ({ open, role, onClose }) => {
-  const { accounts, connect } = useWallet();
+  const { accounts } = useWallet();
   const account = accounts[role];
-
-  useEffect(() => {
-    if (open && (account.state === 'idle' || account.state === 'disconnected')) connect(role);
-  }, [open, account.state, connect, role]);
 
   if (!open) return null;
 

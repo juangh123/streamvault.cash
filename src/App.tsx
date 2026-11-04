@@ -61,7 +61,7 @@ interface AppShellProps {
 }
 
 const AppShell: React.FC<AppShellProps> = ({ network, setNetwork, view, setView, mode, setMode }) => {
-  const { wallet, disconnect } = useWallet();
+  const { wallet, connect, disconnect } = useWallet();
   const [stream, setStream] = useState<StreamConfig | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -219,6 +219,8 @@ const AppShell: React.FC<AppShellProps> = ({ network, setNetwork, view, setView,
   };
 
   const connectWallet = (role: WalletRole) => {
+    // Start once from the click, rather than a mount effect replayed by StrictMode.
+    connect(role);
     setWalletRole(role);
     setShowWallet(true);
   };
