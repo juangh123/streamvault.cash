@@ -124,6 +124,15 @@ uses this verified category by default and blocks Mainnet if a demo category is 
 - Mainnet: no project address (payer, agent hot wallet, service, Selene receive/0) has any history.
   Requirement 1 stays open.
 
+## 2026-11-04 local phone update
+
+- Selene Payer pairing, return after 60 seconds in the phone background, and page-refresh recovery
+  passed on the local complete app after `07b2673`; no signing or broadcast occurred.
+- The phone run exposed staged walletready messages and duplicate pairing in development StrictMode.
+  Both have focused browser regressions and local fixes; production has not been updated in this run.
+- Full phone-wallet acceptance stays open: device/version details, signing, production retest and
+  C4 browser-hidden behavior are not established. See [PHONE_WALLET_TEST_ZH.md](PHONE_WALLET_TEST_ZH.md).
+
 ## Media track (optional second submission)
 
 - Final Media target: [MEDIA_SCRIPT_V2.md](MEDIA_SCRIPT_V2.md), a 60-90 second agent-budget short

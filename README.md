@@ -40,6 +40,10 @@ Mainnet evidence and do not replace the Selene/Paytaca phone-wallet test.
 | Pairing and reconnect after backgrounding | - | Two simultaneous sessions worked | Selene paired as payer on 2026-10-31 without signing; reconnect fix deployed 2026-11-02, phone retest pending | - |
 
 Chipnet transactions and confirmations: [docs/CHIPNET_EVIDENCE.md](docs/CHIPNET_EVIDENCE.md).
+Local Selene update (2026-11-04, `07b2673`): Payer pairing, return after 60 seconds in the phone
+background, and automatic recovery after a page refresh passed without re-pairing. This is connection
+testing on localhost; signing, device/version details and production retest remain pending. See
+[the phone test record](docs/PHONE_WALLET_TEST_ZH.md).
 BCH Mainnet: no project transactions yet; the vaults stay unfunded until the wallets are funded
 ([RUNBOOK.md](docs/RUNBOOK.md)). The Chipnet run found and fixed category byte-order, wallet relay,
 vault-age and Agent payment defects; those fixes are deployed.

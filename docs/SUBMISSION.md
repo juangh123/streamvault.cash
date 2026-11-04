@@ -83,6 +83,11 @@ Payroll fallback: switch to **Payroll** → **Sandbox** and run the $1,000 strea
 
 ## Submission checklist
 
+Local phone update (2026-11-04, code `07b2673`): Selene Payer pairing, return after 60 seconds in
+the phone background, and automatic recovery after a browser refresh passed on localhost. No signing
+or broadcast occurred. The phone-wallet gate below stays open for signing, device/version details
+and production retest; C4 browser-hidden behavior remains unverified. See the phone test record.
+
 - [ ] Real Mainnet txids added to README and `docs/BUILT_DURING_BLAZE.md` - blocked on funding: on
       2026-11-02 no project Mainnet address (payer, agent, service, Selene receive/0) had any history
 - [ ] Selene or Paytaca phone-wallet test: connect, background recovery, reject and sign; record device,
