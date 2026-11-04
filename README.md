@@ -232,7 +232,11 @@ Without `AGENT_STORE_URL` and `AGENT_STORE_TOKEN`, the API uses a process-local 
 both variables before relying on rate limits or request-id de-duplication across multiple instances.
 
 Run `npm run verify:release` before release to execute every non-browser test, typecheck, production
-build and client secret scan in one command.
+build, client secret scan and submission asset check in one command. The asset check verifies the
+deck PDF and Sandbox MP4 signatures, matching `public`/`dist` copies, and judge-guide JPEG files.
+Run it separately with `npm run verify:submission-assets` after building. It checks packaging only;
+Mainnet evidence, media playback, phone-wallet acceptance and official submission remain separate.
+Run `npm run test:e2e` for the judge paths, including desktop/mobile budget exhaustion and renewal.
 
 `VITE_AGENT_DEMO_PAYER_PUBKEY` is an optional public build-time payer key for a pre-funded
 Live demo vault. It lets the Agent view load real Mainnet status and run paid requests without

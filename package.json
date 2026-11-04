@@ -22,10 +22,12 @@
     "test:settle": "node tests/run-settle.mjs",
     "test:wallet-session": "node tests/run-wallet-session.mjs",
     "test:e2e": "playwright test",
+    "test:submission-assets": "node --test tests/submission-assets.test.mjs",
     "test:all": "npm test && npm run test:engine && npm run test:agent && npm run test:api && npm run test:derive && npm run test:chain && npm run test:network-config && npm run test:settle && npm run test:wallet-session",
     "verify:client-secrets": "node scripts/check-client-secrets.mjs .env.agent-wallet.local",
     "verify:wallet-config": "node scripts/check-wallet-env.mjs .env.agent-wallet.local",
-    "verify:release": "npm run test:all && npm run typecheck && npm run build && npm run verify:client-secrets",
+    "verify:submission-assets": "node scripts/check-submission-assets.mjs",
+    "verify:release": "npm run test:all && npm run test:submission-assets && npm run typecheck && npm run build && npm run verify:client-secrets && npm run verify:submission-assets",
     "verify:network": "node tests/run-network.mjs",
     "settle": "node scripts/settle.mjs",
     "deploy": "vercel --prod"

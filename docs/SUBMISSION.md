@@ -2,6 +2,7 @@
 
 Use this file as the single source of truth when filling the BCH BLAZE 2026 submission form.
 The paste-ready form text is in [DORAHACKS_BUIDL.md](DORAHACKS_BUIDL.md).
+Local sprint checks and remaining gates: [2026-11-04 sprint](SPRINT_2026-11-04.md).
 
 ## Official timeline (DoraHacks page, UTC-6)
 
